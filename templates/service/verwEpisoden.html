@@ -1,0 +1,79 @@
+{% extends "service/base_form.html" %}
+
+{% block overview %}
+    <thead>
+      <tr>
+        <th scope="col" style="line-height: 1.1em; width: 8%">Episode Nr</th>
+        <th scope="col" style="width: 32%">Titel</th>
+        <th scope="col" style="line-height: 1.1em; width: 10%">Veröfflg. Datum</th>
+        <th scope="col" style="width: 2%">Aktiv</th>
+        <th scope="col" style="width: 40%">Audio</th>
+        <th scope="col" style="line-height: 1.1em; width: 3%">Än- dern</th>
+      </tr>
+    </thead>
+{% endblock %}
+
+{% block form_input %}
+        <input type="hidden" name="frm-main-id" id="frm-main-id">
+        <input type="hidden" name="frm-item-timestamp" id="frm-item-timestamp">
+        <div class="row g-3">
+          <div style="display:flex;">
+            <div class="col-sm-4 bg-light pb-1" style="padding-right: calc(var(--bs-gutter-x) * .5);padding-left: calc(var(--bs-gutter-x) * .5);">
+              <label for="frm-main-datum">Veröffentlichungs Datum</label>
+              <input type="datetime-local" class="form-control storaged-elem" name="frm-main-datum" id="frm-main-datum" data-default="{{ conf.timeformat }}" required>
+              <div class="invalid-feedback"></div>
+            </div>
+            <div class="ms-5 form-check" style="width: 30%;">
+              <label class="form-check-label" for="frm-main-aktiv">Episode aktiv ?</label>
+              <input type="checkbox" class="form-check-input storaged-elem" name="frm-main-aktiv" id="frm-main-aktiv" checked>
+            </div>
+          </div>
+          <div class="bg-light ms-2 pb-1" style="width: 98%;">
+            <label for="frm-main-title">Titel</label>
+            <input type="text" class="form-control storaged-elem" name="frm-main-title" id="frm-main-title" placeholder="{{ conf.map['title_default'] }}" required>
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="bg-light ms-2 pb-1" style="width: 98%;">
+            <label for="frm-main-summary">Begleittext</label>
+            <textarea class="form-control storaged-elem" name="frm-main-summary" id="frm-main-summary" rows="10" required></textarea>
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="bg-light ms-2 pb-1" style="width: 98%;">
+            <label for="frm-main-chapter">Kapitel</label>
+            <textarea class="form-control storaged-elem" name="frm-main-chapter" id="frm-main-chapter" rows="10"></textarea>
+            <div class="invalid-feedback"></div>
+          </div>
+          
+          <div id="cover-images-select" class="list-group bg-light ms-2 pb-1" style="width: 98%;"> 
+            <label for="cover-images-set">Zuordnen zum jeweiligen Team</label>
+            <fieldset id="cover-images-set" class="storaged-elem" name="frm-main-set-berater" data-collect="image-group">
+              <label class="list-group-item" style="width: 17%;"><small>Team 1</small>
+                <input class="form-check-input" type="radio" name="frm-main-image" value="LogoGruppe-1.jpg"> 
+                <img src="{{ url_for('bx_start.media', file='LogoGruppe-1k.jpg') }}">
+              </label> 
+              <label class="list-group-item" style="width: 17%;"><small>Team 2</small>
+                <input class="form-check-input" type="radio" name="frm-main-image" value="LogoGruppe-2.jpg"> 
+                <img src="{{ url_for('bx_start.media', file='LogoGruppe-2k.jpg') }}">
+              </label> 
+              <label class="list-group-item" style="width: 17%;"><small>Team 3</small>
+                <input class="form-check-input" type="radio" name="frm-main-image" value="LogoGruppe-3.jpg"> 
+                <img src="{{ url_for('bx_start.media', file='LogoGruppe-3k.jpg') }}">
+              </label> 
+              <label class="list-group-item" style="width: 17%;"><small>Team 4</small>
+                <input class="form-check-input" type="radio" name="frm-main-image" value="LogoGruppe-5.jpg"> 
+                <img src="{{ url_for('bx_start.media', file='LogoGruppe-5k.jpg') }}">
+              </label> 
+            </fieldset>
+            <div class="invalid-feedback"></div>
+          </div>
+
+          <div class="bg-light ms-2 pb-1" style="width: 98%;">
+            <label for="frm-main-file">Datei zum Hochladen auswählen<span class="d-none"><br>Aktuelle Datei: <strong id="frm-main-audiofile"></strong></span></label>
+            <input class="form-control storaged-elem" type="file" accept="audio/mpeg" name="frm-main-file" id="frm-main-file" aria-label="Datei wählen" required>
+            <div class="invalid-feedback"></div>
+            <div class="ms-5 form-check d-none mt-2">
+              <label class="form-check-label" for="frm-main-replace">Audio-Datei in der Episode ersetzen ?</label>
+              <input type="checkbox" class="form-check-input storaged-elem" name="frm-main-replace" id="frm-main-replace">
+            </div>
+        </div>
+{% endblock %}

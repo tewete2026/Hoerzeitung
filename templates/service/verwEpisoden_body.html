@@ -1,0 +1,9 @@
+{% for row in episodes %}
+      <tr>
+        <td class="pt-4">{{ row['kdnr'] }}</td>
+        <td class="pt-4">{{ row['title'] }}</td>
+        <td class="pt-4">{{ row['datum'] }} {{ row['zeit'] }}</td>
+        <td class="pt-4 ps-3">{% if row['aktiv']=='*' %}&#x2713;{% endif %}</td>
+        <td><audio controls src="{{ url_for('bx_start.media', file=row['audiofile']) }}" style="width: 100%;"></audio></td>
+        <td class="pt-4"><figure class="text-body-secondary frm-main-overview-edit" data-id="{{ row['id'] }}" title="Eintrag ändern"><svg class="bi" width="2em" height="1em" title="Eintrag ändern"><use xlink:href="#bi-pencil-fill" title="Eintrag ändern"/></svg></figure></td>
+      </tr>{% endfor %}

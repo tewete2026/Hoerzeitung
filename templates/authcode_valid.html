@@ -1,0 +1,17 @@
+{% extends "base_form.html" %}
+{% block main %}
+			<div class="container">
+				<div class="pl-section text-center">
+					<div class="section-title text-center">
+						<span>Ihre Eingabe war erfolgreich</span>
+						<h3>Der eingegebene Freischaltcode ist gültig anerkannt.</h3>
+						<div class="mx-auto w-75">
+							<p class="mt-3">Kehren Sie bitte mit dem Link unten zur Hauptseite zurück. <br>
+								Der Freischaltcode wurde in Ihrem Browser gespeichert als "Cookie", <br>damit müssen Sie den Freischaltcode nicht jedes Mal erneut eingeben.<br> 
+								Um ein Abspeichern zu gewährleisten, sollten Sie die Einstellungen für Cookies in Ihrem Browser für diese Seite freischalten.</p>
+						</div>
+						<a href="{{ url_for('bx_start.start') }}?q=episodes" title="" class="home-btn"><i class="fa fa-arrow-left"></i> Zurück zur Hauptseite ...</a>
+					</div><!--section-title end-->
+				</div><!--pl-section end-->
+			</div>
+{% endblock %}

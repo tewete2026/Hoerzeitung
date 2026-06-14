@@ -1,0 +1,332 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>{{ conf.credits["title"] }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Hörzeitung für Norderstedt und die Welt" />
+    <meta name="author" content="DRK-Norderstedt, Thomas Wachler-Thomsen">
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='beatx/css/animate.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='beatx/css/all.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='beatx/css/slick.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='beatx/css/slick-theme.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='beatx/css/flaticon.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='beatx/css/GoogleFonts.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='beatx/css/maudio.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='beatx/css/jplayer.blue.monday.min.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='beatx/css/style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='beatx/css/color-schemes/color2.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='beatx/css/responsive.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/nhz.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='Logo_Title.png') }}">
+    <script>{{ javascript|safe }}</script>
+  </head>
+
+<body>
+
+	<div class="wrapper">
+
+		<header {% if conf.has("header_class") %}class="pb"{% endif %}>
+			<div class="top-header">
+				<div class="container">
+					<div class="row align-items-center">
+						<div class="col-xl-4 col-lg-5 col-md-6 mll-auto">
+							{% if conf.has("user_name") %}<span class="login me-5">{{ conf.map['user_name'] }}</span>{% endif %}
+							{% if conf.has("show_no_backgr") %}<a href="{{ url_for('bx_start.start') }}?q=with-backgr" title="" class="login">Mit Hintergrund anzeigen</a>{% else %}<a href="{{ url_for('bx_start.start') }}?q=no-backgr" title="" class="login">Ohne Hintergrund anzeigen</a>{% endif %}
+							<div class="clearfix"></div>
+						</div>
+					</div>
+				</div>
+			</div><!--top-header end-->
+			<div class="bottom-header" {% if not conf.has("header_class") %}style="background-color: #afafaf;"{% endif %}>
+				<div class="container">
+					<div class="header-content">
+						<div class="logo">
+							<a href="{{ url_for('bx_start.start') }}" title=""><img src="{{ url_for('static', filename='Logo_Title_white_200.png') }}" alt=""></a>
+						</div><!--logo end-->
+						<nav>
+							<ul>
+								<li><a id="link-main" href="{{ url_for('bx_start.start') }}?q=episodes" title="Gehe zu den Episoden">Gehe zu den Episoden</a></li>
+								{#<!-- <li><a href="#" title="">Blog</a></li>
+								<li><a href="#" title="">Sprecher</a></li>-->#}
+								<li><a id="link-contact" href="{{ url_for('bx_start.contact') }}" title="Kontakt/Impressum">Kontakt/Impressum</a></li>
+							</ul>
+						</nav><!--nav end-->
+					</div><!--header-content end-->
+				</div>
+			</div><!--bottom-header end-->
+		</header><!--header end-->
+
+		{% if conf.has("show_player") %}
+		<!--  MUSIC PLAYER -->
+		<a href="#" title="" class="remove-music-player v2"><i class="fa fa-angle-up"></i></a>
+		<div class="beatx-playyer fixed-player">
+			<a href="#" title="" class="remove-music-player"><i class="fa fa-angle-down"></i></a>
+			<div id="jquery_jplayer_1" class="jp-jplayer"></div>
+			<div class="container-fluid">
+				<div id="jp_container_1" class="jp-audio" role="application" aria-label="media player">
+					<div class="jp-type-playlist">
+						<div class="jp-gui jp-interface align-items-center">
+							<div class="musicc-controls">
+								<div class="row align-items-center">
+									<div class="col-xl-4">
+										<div class="song-title">
+											<h2 class="jp-title"></h2>
+										</div>
+									</div>
+									<div class="col-xl-3 col-lg-4">
+										<div class="jp-controls d-flex flex-wrap align-items-center justify-content-end">
+											<button class="jp-previous" role="button" tabindex="0"><i class="flaticon-backward-arrows-couple-pointing-to-left"></i></button>
+											<button class="jp-play" role="button" tabindex="0"><i class="fa fa-play"></i></button>
+											<button class="jp-next" role="button" tabindex="0"><i class="flaticon-fast-forward"></i></button>
+										</div>
+									</div>
+									<div class="col-xl-5 col-lg-8 text-right">
+										<div class="controls-sc">
+											<div class="jp-progress">
+												<div class="jp-seek-bar">
+													<div class="jp-play-bar"></div>
+												</div>
+											</div>
+											<div class="jp-time-holder">
+												<div class="jp-current-time" role="timer" aria-label="time">&nbsp;</div>
+												<div class="jp-duration" role="timer" aria-label="duration">&nbsp;</div>
+											</div>
+											<div class="jp-toggles">
+												<button class="jp-repeat" role="button" tabindex="0"><i class="fa fa-redo-alt"></i></button>
+												<button class="jp-shuffle" role="button" tabindex="0"><i class="fa fa-random"></i></button>
+											</div>
+											<div class="jp-volume-controls">
+												<!-- <button class="jp-mute" role="button" tabindex="0"><i class="fa fa-volume-off"></i></button> -->
+												<div class="jp-volume-bar">
+													<div class="jp-volume-bar-value"></div>
+												</div>
+												<button class="jp-mute" role="button" tabindex="0"><i class="fa fa-volume-up"></i></button>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="jp-playlist">
+							<h3>Episodes</h3>
+							<ul>
+								<li>&nbsp;</li>
+							</ul>
+						</div>
+						<div class="jp-no-solution">
+							<span>Update Required</span>
+							To play the media you will need to either update your browser to a recent version or update your <a href="http://get.adobe.com/flashplayer/" target="_blank">Flash plugin</a>.
+						</div>
+					</div>
+				</div>
+			</div>
+		</div><!--beatx-music-player end-->
+		{% endif %}
+    
+		{% if conf.has("show_banner") %}
+		<section class="main-banner-hp4 text-center">
+      		<div id="banner-bg1" class="fixed-bg banner-bg1"></div>
+			<div class="container">
+				<div class="banner-text-hp3">
+					<h2>Die Norderstedter Hörzeitung</h2>
+					<h3>Von Norderstedt mit Blick in die Welt</h3>
+					<p>Wir bestehen aus einer Gruppe von 20 Sprechern, die wöchentlich Artikel aus lokalen Zeitschriften vorlesen und diese mit interessanten Geschichten und Anekdoten ergänzen. Wir wagen auch mal den Blick über den Norderstedter Tellerrand hinaus und haben auch immer Neuigkeiten aus aller Welt im Gepäck. Insgesamt 5 Leserteams treffen sich abwechselnd am Montagmorgen und produzieren eine Sendung von ca 1 Stunde Laufzeit. Af un an snakt wi ook en ditt Plattdüütsch. Ursprünglich haben wir dieses Format für Blinde und sehbehinderte Mitmenschen entwickelt, um diese so am alltäglichen Geschehen hier in der Nachbarschaft teilhaben zu lassen. Seit September 2003 erscheint die Norderstedter Hörzeitung als CD und jetzt auch im Stream.</p>
+					<span>{{ conf.map["last_play"] }}:</span>
+				</div><!--banner-text-hp3 end-->
+				<div class="podcast-ep-info col-lg-8 mx-auto">
+					<h2>{{ last_episode['title'] }}</h2>
+					<div class="music-player">
+						<audio controls src="{{ url_for('bx_start.media', file=last_episode['audio']) }}"></audio>
+					</div>
+				</div>
+			</div>
+		</section><!--banner-hp3 end-->
+		{% endif %}
+
+		<section id="main-block" class="block">
+    	{% block main %}{% endblock %}
+		</section>
+
+		{% if conf.has("show_more_trailer") %}
+		<section class="block pt-0 music-show-sec">
+			<div class="fixed-bg bg1"></div>
+			<section class="block pb-0">
+				<div class="container">
+					<div class="section-title text-center">
+						<span>Lust auf weitere Kostproben?</span>
+						<h2>Episoden <span>Beispiele</span></h2>
+						<i class="flaticon-playlist"></i>
+					</div><!--section-title end-->
+					<div class="podcast-series">
+						<div class="row">
+							<div>
+								<div class="pod-series">
+									<div class="pod-info">
+										<ul class="songs-list">{% for row in episodes1 %}
+											<li>
+                        						<h3>{{ row['title'] }}</h3>
+												<div class="music-player">
+													<audio controls src="{{ url_for('bx_start.media', file=row['audio']) }}"></audio>
+												</div>
+											</li>{% endfor %}
+										</ul>
+									</div><!--pod-info end-->
+								</div><!--pod-series end-->
+							</div>
+						</div>
+					</div><!--podcast-series end-->
+				</div>
+			</section>
+		</section>
+		{% endif %}
+		
+		{% if conf.has("show_blog") %}
+		<section class="block">
+			<div class="fixed-bg bg2"></div>
+			<div class="container">
+				<div class="section-title text-center">
+					<span>Kennen Sie schon unseren Blog?</span>
+					<h2>Neueste <span>Blogeinträge</span></h2>
+					<i class="flaticon-playlist"></i>
+				</div><!--section-title end-->
+				<div class="blog-posts">
+					<div class="row">
+						<div class="col-lg-4 col-md-6">
+							<div class="post">
+								<span class="category">Auf Sendung</span>
+								<h2 class="post-title"><a href="#" title="">Einblicke in den Ablauf der Aufnahme einer Folge</a></h2>
+								<img src="{{ url_for('static', filename='_D753356_DxO-1.jpg') }}" alt="" class="w-100">
+								<p>Es wird, wie man sieht, nicht nur gesprochen, sondern auch ab und zu Musik gemacht. Daraus entstehen dann sehr fröhliche Momente.</p>
+							</div><!--post end-->
+						</div>
+						<div class="col-lg-4 col-md-6">
+							<div class="post">
+								<span class="category">Sprecher</span>
+								<h2 class="post-title"><a href="#" title="">Eine Aufzeichnung<br>entsteht</a></h2>
+								<img src="{{ url_for('static', filename='_ZFC1981_DxO.jpg') }}" alt="" class="w-100">
+								<p>Während eine Aufzeichnung gesprochen wird, muss es im Umfeld sehr still sein und der oder die Lesenden muss konzentriert arbeiten.</p>
+							</div><!--post end-->
+						</div>
+						<div class="col-lg-4 col-md-6">
+							<div class="post">
+								<span class="category">Aktuelles</span>
+								<h2 class="post-title"><a href="#" title="">Rücksendungen verzögern sich leider</a></h2>
+								<img src="{{ url_for('static', filename='_ZFC1991_DxO.jpg') }}" alt="" class="w-100">
+								<p>Bei der Rücksendung von Versandtaschen kommt es in letzter Zeit häufiger zu Verzögerungen.</p>
+							</div><!--post end-->
+						</div>
+					</div>
+				</div><!--blog-posts end-->
+			</div>
+		</section>
+		{% endif %}
+
+		{% if conf.has("show_galerie") %}
+		<section class="block galerie-sec">
+			<div class="container">
+				<div class="partners">
+					<div class="row pt-carousel">{% for row in galerie %}
+						<div class="col-lg-3">
+							<div class="partner">
+								<div class="pt-logo">
+									<img src="{{ url_for('bx_start.media', file=row) }}" alt="Image {{ loop.index }}">
+								</div><!--pt-logo end-->
+							</div>
+						</div>{% endfor %}
+					</div>
+				</div><!--partners end-->
+			</div>
+		</section>
+		{% endif %}
+
+		<section class="newsletter-sec">
+			<div class="container">
+				<div class="newsletter">
+					<div class="row align-items-center">
+						<div class="col-lg-5">
+							<div class="newz-txt">
+								<h3>Lernen Sie unseren <span>Newsletter</span> kennen...</h3>
+							</div>
+						</div>
+						<div class="col-lg-7">
+							<div class="newsletter-form">
+								<div class="input-field">
+									<span class="env"><i class="flaticon-email"></i></span>
+									<input type="email" name="email" placeholder="Ihre Email Adresse....">
+									<button type="submit" class="btn-default">Abonieren <span></span></button>
+								</div>
+							</div><!--newsletter-form end-->
+						</div>
+					</div>
+				</div><!--newsletter end-->
+			</div>
+		</section>
+
+		<footer>
+			<div class="container">
+				<div class="bottom-footer">
+					<div class="row">
+						<div class="col-lg-3">
+							<div class="btm-logo">
+								<img src="{{ url_for('static', filename='Logo_Title_black_200.png') }}" alt="">
+							</div><!--btm-logo end-->
+						</div>
+						<div class="col-lg-9">
+							<ul class="btm-links">
+								{#<!--<li><a href="#" title="">Über uns</a></li>
+								<li><a href="#" title="">Geschichte</a></li>
+								<li><a href="#" title="">Sprecher</a></li> -->#}
+								<li><a href="{{ url_for('bx_start.contact') }}" title="Kontakt/Impressum">Kontakt/Impressum</a></li>
+								{% if conf.has("show_upload") %}<li><a href="{{ url_for('service.start') }}" title="Service">Service</a></li>{% endif %}
+								{% if conf.has("show_logout") %}<li><a href="{{ url_for('bx_start.logout') }}" title="Abmelden">Abmelden</a></li>{% endif %}
+							</ul><!--btm-links end-->
+							<p class="copyright-txt"><strong>DRK-Norderstedter-Hörzeitung</strong> - Version: {{ conf.credits["version"] }} - Erstellt: {{ conf.credits["created"] }} - {{ conf.credits["hostname"] }}</p>
+						</div>
+					</div>
+				</div>
+			</div>			
+      		<div id="main-errors-flashed"></div>
+		</footer><!--footer end-->
+
+	</div><!--wrapper end-->
+
+<script src="{{ url_for('static', filename='js/utilFunctions.js') }}"></script>
+<script src="{{ url_for('static', filename='js/mainClasses.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='beatx/js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='beatx/js/popper.js') }}"></script>
+<script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='beatx/js/slick.min.js') }}"></script>
+<script src="{{ url_for('static', filename='beatx/js/maudio.js') }}"></script>
+{% if conf.has("show_player") %}
+<!-- <script src="{{ url_for('static', filename='beatx/js/jquery.jplayer.min.js') }}"></script>
+<script>
+	$(document).ready(function(){
+		new jPlayerPlaylist({
+			jPlayer: "#jquery_jplayer_1",
+			cssSelectorAncestor: "#jp_container_1"
+		}, [{% for row in episodes %}
+			{
+				title:"{{ row['title'] }}",
+				mp3:"{{ url_for('bx_start.media', file=row['audio']) }}"
+			},{% endfor %}
+		], {
+			swfPath: "js/jplayer",
+			supplied: "mp3",
+			wmode: "window",
+			useStateClassSkin: true,
+			autoBlur: false,
+			smoothPlayBar: true,
+			keyEnabled: true
+		});
+	});
+</script>
+ -->{% endif %}
+<script src="{{ url_for('static', filename='beatx/js/script.js') }}"></script>
+
+</body>
+</html>

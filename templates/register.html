@@ -1,0 +1,97 @@
+{% extends "base_form.html" %}
+{% block main %}
+			<div class="container">
+				<div class="text-center">
+					<div class="section-title text-center">
+						<span>Um Episoden hören zu können ist eine Freischaltung erforderlich</span>
+						<h3>Freischaltung anfordern</h3>
+					</div><!--section-title end-->
+				</div><!--pl-section end-->
+				<div class="login-register">
+					<div class="row">
+						<div class="col-lg-5">
+							<div class="lg-form">
+								<h3 class="mm-title">Eingabe Freischaltcode</h3>
+								<form id="frm-release" method="post">
+									<input type="hidden" name="release" value="set">
+									<div class="form-group">
+										<input id="auth-code" type="text" name="authcode" placeholder="Hier Freischaltcode (aus unserer E-Mail) eingeben" class="form-control" required>
+									</div>
+									<div class="form-group">
+										<button type="submit" class="btn-default">Freigabe erteilen</button>
+									</div>
+								</form>
+							</div><!--login end-->
+						</div>
+						<div class="col-lg-2">
+							<div class="or">
+								<span>Oder</span>
+							</div>
+						</div>
+						<div class="col-lg-5">
+							<div class="lg-form">
+								<h3 class="mm-title">Noch nicht registriert?</h3>
+								<form id="frm-regist" method="post" enctype="multipart/form-data">
+									<input type="hidden" name="register" value="set">
+									<div class="form-group">
+										<input type="text" name="name" placeholder="Name" class="form-control" >
+									</div>
+									<div class="form-group">
+										<input type="email" name="email" placeholder="Email Addresse" class="form-control" >
+									</div>
+									<div class="form-group">
+										<input type="text" name="street" placeholder="Straße" class="form-control" >
+									</div>
+									<div class="form-group">
+										<input type="text" name="city" placeholder="Plz, Ort" class="form-control" >
+									</div>
+									<div class="bg-light">
+										<div class="form-check pt-2">
+											<span>Zur Wahrung des Urheberschutzes darf die Hörzeitung nur an einen berechtigten Hörerkreis ausgeliefert werden. <br>Berechtigt sind grundsätzlich alle Menschen, denen das tägliche Lesen der Zeitung durch eine körperliche Einschränkung nicht mehr möglich ist. <br>Bitte bestätigen Sie im folgenden Feld, dass Sie diesem Hörerkreis angehören. In Zweifelsfällen bitten wir Sie um einen Nachweis.</span>
+											<label class="form-check-label" for="commit">Ich bestätige, dass mir das tägliche Lesen der Zeitung aufgrund einer körperlichen Einschränkung nicht mehr möglich ist und bitte um Zusendung der Norderstedter Hörzeitung.</label>
+											<input type="checkbox" class="form-check-input form-control" name="commit" id="commit" style="margin-top: -2.5em; margin-left: auto;" >
+										</div>
+										<div class="list-group ms-2 pb-1"> 
+											<label class="list-group-item">
+												<input class="form-check-input form-control" type="radio" name="options" value="1" style="margin-right: 1em;" > 
+												Bitte die CD zusenden
+											</label> 
+											<label class="list-group-item">
+												<input class="form-check-input form-control" type="radio" name="options" value="2" style="margin-right: 1em;" > 
+												Bitte den Freischaltcode für den Podcast zusenden
+											</label> 
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="uploadfile">Ein PDF-Dokument oder ein Foto als Nachweis wählen zum Hochladen:</label>
+            							<input class="form-control" type="file" accept="application/pdf, image/png, image/jpeg, image/gif, image/tiff" name="uploadfile" id="uploadfile" aria-label="Datei wählen" >
+            							<div class="invalid-feedback"></div>
+									</div>
+									<div class="form-group">
+										<button type="submit" class="btn-default">Absenden</button>
+									</div>
+								</form>
+							</div><!--login end-->
+						</div>
+					</div>
+				</div><!--login-register end-->
+				<div class="pl-section text-center">
+					<div class="section-title text-center">
+						<span>So gehen Sie vor:</span>
+						<h3>Erläuterungen</h3>
+						<div class="text-start mx-auto w-75">
+							<ol>
+								<li class="fs-4">Wenn Sie einen Freischaltcode per E-Mail von uns erhalten haben:
+									<p class="mt-1"><strong>Bewahren Sie den von uns erhaltenen Freischaltcode unbedingt auf.</strong> Geben Sie den Freischaltcode oben links in dem dafür vorgesehenen Eingabefeld ein und klicken auf "Freigabe erteilen". Danach werden Sie automatisch weitergeleitet zur Übersicht der Episoden der Hörzeitung. Beachten Sie, dass die Eingabe des Codes verdeckt erfolgt, damit Ihr Browser (z.B. Firefox, Safari, Chrome) den Code als Passwort behandelt und Sie fragt, ob das Passwort gespeichert werden soll (abhängig von Ihren Browser-Einstellungen zur Daten-Sicherheit). Die Speicherung wird empfohlen, dadurch wird das Feld bei erneutem Aufruf dieser Webseite automatisch gefüllt.
+										<br>Weiterhin wird dieser Code als sogenanntes "Cookie" in Ihrem Browser ein Jahr lang gespeichert, damit Sie in Zukunft den Code nicht erneut eingeben müssen. Damit Ihr Browser dieses Cookie nicht wieder löscht, können Sie in Ihren Browser-Einstellungen die Internetadresse dieser Webseite in die <strong>Ausnahmen verwalten - Cookies und Website-Daten beim Beenden von Firefox löschen</strong> als "nicht löschen" eintragen.
+									</p>
+								</li>
+								<li class="mt-3 fs-4">Wenn Sie KEINEN Freischaltcode erhalten haben, aber die DRK-Norderstedter-Hörzeitung hören möchten:
+									<p class="mt-1"><strong>Einen Freischaltcode bekommen Sie nur, wenn Sie uns einen Nachweis Ihrer Sehbehinderung an dieser Stelle mitsenden.</strong> Geben Sie oben rechts in den Feldern Ihre Kontaktdaten ein, wählen Sie ein Dokument zum Nachweis Ihrer Sehbehinderung aus und klicken auf "Absenden". Wir werden uns dann mit Ihnen in Verbindung setzen. Die Freischaltung für die Inhalte ist kostenfrei.</p>
+								</li>
+							</ol>
+						</div>
+					</div><!--section-title end-->
+				</div><!--pl-section end-->
+			</div>
+{% endblock %}
