@@ -17,20 +17,12 @@ from ..podcast_texte import podcast_texte
 bp = Blueprint("srv_tool", __name__, url_prefix="/service/toolfix")
 
 
-@bp.after_request
-def add_security_headers(response):
-    response.headers['Cache-Control']='no-cache'
-    response.headers['Pragma']='no-cache'
-    return response
-
-
 # @bp.before_request
 # def check_authority():
 #     auth_code_valid = False
 #     if "authcode" in session:
-#         code = session["authcode"]
-#         if code == current_app.config['FREE_CODE']:
-#             auth_code_valid = True
+#         # code = session["authcode"]
+#         auth_code_valid = True
 #     if not auth_code_valid:
 #         abort(403)
 
@@ -195,10 +187,12 @@ def init_freecode():
         cur = db.cursor(dictionary=True)
         cur.execute("SELECT id FROM tBesucher")
         content = cur.fetchall()
+        count = 1
         for row in content:
             id = row['id']
-            cur.execute("UPDATE tBesucher SET FreeCode=? WHERE id=?", (generateCode(), id))
+            cur.execute("UPDATE tBesucher SET FreeCode=?, KundenNr=? WHERE id=?", (generateCode(), count, id))
             max_rec += 1
+            count += 1
         db.commit()
         cur.close()
         db.close()
@@ -223,6 +217,9 @@ def getMP3Info(rawname:str):
             if len(text) > 0:
                 episode_kap.update({key.removeprefix("CHAP:"):text})
     description = audio.get("COMM::eng")
+    # keys = ["TALB", "TPE1", "TDRC", "TIT2", "TENC", "TLEN"]
+    # for key in keys:
+    #     print(key, audio.get(key))
     if description is None: description = "- - - -"
     title = audio.get("TIT2")
     if title is None: title = ["---"]
@@ -241,7 +238,7 @@ def getMP3Info(rawname:str):
     min = dur / 60
     sec = dur % 60
     duration = "{0:02.0f}:{1:02.0f}".format(min, sec)
-    print(tlen, dur, min, sec, duration, audio, audio.keys())
+    # print(tlen, dur, min, sec, duration, audio, audio.keys())
 
     return (title, description, published, size, duration, chapter)
 

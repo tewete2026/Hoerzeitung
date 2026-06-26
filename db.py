@@ -1,5 +1,5 @@
 import mariadb, os, smtplib
-from flask import current_app, render_template
+from flask import current_app, render_template, session
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from . import version, credentials
@@ -36,10 +36,9 @@ class Javascript:
     
 
 class Configure:
-    def __init__(self, title:str, app:str, link:str, request, current_app):
+    def __init__(self, title:str, request, current_app, app:str='', link:str=''):
         self.credits = {
             "title":title,
-            "app":app,
             "user":request.remote_user,
             "addr":request.remote_addr,
             "hostname":current_app.config["HOSTNAME"],
@@ -47,6 +46,10 @@ class Configure:
             "version":version.Configs.APP_VERSION,
             "author":version.Configs.APP_AUTHOR
         }
+        if 'dbdata' in session and 'pnr' in session['dbdata']: 
+            rolls = ["Hörer", "Redakteur", "Leitung", "Admin"]
+            self.credits.update({'pnr': session['dbdata']['pnr']})
+            self.credits.update({'seclevel': rolls[session['dbdata']['seclevel']]})
         if self.credits["user"] is None: self.credits["user"] = "--"
         current_app.logger.info("%s started; Modname=%s; Remote-Addr=%s; Method=%s; Mimetype=%s", title, current_app.name, request.remote_addr, request.method, request.mimetype)
         self.today=date.today()
@@ -54,11 +57,15 @@ class Configure:
         self.max_date = self.today + relativedelta(months=12)
         self.javascript = Javascript(app, self.credits["user"])
         self.map = {}
+        self.error = {}
         self.javascript.add({'today':self.today, 'min_date':self.min_date, 'max_date':self.max_date, 'link_active':link})
     def append(self, key:str, value:str):
         self.map.update({key: value})
     def has(self, key:str) -> bool:
         valid = self.map.get(key) is not None
+        return valid
+    def haserror(self, key:str) -> bool:
+        valid = self.error.get(key) is not None
         return valid
 
 def get_db():
@@ -265,22 +272,22 @@ def getLogin(freeCode:str):
         db = get_db()
         if not db:
             raise mariadb.PoolError("Kein Pool gesetzt, keine Verbindung zur DB.")
+        db.begin()
         cur = db.cursor(dictionary=True)
-        cur.execute("SELECT id,KundenNr,Nachname,Vorname from tBesucher WHERE FreeCode=?", (freeCode,))
+        cur.execute("SELECT * from tUser WHERE freecode=? && active=1", (freeCode,))
         dbdata = cur.fetchone()
         if cur.rowcount > 0:
-            rc_code['vorname'] = dbdata['Vorname']
-            rc_code['nachname'] = dbdata['Nachname']
-            rc_code['kdnr'] = dbdata['KundenNr']
-            rc_code['id'] = dbdata['id']
+            rc_code['dbdata'] = dbdata
+            cur.execute("UPDATE tUser SET lastActive=current_timestamp WHERE id=?", (rc_code['dbdata']['id'],))
         else:
             rc_code["status"] = False
             rc_code['type'] = 'NOTFOUND'
+        db.commit()
         cur.close()
         db.close()
     except mariadb.Error as err:
         current_app.logger.error("Datenbank-Fehler: %s", err)
         rc_code['status'] = False
         rc_code['type'] = 'DBERR'
-        db.close()
+        if db: db.close()
     return rc_code

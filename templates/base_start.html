@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-bs-theme="auto">
+<html lang="en" data-bs-theme="dark">
   <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
@@ -10,12 +10,11 @@
     <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='bootstrap/css/css@3.css') }}" rel="stylesheet">
   
-    <!-- Favicons 
-    <link rel="shortcut icon" href="{{ url_for('static', filename='Favicon_PCafe.png') }}" sizes="29x26" type="image/png">
-    -->
+    <!-- Favicons -->
+    <link rel="shortcut icon" href="{{ url_for('static', filename='Logo_Title.png') }}" sizes="29x26" type="image/png">
       
     <!-- Custom styles for this template -->
-    <link href="{{ url_for('static', filename='bootstrap/css/main.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/nhz.css') }}" rel="stylesheet">
   </head>
   <body>
   <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
@@ -28,33 +27,19 @@
   <header class="d-flex align-items-center pb-3 mb-5 border-bottom">
     <a href="/" class="d-flex align-items-center text-body-emphasis text-decoration-none">
       <img src="{{ url_for('static', filename='Logo_Img.png') }}" alt="Logo_DRK">
-      <span class="fs-4 ms-5">Hörzeitung - Tools</span>
+      <span class="fs-4 ms-5">Norderstedter Hörzeitung</span>
     </a>
   </header>
 
   <main>
-    {% block header %}{% endblock %}
-    <hr class="mb-5">
-    <div class="row g-5">
-      <div class="col-md-6">
-        <h2 class="text-body-emphasis">Übersicht der Tools</h2>
-        <p>Bitte wähle eines der gewünschten aus:</p>
-        <ul class="list-unstyled ps-0">
-          <li>
-            <a class="icon-link mb-1" href="{{ url_for('bx_start.start') }}" rel="noopener">
-              <svg class="bi" width="16" height="16"><use xlink:href="#arrow-right-circle"/></svg>
-              Hörzeitung - Start
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
+    {% block main %}{% endblock %}
   </main>
   <footer class="pt-5 my-5 text-body-secondary border-top">
-    Created by Thomas Wachler-Thomsen &middot; &copy; 2025
+    DRK-Norderstedter-Hörzeitung &middot; &copy; 2026
   </footer>
 </div>
 <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='bootstrap/js/color-modes.js') }}"></script>
 
 </body>
 </html>

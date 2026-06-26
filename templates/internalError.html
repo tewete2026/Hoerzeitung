@@ -1,4 +1,4 @@
-{% extends "base_form.html" %}
+{% extends "base_start.html" %}
 {% block main %}
 			<div class="fixed-bg error-bg overlay-light"></div>
 			<div class="container">
@@ -7,9 +7,8 @@
 						<div class="col-lg-6">
 							<div class="error-text">
 								<i class="flaticon-musical-notes"></i>
-								<h3>Interner Fehler</h3>
+								<h2>Interner Fehler</h2>
 								<p>Für die angeforderte Seite ist ein interner Fehler aufgetreten.</p>
-								<a href="{{ url_for('bx_start.start') }}" title="" class="home-btn"><i class="fa fa-arrow-left"></i> Zurück zur Startseite</a>
 							</div>
 						</div>
 					</div>

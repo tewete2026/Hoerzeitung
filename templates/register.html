@@ -33,35 +33,8 @@
 								<h3 class="mm-title">Noch nicht registriert?</h3>
 								<form id="frm-regist" method="post" enctype="multipart/form-data">
 									<input type="hidden" name="register" value="set">
-									<div class="form-group">
-										<input type="text" name="name" placeholder="Name" class="form-control" >
-									</div>
-									<div class="form-group">
-										<input type="email" name="email" placeholder="Email Addresse" class="form-control" >
-									</div>
-									<div class="form-group">
-										<input type="text" name="street" placeholder="Straße" class="form-control" >
-									</div>
-									<div class="form-group">
-										<input type="text" name="city" placeholder="Plz, Ort" class="form-control" >
-									</div>
-									<div class="bg-light">
-										<div class="form-check pt-2">
-											<span>Zur Wahrung des Urheberschutzes darf die Hörzeitung nur an einen berechtigten Hörerkreis ausgeliefert werden. <br>Berechtigt sind grundsätzlich alle Menschen, denen das tägliche Lesen der Zeitung durch eine körperliche Einschränkung nicht mehr möglich ist. <br>Bitte bestätigen Sie im folgenden Feld, dass Sie diesem Hörerkreis angehören. In Zweifelsfällen bitten wir Sie um einen Nachweis.</span>
-											<label class="form-check-label" for="commit">Ich bestätige, dass mir das tägliche Lesen der Zeitung aufgrund einer körperlichen Einschränkung nicht mehr möglich ist und bitte um Zusendung der Norderstedter Hörzeitung.</label>
-											<input type="checkbox" class="form-check-input form-control" name="commit" id="commit" style="margin-top: -2.5em; margin-left: auto;" >
-										</div>
-										<div class="list-group ms-2 pb-1"> 
-											<label class="list-group-item">
-												<input class="form-check-input form-control" type="radio" name="options" value="1" style="margin-right: 1em;" > 
-												Bitte die CD zusenden
-											</label> 
-											<label class="list-group-item">
-												<input class="form-check-input form-control" type="radio" name="options" value="2" style="margin-right: 1em;" > 
-												Bitte den Freischaltcode für den Podcast zusenden
-											</label> 
-										</div>
-									</div>
+									<p>Zur Wahrung des Urheberschutzes darf die Hörzeitung nur an einen berechtigten Hörerkreis ausgeliefert werden. <br>Berechtigt sind grundsätzlich alle Menschen, denen das tägliche Lesen der Zeitung durch eine körperliche Einschränkung nicht mehr möglich ist. <br>Bitte bestätigen Sie, dass Sie diesem Hörerkreis angehören, indem Sie eine Kopie Ihres Schwerbehindertenausweises oder das nachfolgende PDF-Formular ausgefüllt an uns zurücksenden.</p>
+									<p class="mt-2"><a href="{{ url_for('bx_start.media', file='Nachweis.pdf') }}">Bitte laden Sie hier ein Dokument herunter zum Nachweis der Seh- oder Lesebehinderung.</a> Das vollständig unterschriebene Dokument können Sie einscannen und hier weiter unten an uns hochladen oder uns per Post zusenden.</p>
 									<div class="form-group">
 										<label for="uploadfile">Ein PDF-Dokument oder ein Foto als Nachweis wählen zum Hochladen:</label>
             							<input class="form-control" type="file" accept="application/pdf, image/png, image/jpeg, image/gif, image/tiff" name="uploadfile" id="uploadfile" aria-label="Datei wählen" >

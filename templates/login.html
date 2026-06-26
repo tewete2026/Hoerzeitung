@@ -1,0 +1,25 @@
+{% extends "base_s_form.html" %}
+{% block content %}
+    
+<main>
+  <div class="container col-xl-10 col-xxl-8 px-4 py-5">
+    <div class="row align-items-center g-lg-5 py-5">
+      <div class="col-lg-7 text-center text-lg-start">
+        <h1 class="display-4 fw-bold lh-1 text-body-emphasis mb-3">Norderstedter Hörzeitung</h1>
+        <p class="col-lg-10 fs-4">Geben Sie bitte Ihren Freischaltcode ein, um Episoden der Hörzeitung hören zu können. Dieser Freischaltcode wurde Ihnen von uns zugesendet.</p>
+      </div>
+      <div class="col-md-10 mx-auto col-lg-5">
+        <form class="p-4 p-md-5 border rounded-3 bg-body-tertiary" autocomplete="off" method="post">
+          <div class="form-floating mb-3">
+            <input type="text" name="authcode" class="form-control {% if conf.haserror('authcode') %}is-invalid{% endif %}" id="floatingInput">
+            <label for="floatingInput">Freischaltcode</label>
+            <div class="invalid-feedback">{% if conf.haserror('authcode') %}{{ conf.error['authcode'] }}{% endif %}</div>
+          </div>
+          <button class="w-100 btn btn-lg btn-primary" type="submit">Absenden</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</main>
+{% endblock %}

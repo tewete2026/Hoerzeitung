@@ -1,0 +1,50 @@
+{% extends "base_s_form.html" %}
+{% block content %}
+
+<div class="container py-3">
+  <header>
+    <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
+      <a href="{{ url_for('bx_s_start.s_album') }}" class="d-flex align-items-center link-body-emphasis text-decoration-none">
+        <img src="{{ url_for('static', filename='Logo_Title_black_200.png') }}" alt="Logo_Title_black_200">
+      </a>
+      
+      <nav class="nav nav-underline d-inline-flex mt-2 mt-md-0 ms-md-auto">
+        <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link" title="Zur Album-Übersicht" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
+        <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
+        <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi me-2 opacity-1" width="1.6em" height="1.6em"><use href="#box-arrow-right"></use></svg></a>
+      </nav>
+    </div>
+    
+    <div class="pricing-header p-3 pb-md-4 mx-auto text-center">
+      <h1 class="display-4 fw-normal text-body-emphasis">Einzel Beiträge</h1>
+      <p class="fs-5 text-body-secondary">Alle einzelnen Beiträge zum Album {{ conf.map['subdir'] }}.</p>
+    </div>
+  </header>
+  
+  <main>
+    <div class="table-responsive">
+      <table class="table text-center">
+        <thead>
+          <tr>
+            <th style="width: 33%;">Titel</th>
+            <th style="width: 5%;">Länge</th>
+            <th style="width: 20%;">Veröffentlicht</th>
+            <th style="width: 37%;">Audio-Player</th>
+          </tr>
+        </thead>
+        <tbody>{% for row in episodes %}
+          <tr>
+            <th scope="row" class="text-start">{{ row['title'] }} <a class="list-table-rows" title="Anzeigen Beschreibung für {{ row['title'] }}" href="#"><svg class="bi me-2 opacity-1" width="1em" height="1em"><use href="#question-circle"></use></svg></a></th>
+            <td>{{ row['length'] }}</td>
+            <td>{{ row['published'] }}</td>
+            <td><audio controls src="{{ url_for('bx_start.media', file=row['audio']) }}"></audio></td>
+          </tr>
+          <tr class="d-none"><td colspan="4" aria-details="{{ row['title'] }}">{{ row['description'] }}</td>
+          </tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+{% endblock %}

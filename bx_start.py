@@ -17,11 +17,14 @@ bp = Blueprint("bx_start", __name__)
 @bp.route("/media/<file>")
 def media(file):
     path = ""
-    if not file.endswith(".jpg"):
+    if file.startswith("Logo"):path = ""
+    elif file.endswith(".jpg"):path = "/galerie"
+    elif file.endswith(".pdf"):path = "/docs"
+    elif file.endswith(".mp3"):
         path = "/short"
         auth_code_valid = False
         if "authcode" in session:
-            auth_code_valid = True
+            auth_code_valid = getLogin(session["authcode"])['status']
         elif "authcode" in request.args:
             auth_code_valid = getLogin(request.args["authcode"])['status']
         if auth_code_valid:
@@ -29,9 +32,11 @@ def media(file):
         # werkzeug.datastructures.headers.EnvironHeaders
         if current_app.config['TEST_RUN'] == 'PROD':
             current_app.logger.info("Empfangener HTTP-Header für %s, %s, %s: %s", file, request.remote_addr, request.origin, request.headers)
-    else:
-        if file.startswith("IMG_"):path = "/galerie"
     path = current_app.instance_path + path
+    file_arr = file.split('_')
+    if len(file_arr) > 1:
+        path += "/" + file_arr[0]
+        file = file_arr[1]
     return send_from_directory(path, file)
 
 
@@ -39,8 +44,6 @@ def media(file):
 def logout():
     if "authcode" in session:
         session.pop("authcode")
-        session.pop('Vorname')
-        session.pop('Nachname')
         session.pop('Kdnr')
         session.pop('Id')
     return redirect(url_for("bx_start.start"))
@@ -87,18 +90,8 @@ def start():
                 rc_code = getLogin(form_data["authcode"].upper())
                 if rc_code['status']:
                     auth_code_valid = True
-                    session['Vorname'] = rc_code['vorname']
-                    session['Nachname'] = rc_code['nachname']
-                    session['Kdnr'] = rc_code['kdnr']
-                    session['Id'] = rc_code['id']
                     session['authcode'] = form_data["authcode"].upper()
             elif form_data.get("register") is not None and form_data["register"] == "set":
-                regist_map.update({"name":form_data.get("name")})
-                regist_map.update({"email":form_data.get("email")})
-                regist_map.update({"street":form_data.get("street")})
-                regist_map.update({"city":form_data.get("city")})
-                regist_map.update({"commit":form_data.get("commit")})
-                regist_map.update({"options":form_data.get("options")})
                 regist_map.update({"uploadfile":request.files.get("uploadfile")})
                 register_request = True
                 for k, v in regist_map.items():
@@ -116,6 +109,7 @@ def start():
     conf = Configure(title="Norderstedter Hörzeitung - Online-Version", app='start', link='link-main', request=request, current_app=current_app)
     conf.append("header_class", True)
     conf.append("show_banner", True)
+    conf.append("show_player", True)
     if auth_code_valid: 
         html = "main.html"
         conf.append("last_play", "Aktuelle Episode anhören")
@@ -157,12 +151,11 @@ def start():
     if auth_code_set or scroll_request or register_request:
         conf.javascript.add({"scroll_To":"main-block"})
     if auth_code_valid:
-        conf.append("user_name", session['Vorname'] + " " + session['Nachname'])
+        conf.append("user_name", session['Kdnr'])
     if set_with_backgr:
         session.pop("no_backgr")
     elif set_no_backgr:
         session["no_backgr"] = "True"
-    # print(conf.map['user_name'])
     return render_template(html, episodes=episodes, episodes1=episodes[1:], last_episode=episodes[0], galerie=galerie, javascript=conf.javascript.getOut(), conf=conf)
 
 

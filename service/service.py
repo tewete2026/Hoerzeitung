@@ -15,20 +15,12 @@ from .srv_tool import getMP3Info, getMpegInfo
 bp = Blueprint("service", __name__, url_prefix="/service")
 
 
-@bp.after_request
-def add_security_headers(response):
-    response.headers['Cache-Control']='no-cache'
-    response.headers['Pragma']='no-cache'
-    return response
-
-
 @bp.before_request
 def check_authority():
     auth_code_valid = False
     if "authcode" in session:
-        code = session["authcode"]
-        if code == current_app.config['FREE_CODE']:
-            auth_code_valid = True
+        # code = session["authcode"]
+        auth_code_valid = True
     if not auth_code_valid:
         abort(403)
 

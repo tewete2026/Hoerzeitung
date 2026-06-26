@@ -127,24 +127,6 @@ async function bx_env_init() {
 /* -------------------------------------------------------------------------------------------------------------------------------------------------*/
 function bx_performRegist(event) {
   let errorText = "";
-  let missing = false;
-  let missing_radio = true;
-  for (const elem of bx_frm_regist.elements) {
-    if (["BUTTON", "FIELDSET"].includes(elem.nodeName) || elem.type == "hidden") continue;
-    elem.classList.remove("is-invalid","is-valid");
-    if ((elem.type == "checkbox" && !elem.checked) ||
-    (elem.type == "text" && !elem.value) ||
-    (elem.type == "email" && !elem.value)) {
-      if (["text", "email"].includes(elem.type)) elem.classList.add("is-invalid");
-      missing = true;
-    }
-    if (elem.type == "radio" && elem.checked) {
-        missing_radio = false;
-    }
-  }
-  if (missing || missing_radio) {
-    errorText = "<div>Es fehlen noch erforderliche Eingaben. Bitte vervollständigen.</div>";
-  }
   bx_uploadfile.classList.remove("is-invalid","is-valid");
   const fieldvalue = bx_uploadfile.value;
   if (fieldvalue) {

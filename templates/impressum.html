@@ -1,0 +1,75 @@
+{% extends "base_s_form.html" %}
+{% block content %}
+
+<div class="container py-3">
+  <header>
+    <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
+      <a href="{{ url_for('bx_s_start.s_album') }}" class="d-flex align-items-center link-body-emphasis text-decoration-none">
+        <img src="{{ url_for('static', filename='Logo_Title_black_200.png') }}" alt="Logo_Title_black_200">
+      </a>
+      
+      <nav class="nav nav-underline d-inline-flex mt-2 mt-md-0 ms-md-auto">
+        <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
+        <a class="py-2 link-body-emphasis text-decoration-none nav-link active" aria-current="page" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
+      </nav>
+    </div>
+    
+   </div>
+  </header>
+  
+  <main>
+    <div class="container">
+      <div class="row">
+        <div class="get-touch">
+          <h1>Impressum</h1>
+          <h2>Anbieterkennung nach § 5 TMG</h2>
+          <p><strong>V.i.S.d.P. für die Norderstedter Hörzeitung</strong><br>Kathrin Oehme</p>
+          <p><strong>Vertretungsberechtigte</strong><br>Das Deutsches Rotes Kreuz Ortsverein Norderstedt e.V. wird gesetzlich vertreten durch den Vorsitzenden Matthias Trucks und dem Vorstand.</p>
+          <p><strong>Vereinsregister</strong><br>Das Deutsches Rotes Kreuz Ortsverein Norderstedt e.V. ist im Vereinsregister beim Amtsgericht Norderstedt unter der Registernummer 31 VR 111 eingetragen.</p>
+          <p><strong>Steuerliche Angaben</strong><br>Steuernummer: 11 290 711 29</p>
+          <p><strong>Internet-Redaktion</strong><br>info(at)drk-norderstedt(dot)de</p>
+          <ul class="contact-dtts">
+            <li>
+              <i class="flaticon-cursor"></i>
+              <span>Deutsches Rotes Kreuz Ortsverein Norderstedt e.V., Ochsenzoller Straße 124, 22848 Norderstedt</span>
+            </li>
+            <li>
+              <i class="flaticon-telephone"></i>
+              <span>(040) 523 18 26</span>
+            </li>
+            <li>
+              <i class="flaticon-mail"></i>
+              <span>info(at)drk-norderstedt(dot)de</span>
+            </li>
+          </ul>
+          {#<!--<ul class="socio-links">
+            <li><a href="#" title="" class="fb"><i class="fab fa-facebook-f"></i></a></li>
+            <li><a href="#" title="" class="gp"><i class="fab fa-google-plus-g"></i></a></li>
+            <li><a href="#" title="" class="tw"><i class="fab fa-twitter"></i></a></li>
+          </ul>--><!--socio-links end-->#}
+        </div><!--get-touch end-->
+      </div>
+      <div class="row mt-4">
+        <div class="col-lg-12">
+          <div class="get-touch">
+            <h2>Haftungsausschluss</h2>
+            <h4>1. Inhalt der Seiten</h4>
+            <p>Der DRK-Ortsverein Norderstedt e.V. übernimmt keinerlei Gewähr für die Aktualität, Korrektheit, Vollständigkeit oder Qualität der bereitgestellten Inhalte. Haftungsansprüche gegen den DRK-Ortsverein Norderstedt e.V., welche sich auf Schäden materieller oder ideeller Art beziehen, die durch die Nutzung oder Nichtnutzung der dargebotenen Informationen bzw. durch die Nutzung fehlerhafter und unvollständiger Informationen verursacht wurden, sind grundsätzlich ausgeschlossen, sofern seitens des DRK-Ortsverein Norderstedt e.V. kein nachweislich vorsätzliches oder grob fahrlässiges Verschulden vorliegt.</p>
+            <h4>2. Verweise und Links</h4>
+            <p>Die Verantwortlichkeit des Diensteanbieters beschränkt sich ausschließlich auf die vom Diensteanbieter bereitgehaltenen eigenen Inhalte. Darüber hinaus enthält die Website auch entsprechend gekennzeichnete Verweise oder Links auf Websites Dritter. Auf die aktuelle und zukünftige Gestaltung, die Inhalte oder die Urheberschaft der verlinkten/verknüpften Seiten hat der DRK-Ortsverein Norderstedt e.V. keinerlei Einfluss. Für den Inhalt der Seite ist allein der jeweilige Anbieter der Seite verantwortlich, weshalb der DRK-Ortsverein Norderstedt e.V. diesbezüglich keine Gewähr übernimmt. Der DRK-Ortsverein Norderstedt e.V. erklärt hiermit ausdrücklich, dass zum Zeitpunkt der Linksetzung keine illegalen Inhalte auf den zu verlinkenden Seiten erkennbar waren. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ohne konkrete Anhaltspunkte einer Rechtsverletzung ist jedoch nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden derartige Links umgehend entfernt.</p>
+            <h4>3. Urheber- und Kennzeichenrecht</h4>
+            <p>Der DRK-Ortsverein Norderstedt e.V. ist bestrebt, in allen Publikationen die Urheberrechte der verwendeten Bilder, Grafiken, Tondokumente, Videosequenzen und Texte zu beachten, von ihm selbst erstellte Bilder, Grafiken, Tondokumente, Videosequenzen und Texte zu nutzen oder auf lizenzfreie Grafiken, Tondokumente, Videosequenzen und Texte zurückzugreifen. Alle innerhalb des Internetangebotes genannten und ggf. durch Dritte geschützten Marken- und Warenzeichen unterliegen uneingeschränkt den Bestimmungen des jeweils gültigen Kennzeichenrechts und den Besitzrechten der jeweiligen eingetragenen Eigentümer. Allein aufgrund der bloßen Nennung ist nicht der Schluss zu ziehen, dass Markenzeichen nicht durch Rechte Dritter geschützt sind! Das Copyright für veröffentlichte, vom DRK-Ortsverein Norderstedt e.V. selbst erstellte Objekte bleibt allein beim Autor der Seiten. Eine Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts solcher Grafiken, Tondokumente, Videosequenzen und Texte in anderen elektronischen oder gedruckten Publikationen bedürfen der schriftlichen Zustimmung des Autors. Downloads und Kopien sind nur für den privaten, nicht aber den kommerziellen Gebrauch gestattet.</p>
+            <h4>4. Datenschutz</h4>
+            <p>Sofern innerhalb der Website die Möglichkeit zur Eingabe persönlicher oder geschäftlicher Daten (Mailadressen, Namen, Anschriften) besteht, so erfolgt die Preisgabe dieser Daten seitens des Nutzers auf ausdrücklich freiwilliger Basis. Die Inanspruchnahme und ggf. Bezahlung aller angebotenen Dienste ist - soweit technisch möglich und zumutbar - auch ohne Angabe solcher Daten bzw. unter Angabe anonymisierter Daten oder eines Pseudonyms gestattet. Eine Weiterleitung an Dritte erfolgt nicht ohne ausdrückliche Zustimmung des Users. Die Nutzung der im Rahmen des Impressums oder vergleichbarer Angaben veröffentlichten Kontaktdaten wie Postanschriften, Telefon- und Faxnummern sowie Emailadressen durch Dritte zur Übersendung von nicht ausdrücklich angeforderten Informationen ist nicht gestattet. Rechtliche Schritte gegen die Versender von sogenannten Spam-Mails bei Verstößen gegen dieses Verbot sind ausdrücklich vorbehalten.</p>
+            <h4>5. Rechtswirksamkeit dieses Haftungsausschlusses</h4>
+            <p>Dieser Haftungsausschluss ist als Teil des Informationsangebotes zu betrachten, von dem aus auf diese Seite verwiesen wurde. Sofern Teile oder einzelne Formulierungen dieses Textes der geltenden Rechtslage nicht, nicht mehr oder nicht vollständig entsprechen sollten, bleiben die übrigen Teile des Dokumentes in ihrem Inhalt und ihrer Gültigkeit davon unberührt.</p>
+            <h4>6. Hinweis auf EU-Streitschlichtung</h4>
+            <p>Die Europäische Kommission stellt eine Plattform zur Online- Streitbeilegung (OS) bereit: <a href="https://ec.europa.eu/consumers/odr/" target="_blank">ec.europa.eu/consumers/odr/</a> <strong>Hinweis:</strong> Dieser Link führt auf die Seite eines anderen Anbieters und Sie verlassen unsere Webseite. Unsere E-Mail-Adresse finden Sie oben im Impressum.<br> <strong>Hinweis auf Verbraucherstreitbeilegung gemäß VSBG</strong><br> Der DRK-Ortsverein Norderstedt e.V. nimmt nicht an Streitbeilegungsverfahren vor einer Streitbeilegungsstelle teil. Siehe auch „Datenschutz“</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+{% endblock %}

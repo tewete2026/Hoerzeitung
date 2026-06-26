@@ -114,7 +114,6 @@ def create_app(test_config="DEV"):
         TEST_RUN=False,
         DB_POOL=None,
         NO_POOL_AVAILABLE=False,
-        FREE_CODE=credentials.Passwords.FREE_CODE,
         SEND_TO=credentials.EMails.SMTPHandler, SEND_FROM=f"{version.Configs.APP_NAME}@drk-nhz.de",
         SMTP_HOST="localhost", SMTP_PORT=25, SMTP_USER=None, SMTP_PWD=None
     )
@@ -128,7 +127,11 @@ def create_app(test_config="DEV"):
 
     @app.route("/")
     def default():
-        return redirect(url_for("bx_start.start"))
+        # if request.base_url.count("s-nhz") > 0:
+        #     return redirect(url_for("bx_s_start.s_album"))
+        # else:
+        #     return redirect(url_for("bx_start.start"))
+        return redirect(url_for("bx_s_start.s_album"))
 
     @app.errorhandler(404)
     def page_not_found(e):
@@ -184,11 +187,12 @@ def create_app(test_config="DEV"):
         app.config.from_mapping(NO_POOL_AVAILABLE=True)
 
     # apply the blueprints to the app
-    from . import main, bx_start
-    from .service import service, ax_member, ax_default, srv_tool, ax_episode
-    app.register_blueprint(main.bp)
+    from . import bx_start, bx_s_start
+    from .service import service, s_service, ax_member, ax_default, srv_tool, ax_episode
+    app.register_blueprint(bx_s_start.bp)
     app.register_blueprint(bx_start.bp)
-    app.register_blueprint(service.bp)
+    # app.register_blueprint(service.bp)
+    app.register_blueprint(s_service.bp)
     app.register_blueprint(ax_default.bp)
     app.register_blueprint(ax_member.bp)
     app.register_blueprint(ax_episode.bp)
@@ -201,6 +205,6 @@ def create_app(test_config="DEV"):
     for hdlr in app.logger.parent.handlers:
         app.logger.debug("Registered Handler in %s: %s", app.logger.parent.name, hdlr.get_name())
 
-    app.add_url_rule(f"/{version.Configs.APP_NAME}/", view_func=main.index)
+    app.add_url_rule(f"/{version.Configs.APP_NAME}/", view_func=default)
 
     return app

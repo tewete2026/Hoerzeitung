@@ -1,8 +1,3 @@
 Ein Interessent für die Hörzeitung hat folgende Daten angegeben:
 
-Name:    {{ parms['name'] }}
-E-Mail:  {{ parms['email'] }}
-Straße:  {{ parms['street'] }}
-Ort:     {{ parms['city'] }}
-
 Bitte die Legitimation in der Anlage prüfen. Bei Gültigkeit als Mitglied erfassen.
