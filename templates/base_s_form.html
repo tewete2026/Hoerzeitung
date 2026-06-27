@@ -47,6 +47,7 @@
     <link href="{{ url_for('static', filename='bootstrap/css/pricing.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='bootstrap/css/heroes.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/nhz.css') }}" rel="stylesheet">
+    <script>{{ javascript|safe }}</script>
   </head>
 
   <body>
@@ -150,7 +151,9 @@
         <img src="{{ url_for('static', filename='Logo_Title_black_200.png') }}" alt="Logo_Title_black_200">
     </a>
     <ul class="nav col-md-4 justify-content-end">
+{% if conf.has("show_navall") %}
       <li class="nav-item"><a href="{{ url_for('bx_s_start.s_album') }}" class="nav-link px-2 text-body-secondary">Album-Übersicht</a></li>
+{% endif %}
       <li class="nav-item"><a href="{{ url_for('bx_s_start.s_impress') }}" class="nav-link px-1 text-body-secondary">Impressum</a></li>
     </ul>
   </footer>

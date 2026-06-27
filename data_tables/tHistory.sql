@@ -26,6 +26,7 @@ DROP TABLE IF EXISTS `tHistory`;
 CREATE TABLE `tHistory` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `quantity` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Anzahl Freischaltcodes erstellt',
+  `seclevel` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Berechtigungs Ebene',
   `pnrcreate` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Nummer erstellt',
   `createDate` datetime NOT NULL DEFAULT current_timestamp COMMENT 'Erstellungs Datum',
   PRIMARY KEY (`id`)

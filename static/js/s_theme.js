@@ -27,5 +27,11 @@ window.addEventListener('load', () => {
             event.preventDefault(); // Verhindern, dass der Anker-Link ausgeführt wird, weil das hier nicht erwünscht ist.
         })
     }
+
+    const quantity = this.document.getElementById('quantity');
+    const level = this.document.getElementById('level');
+    quantity.value = SERVER_OPTIONS.quantity;
+    level.value = SERVER_OPTIONS.level;
+    
 });
 

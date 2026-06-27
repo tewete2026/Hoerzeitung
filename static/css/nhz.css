@@ -1,3 +1,8 @@
+.btn-primary {
+  --bs-btn-bg:#b90000;
+  --bs-btn-border-color:#b90000;
+}
+
 .get-touch h2 {
     font-size: 2em;
     padding-bottom: 1em;

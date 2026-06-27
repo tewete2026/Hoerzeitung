@@ -61,6 +61,8 @@ class Configure:
         self.javascript.add({'today':self.today, 'min_date':self.min_date, 'max_date':self.max_date, 'link_active':link})
     def append(self, key:str, value:str):
         self.map.update({key: value})
+    def get(self, key:str):
+        return self.map.get(key)
     def has(self, key:str) -> bool:
         valid = self.map.get(key) is not None
         return valid

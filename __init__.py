@@ -193,9 +193,9 @@ def create_app(test_config="DEV"):
     app.register_blueprint(bx_start.bp)
     # app.register_blueprint(service.bp)
     app.register_blueprint(s_service.bp)
-    app.register_blueprint(ax_default.bp)
-    app.register_blueprint(ax_member.bp)
-    app.register_blueprint(ax_episode.bp)
+    # app.register_blueprint(ax_default.bp)
+    # app.register_blueprint(ax_member.bp)
+    # app.register_blueprint(ax_episode.bp)
     app.register_blueprint(srv_tool.bp)
     app.logger.debug(f"Registered Blueprint Count: {len(app.blueprints.items())}")
     for bp_name, blpr in app.blueprints.items():

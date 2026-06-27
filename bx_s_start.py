@@ -31,14 +31,14 @@ def s_episodes(subdir):
 @bp.route("/S-Impressum", methods=['GET'])
 def s_impress():
     conf = Configure("Norderstedter Hörzeitung - Impressum", request, current_app)
+    if "authcode" in session:
+        conf.append("show_navall", True)
     return render_template("impressum.html", conf=conf)
 
 
 @bp.route("/S-Abmelden", methods=['GET'])
 def s_logout():
-    session.pop('id')
-    session.pop('pnr')
-    session.pop('seclevel')
+    session.pop('dbdata')
     session.pop('authcode')
     return redirect(url_for('bx_s_start.s_album'))
 
@@ -86,6 +86,7 @@ def show_content(path, html_form, header, subdir=None):
         conf.error['authcode'] = "Der eingegebene Code ist nicht gültig."
     
     if auth_code_valid:
+        conf.append("show_navall", True)
         if session['dbdata']['seclevel'] > 0:
             conf.append("show_navtop", True)
         full_dir = current_app.instance_path + path
