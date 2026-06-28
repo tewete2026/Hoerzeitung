@@ -1,4 +1,11 @@
 window.addEventListener('load', () => {
+    
+    const quantity = this.document.getElementById('quantity');
+    const level = this.document.getElementById('level');
+    const histid = this.document.getElementById('histid');
+    const btn_submit = this.document.getElementById('btn-submit');
+    const btn_download = this.document.getElementById('btn-download');
+    const main_form = this.document.getElementById('main-form');
 
     const elements = this.document.getElementsByClassName('list-table-rows');
     for (const element of elements) {
@@ -28,10 +35,27 @@ window.addEventListener('load', () => {
         })
     }
 
-    const quantity = this.document.getElementById('quantity');
-    const level = this.document.getElementById('level');
+    const histories = this.document.getElementsByClassName('list-history');
+    for (const element of histories) {
+        element.addEventListener('click', event => {
+            let target = event.target;
+            // Durchhangeln nach oben bis zum <a> Element
+            while(target.nodeName != 'A') {
+                target = target.parentElement;
+            }
+            // 
+            event.preventDefault(); // Verhindern, dass der Anker-Link ausgeführt wird, weil das hier nicht erwünscht ist.
+            const id = target.getAttribute('data-id');
+            histid.value = id;
+            main_form.submit();
+        })
+    }
+    
     quantity.value = SERVER_OPTIONS.quantity;
     level.value = SERVER_OPTIONS.level;
     
+    btn_submit.addEventListener('click', event => {
+        histid.value = "";
+    })
 });
 

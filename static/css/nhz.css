@@ -17,3 +17,7 @@ audio {
     display: block;
     width: 100%;
 }
+
+#table-history th, #table-history td {
+    padding: 0;
+}
