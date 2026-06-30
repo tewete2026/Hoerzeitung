@@ -46,10 +46,13 @@ class Configure:
             "version":version.Configs.APP_VERSION,
             "author":version.Configs.APP_AUTHOR
         }
+        pnr = seclevel = 0
         if 'dbdata' in session and 'pnr' in session['dbdata']: 
-            rolls = ["Hörer", "Redakteur", "Leitung", "Admin"]
-            self.credits.update({'pnr': session['dbdata']['pnr']})
-            self.credits.update({'seclevel': rolls[session['dbdata']['seclevel']]})
+            pnr = session['dbdata']['pnr']
+            seclevel = session['dbdata']['seclevel']
+            rolls = ["Hörer", "Redakteur", "Leitung", "Admin", "Super-Admin"]
+            self.credits.update({'pnr': pnr})
+            self.credits.update({'seclevel': rolls[seclevel]})
         if self.credits["user"] is None: self.credits["user"] = "--"
         current_app.logger.info("%s started; Modname=%s; Remote-Addr=%s; Method=%s; Mimetype=%s", title, current_app.name, request.remote_addr, request.method, request.mimetype)
         self.today=date.today()
@@ -59,6 +62,8 @@ class Configure:
         self.map = {}
         self.error = {}
         self.javascript.add({'today':self.today, 'min_date':self.min_date, 'max_date':self.max_date, 'link_active':link})
+        self.map['seclevel'] = seclevel
+        self.map['pnr'] = pnr
     def append(self, key:str, value:str):
         self.map.update({key: value})
     def get(self, key:str):
@@ -276,7 +281,7 @@ def getLogin(freeCode:str):
             raise mariadb.PoolError("Kein Pool gesetzt, keine Verbindung zur DB.")
         db.begin()
         cur = db.cursor(dictionary=True)
-        cur.execute("SELECT * from tUser WHERE freecode=? && active=1", (freeCode,))
+        cur.execute("SELECT * from tUser WHERE freecode=? && active=1 FOR UPDATE", (freeCode,))
         dbdata = cur.fetchone()
         if cur.rowcount > 0:
             rc_code['dbdata'] = dbdata

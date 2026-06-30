@@ -11,7 +11,7 @@
       <nav class="nav nav-underline d-inline-flex mt-2 mt-md-0 ms-md-auto">
         <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link active" title="Zur Album-Übersicht" aria-current="page" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
         <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
-        <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi me-2 opacity-1" width="1.6em" height="1.6em"><use href="#box-arrow-right"></use></svg></a>
+        <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi me-2 opacity-100" width="1.6em" height="1.6em"><use href="#box-arrow-right"></use></svg></a>
       </nav>
     </div>
     
@@ -35,11 +35,11 @@
         </thead>
         <tbody>{% for row in episodes %}
           <tr>
-            <th scope="row" class="text-start">{{ row['title'] }} <a class="list-table-rows" title="Anzeigen Beschreibung für {{ row['title'] }}" href="#"><svg class="bi me-2 opacity-1" width="1em" height="1em"><use href="#question-circle"></use></svg></a><a class="list-table-rows-chapter" title="Anzeigen Kapitel für {{ row['title'] }}" href="#"><svg class="bi opacity-1" width="1em" height="1em"><use href="#book"></use></svg></a></th>
+            <th scope="row" class="text-start">{{ row['title'] }} <a class="list-table-rows" title="Anzeigen Beschreibung für {{ row['title'] }}" href="#"><svg class="bi me-2 opacity-100" width="1em" height="1em"><use href="#question-circle"></use></svg></a><a class="list-table-rows-chapter" title="Anzeigen Kapitel für {{ row['title'] }}" href="#"><svg class="bi opacity-100" width="1em" height="1em"><use href="#book"></use></svg></a></th>
             <td>{{ row['length'] }}</td>
             <td>{{ row['published'] }}</td>
             <td><audio controls src="{{ url_for('bx_start.media', file=row['audio']) }}"></audio></td>
-            <td>{% if 'subdir' in row %}<a href="{{ url_for('bx_s_start.s_episodes', subdir=row['subdir']) }}"><svg class="bi me-2 opacity-1" width="1.6em" height="1.6em"><use href="#chevron-double-down"></use></svg></a>{% endif %}</td>
+            <td>{% if 'subdir' in row %}<a href="{{ url_for('bx_s_start.s_episodes', subdir=row['subdir']) }}"><svg class="bi me-2 opacity-100" width="1.6em" height="1.6em"><use href="#chevron-double-down"></use></svg></a>{% endif %}</td>
           </tr>
           <tr class="d-none"><td colspan="5" aria-details="{{ row['title'] }}">{{ row['description'] }}</td></tr>
           <tr class="d-none"><td colspan="5" aria-details="{{ row['title'] }}">{{ row['chapter']|safe }}</td></tr>

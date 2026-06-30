@@ -9,6 +9,7 @@
 								<i class="flaticon-musical-notes"></i>
 								<h2>Interner Fehler</h2>
 								<p>Für die angeforderte Seite ist ein interner Fehler aufgetreten.</p>
+						          {% if conf.haserror("seclevel") %}<div class="alert alert-danger" role="alert">{{ conf.error['seclevel'] }}</div>{% endif %}
 							</div>
 						</div>
 					</div>

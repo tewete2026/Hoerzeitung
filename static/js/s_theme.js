@@ -3,9 +3,14 @@ window.addEventListener('load', () => {
     const quantity = this.document.getElementById('quantity');
     const level = this.document.getElementById('level');
     const histid = this.document.getElementById('histid');
+    const trashid = this.document.getElementById('trashid');
     const btn_submit = this.document.getElementById('btn-submit');
     const btn_download = this.document.getElementById('btn-download');
+    const btn_trash_hist = this.document.getElementById('btn-submit-trash-hist');
     const main_form = this.document.getElementById('main-form');
+    const history_form = this.document.getElementById('history-form');
+
+    const trash_hist_list = [];
 
     const elements = this.document.getElementsByClassName('list-table-rows');
     for (const element of elements) {
@@ -40,14 +45,64 @@ window.addEventListener('load', () => {
         element.addEventListener('click', event => {
             let target = event.target;
             // Durchhangeln nach oben bis zum <a> Element
+            while(target.nodeName != 'svg') {
+                target = target.parentElement;
+            }
+            if (target.nodeName == 'svg') target.classList.replace('opacity-100', 'opacity-50');
             while(target.nodeName != 'A') {
                 target = target.parentElement;
             }
-            // 
             event.preventDefault(); // Verhindern, dass der Anker-Link ausgeführt wird, weil das hier nicht erwünscht ist.
             const id = target.getAttribute('data-id');
-            histid.value = id;
-            main_form.submit();
+            if (id) {
+                histid.value = id;
+                main_form.submit();
+            }
+        })
+    }
+
+    const trashes = this.document.getElementsByClassName('list-trash');
+    for (const element of trashes) {
+        element.addEventListener('click', event => {
+            let target = event.target;
+            // Durchhangeln nach oben bis zum <a> Element
+            while(target.nodeName != 'svg') {
+                target = target.parentElement;
+            }
+            if (target.nodeName == 'svg') {
+                const elem_svg = target;
+                while(target.nodeName != 'A') {
+                    target = target.parentElement;
+                }
+                const id = target.getAttribute('data-id');
+                for (const child of elem_svg.children) {
+                    if (child.nodeName == 'use') {
+                        const att = child.getAttribute('href');
+                        if (att == '#trash') {
+                            child.setAttribute('href', '#check');
+                            btn_trash_hist.setAttribute('type', 'submit');
+                            btn_trash_hist.removeAttribute('disabled');
+                            history_form.classList.remove('d-none');
+                            trash_hist_list.push(id);
+                        }
+                        else {
+                            child.setAttribute('href', '#trash');
+                            trash_hist_list.splice(trash_hist_list.indexOf(id), 1);
+                            if (trash_hist_list.length == 0) {
+                                btn_trash_hist.setAttribute('type', 'button');
+                                btn_trash_hist.setAttribute('disabled', true);
+                                history_form.classList.add('d-none');
+                            }
+                        }
+                    }
+                }
+            }
+            if (trash_hist_list.length > 0) {
+                trashid.value = trash_hist_list.join(",");
+            } else {
+                trashid.value = "";
+            }
+            event.preventDefault(); // Verhindern, dass der Anker-Link ausgeführt wird, weil das hier nicht erwünscht ist.
         })
     }
     
@@ -55,7 +110,7 @@ window.addEventListener('load', () => {
     level.value = SERVER_OPTIONS.level;
     
     btn_submit.addEventListener('click', event => {
-        histid.value = "";
+        histid.remove();
     })
 });
 
