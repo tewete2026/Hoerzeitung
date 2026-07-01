@@ -77,18 +77,6 @@ def confcreate():
         post_request = True
     
     conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
-
-    try:
-        db = get_db()
-        if not db:
-            raise mariadb.PoolError("Kein Databasepool vorhanden.")
-        cur = db.cursor(dictionary=True)
-        cur.execute("SELECT id,DATE_FORMAT(DATE(createDate),'%d.%m.%Y') as createDate,quantity from tHistory WHERE pnrcreate=? ORDER BY id DESC", (session['dbdata']['pnr'],))
-        dbdata = cur.fetchall()
-        conf.append('history', dbdata)
-    except mariadb.Error as err:
-        if db: db.close()
-        current_app.logger.error("Datenbank-Fehler Lesen History: %s/confcreate/%s", bp.name, err)
     
     if auth_code_valid and post_request:
         # Löschen Chargen-Nummern aktiviert
@@ -133,7 +121,7 @@ def confcreate():
                 if not db:
                     raise mariadb.PoolError("Kein Databasepool vorhanden.")
                 cur = db.cursor(dictionary=True)
-                cur.execute("SELECT histid as Charge_Nr,pnr as Persoenl_Nr,pnrcreate as Erstellt_Von,seclevel as Berechtigungsebene,freecode as Freischaltcode,DATE_FORMAT(DATE(createDate),'%d.%m.%Y') as Erstellt_Am from tUser WHERE histid=? ORDER BY pnr", (histid,))
+                cur.execute("SELECT histid as Charge_Nr,pnr as Konto_Nr,pnrcreate as Erstellt_Von,seclevel as Berechtigungsebene,freecode as Freischaltcode,DATE_FORMAT(DATE(createDate),'%d.%m.%Y') as Erstellt_Am from tUser WHERE histid=? ORDER BY pnr", (histid,))
                 dbdata = cur.fetchall()
                 cur.close()
                 db.close()
@@ -198,11 +186,11 @@ def confcreate():
                         stored = []
                         sql = "INSERT INTO tUser(pnr,seclevel,pnrcreate,histid,freecode,createDate) values(?,?,?,?,?,?)"
                         for i in range(quantity):
-                            cur.execute(sql, (max_pnr+i, level, session['dbdata']['pnr'], last_id, generateCode(), tmst))
+                            cur.execute(sql, (max_pnr+i, level, session['dbdata']['pnr'], last_id, generateCode(level), tmst))
                             if cur.rowcount == 1:
                                 stored.append(cur.lastrowid)
                         if len(stored) == quantity:
-                            conf.error['result_succ'] = f"Charge {last_id} wurde erfolgreich durchgeführt. Das Ergebnis wird per Download im JSON-Format bereit gestellt."
+                            conf.error['result_succ'] = f"Erstellung der Charge {last_id} wurde erfolgreich durchgeführt. Das Ergebnis wird per Download im JSON-Format bereit gestellt."
                             conf.error['histid'] = last_id
                             db.commit()
                         else:
@@ -216,7 +204,7 @@ def confcreate():
                         db.rollback()
                         db.close()
                     except mariadb.Error as err:
-                        conf.error['result_err'] = f"Datenbankfehler: {err}. Erstellung der Chatge wurde NICHT erfolgreich durchgeführt."
+                        conf.error['result_err'] = f"Datenbankfehler: {err}. Erstellung der Charge wurde NICHT erfolgreich durchgeführt."
                         if db: db.rollback()
                         if db: db.close()
                         current_app.logger.error("Datenbank-Fehler: %s/confcreate/%s", bp.name, err)
@@ -226,6 +214,18 @@ def confcreate():
         conf.append("seclevel", session['dbdata']['seclevel'])
         if session['dbdata']['seclevel'] > 0:
             conf.append("show_navtop", True)
+
+        try:
+            db = get_db()
+            if not db:
+                raise mariadb.PoolError("Kein Databasepool vorhanden.")
+            cur = db.cursor(dictionary=True)
+            cur.execute("SELECT id,DATE_FORMAT(DATE(createDate),'%d.%m.%Y') as createDate,quantity from tHistory WHERE pnrcreate=? ORDER BY id DESC", (session['dbdata']['pnr'],))
+            dbdata = cur.fetchall()
+            conf.append('history', dbdata)
+        except mariadb.Error as err:
+            if db: db.close()
+            current_app.logger.error("Datenbank-Fehler Lesen History: %s/confcreate/%s", bp.name, err)
 
     conf.javascript.add({'quantity':quantity})
     conf.javascript.add({'level':level})
@@ -271,7 +271,7 @@ def export(level):
                 if not db:
                     raise mariadb.PoolError("Kein Databasepool vorhanden.")
                 cur = db.cursor(dictionary=True)
-                cur.execute("SELECT histid as Charge_Nr,pnr as Persoenl_Nr,pnrcreate as Erstellt_Von,seclevel as Berechtigungsebene,freecode as Freischaltcode,DATE_FORMAT(DATE(createDate),'%d.%m.%Y') as Erstellt_Am from tUser WHERE seclevel=? ORDER BY pnr", (level,))
+                cur.execute("SELECT histid as Charge_Nr,pnr as Konto_Nr,pnrcreate as Erstellt_Von,seclevel as Berechtigungsebene,freecode as Freischaltcode,DATE_FORMAT(DATE(createDate),'%d.%m.%Y') as Erstellt_Am from tUser WHERE seclevel=? ORDER BY pnr", (level,))
                 dbdata = cur.fetchall()
                 cur.close()
                 db.close()

@@ -1,4 +1,4 @@
-import datetime, pytz, os
+import datetime, pytz, os, json
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 from flask import Flask, url_for, send_from_directory
@@ -98,9 +98,8 @@ def create_app(test_config="DEV"):
         ownhost = "http://localhost:5000"
     else:
         modname = f"/{version.Configs.APP_NAME}"
-        ownhost = "https://hoerzeitung.drk-norderstedt.ipv64.net/nhz"
+        ownhost = "https://hoerzeitung.drk-norderstedt.ipv64.net/s-nhz"
     app.config.from_mapping(
-        # a default secret that should be overridden by instance config
         SECRET_KEY=credentials.Passwords.SECRET_KEY,
         OWN_URL=Http_Helper(ownhost),
         SESSION_COOKIE_NAME="drk-nhz-session",
@@ -118,6 +117,8 @@ def create_app(test_config="DEV"):
         SMTP_HOST="localhost", SMTP_PORT=25, SMTP_USER=None, SMTP_PWD=None
     )
 
+    with open(app.instance_path + "/config/options.json") as config_file:
+        app.config.update(json.load(config_file))
 
     @app.after_request
     def add_several_headers(response):

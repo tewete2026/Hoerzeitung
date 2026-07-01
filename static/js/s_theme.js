@@ -7,6 +7,7 @@ window.addEventListener('load', () => {
     const btn_submit = this.document.getElementById('btn-submit');
     const btn_download = this.document.getElementById('btn-download');
     const btn_trash_hist = this.document.getElementById('btn-submit-trash-hist');
+    const btn_arrow_repeat = this.document.getElementById('btn-arrow-repeat');
     const main_form = this.document.getElementById('main-form');
     const history_form = this.document.getElementById('history-form');
 
@@ -54,7 +55,7 @@ window.addEventListener('load', () => {
             }
             event.preventDefault(); // Verhindern, dass der Anker-Link ausgeführt wird, weil das hier nicht erwünscht ist.
             const id = target.getAttribute('data-id');
-            if (id) {
+            if (main_form && histid && id) {
                 histid.value = id;
                 main_form.submit();
             }
@@ -78,7 +79,7 @@ window.addEventListener('load', () => {
                 for (const child of elem_svg.children) {
                     if (child.nodeName == 'use') {
                         const att = child.getAttribute('href');
-                        if (att == '#trash') {
+                        if (btn_trash_hist && att == '#trash') {
                             child.setAttribute('href', '#check');
                             btn_trash_hist.setAttribute('type', 'submit');
                             btn_trash_hist.removeAttribute('disabled');
@@ -88,7 +89,7 @@ window.addEventListener('load', () => {
                         else {
                             child.setAttribute('href', '#trash');
                             trash_hist_list.splice(trash_hist_list.indexOf(id), 1);
-                            if (trash_hist_list.length == 0) {
+                            if (btn_trash_hist && trash_hist_list.length == 0) {
                                 btn_trash_hist.setAttribute('type', 'button');
                                 btn_trash_hist.setAttribute('disabled', true);
                                 history_form.classList.add('d-none');
@@ -106,11 +107,20 @@ window.addEventListener('load', () => {
         })
     }
     
-    quantity.value = SERVER_OPTIONS.quantity;
-    level.value = SERVER_OPTIONS.level;
+    if (quantity) quantity.value = SERVER_OPTIONS.quantity;
+    if (level) level.value = SERVER_OPTIONS.level;
     
-    btn_submit.addEventListener('click', event => {
-        histid.remove();
-    })
+    if (btn_submit) {
+        btn_submit.addEventListener('click', event => {
+            histid.remove();
+        })
+    }
+    
+    if (btn_arrow_repeat) {
+        btn_arrow_repeat.addEventListener('click', event => {
+            event.preventDefault(); // Verhindern, dass der Anker-Link ausgeführt wird, weil das hier nicht erwünscht ist.
+            window.location.replace(window.location.href);
+        })
+    }
 });
 

@@ -190,7 +190,7 @@ def init_freecode():
         count = 1
         for row in content:
             id = row['id']
-            cur.execute("UPDATE tBesucher SET FreeCode=?, KundenNr=? WHERE id=?", (generateCode(), count, id))
+            cur.execute("UPDATE tBesucher SET FreeCode=?, KundenNr=? WHERE id=?", (generateCode(''), count, id))
             max_rec += 1
             count += 1
         db.commit()
@@ -252,11 +252,11 @@ def getMpegInfo(rawname:str):
     return (size, duration)
 
 
-def generateCode():
+def generateCode(prefix:str):
     chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789'
     chars_list = list(chars)
     code = ''
     for z in range(1, 5):
         code += "".join(random.sample(chars_list, 4))
         if z < 4: code += '-'
-    return code
+    return str(prefix) + code

@@ -38,7 +38,7 @@ CREATE TABLE `tUser` (
   UNIQUE KEY `freecode` (`freecode`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1987 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 TRUNCATE TABLE `tUser`;
-INSERT INTO `tUser`(pnr,seclevel,histid,freecode) VALUES(1,4,1,'AQPW-LVB1-9E24-B7CG');
+INSERT INTO `tUser`(pnr,seclevel,histid,freecode) VALUES(1,4,1,'4AQPW-LVB1-9E24-B7CG');
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
