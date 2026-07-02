@@ -7,11 +7,35 @@
       <a href="{{ url_for('bx_s_start.s_album') }}" class="d-flex align-items-center link-body-emphasis text-decoration-none">
         <img src="{{ url_for('static', filename='Logo_Title_black_200.png') }}" alt="Logo_Title_black_200">
       </a>
-      
-      <nav class="nav nav-underline d-inline-flex mt-2 mt-md-0 ms-md-auto">
-        <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link active" title="Zur Album-Übersicht" aria-current="page" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
-        <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
-        <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi me-2 opacity-100" width="1.6em" height="1.6em"><use href="#box-arrow-right"></use></svg></a>
+      <nav class="navbar navbar-expand-lg nav-underline d-inline-flex mt-2 mt-md-0 ms-md-auto">
+        <div class="container-fluid">
+          {#<a class="navbar-brand" href="#">Navbar</a>#}
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav">
+              <li class="nav-item">
+                <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link active" title="Zur Album-Übersicht" aria-current="page" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="me-4 nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Ansicht</a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#10">bis 10 Positionen</a></li>
+                  <li><a class="dropdown-item" href="#20">bis 20 Positionen</a></li>
+                  <li><a class="dropdown-item" href="#40">bis 40 Positionen</a></li>
+                  <li><a class="dropdown-item" href="#ALL">Alles</a></li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
+              </li>
+              <li class="nav-item">
+                <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi me-2 opacity-100" width="1.6em" height="1.6em"><use href="#box-arrow-right"></use></svg></a>
+              </li>
+            </ul>
+          </div>
+        </div>
       </nav>
     </div>
     
@@ -46,6 +70,16 @@
           {% endfor %}
         </tbody>
       </table>
+    </div>
+    <!-- More content button -->
+    <div class="mt-1 ms-auto text-center">
+      <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        Mehr anzeigen
+      </button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#10">Weitere 10 Positionen</a></li>
+        <li><a class="dropdown-item" href="#ALL">Alles</a></li>
+      </ul>
     </div>
   </main>
 </div>

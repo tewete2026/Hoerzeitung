@@ -46,13 +46,12 @@ class Configure:
             "version":version.Configs.APP_VERSION,
             "author":version.Configs.APP_AUTHOR
         }
-        pnr = seclevel = 0
         if 'dbdata' in session and 'pnr' in session['dbdata']: 
-            pnr = session['dbdata']['pnr']
             seclevel = session['dbdata']['seclevel']
             rolls = ["Hörer", "Redakteur", "Leitung", "Admin", "Super-Admin"]
-            self.credits.update({'pnr': pnr})
-            self.credits.update({'seclevel': rolls[seclevel]})
+            self.credits.update({'pnr': session['dbdata']['pnr']})
+            self.credits.update({'seclevel': seclevel})
+            self.credits.update({'seclevel_text': rolls[seclevel]})
         if self.credits["user"] is None: self.credits["user"] = "--"
         current_app.logger.info("%s started; Modname=%s; Remote-Addr=%s; Method=%s; Mimetype=%s", title, current_app.name, request.remote_addr, request.method, request.mimetype)
         self.today=date.today()
@@ -62,8 +61,6 @@ class Configure:
         self.map = {}
         self.error = {}
         self.javascript.add({'today':self.today, 'min_date':self.min_date, 'max_date':self.max_date, 'link_active':link})
-        self.map['seclevel'] = seclevel
-        self.map['pnr'] = pnr
     def append(self, key:str, value:str):
         self.map.update({key: value})
     def get(self, key:str):

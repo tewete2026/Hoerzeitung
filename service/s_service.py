@@ -42,7 +42,6 @@ def confmanage():
     
     if auth_code_valid:
         conf.append("show_navall", True)
-        conf.append("seclevel", session['dbdata']['seclevel'])
         if session['dbdata']['seclevel'] > 0:
             conf.append("show_navtop", True)
 
@@ -60,6 +59,8 @@ def confcreate():
         abort(403)
     
     ts = current_app.config["TS"]
+    conf_max_freecodes = current_app.config["max_freecodes"]
+    max_pageview = current_app.config["max_pageview"]
     error = False
     post_request = False
     auth_code_valid = False
@@ -77,6 +78,7 @@ def confcreate():
         post_request = True
     
     conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
+    conf.append('conf_max_freecodes', conf_max_freecodes)
     
     if auth_code_valid and post_request:
         # Löschen Chargen-Nummern aktiviert
@@ -88,22 +90,40 @@ def confcreate():
                     raise mariadb.PoolError("Kein Databasepool vorhanden.")
                 db.begin()
                 cur = db.cursor(dictionary=True)
-                cur.execute(f"DELETE from tUser WHERE histid in ({trashid})")
-                if cur.rowcount < 1:
-                    conf.error['result_err_trash'] = "Keine User-Einträge gelöscht."
+                """ 
+                    Prüfen, ob betroffene zu löschende Konto-Nummern ihrerseits Freischaltcodes für weitere Konto-Nummern erzeugt haben.
+                    Wenn z.B. ein Konto der Ebene Leitung Freischaltcodes für Redakteur erzeugt hat und dieses Redakteur-Konto wiederum Konten für Hörer erzeugt hat,
+                    dann kann die Charge mit dem zugehörigen Konto Redakteur nicht gelöscht werden. Erst muss das Redakteur-Konto seine Freischaltcodes löschen.
+                    Dazu wird die Tabelle tUser mit sich selbst verknüpft über die Felder pnrcreate und pnr. Es dürfen keine Einträge geliefert werden, dann ist die Prüfung korrekt.
+                """
+                cur.execute(f"select a.id as a_id,b.id as b_id,a.pnr as a_pnr,b.pnr as b_pnr,a.pnrcreate as a_pnrcreate,b.pnrcreate as b_pnrcreate,a.histid as a_histid,b.histid as b_histid from tUser a join tUser b on a.pnr=b.pnrcreate where a.histid in ({trashid})")
+                if cur.rowcount > 0:
+                    dbdata = cur.fetchall()
+                    a_pnr_err = []
+                    b_pnr_err = []
+                    for entry in dbdata:
+                        a_spnr = str(entry['a_pnr'])
+                        if a_pnr_err.count(a_spnr) <= 0: a_pnr_err.append(a_spnr)
+                        b_spnr = str(entry['b_pnr'])
+                        if b_pnr_err.count(b_spnr) <= 0: b_pnr_err.append(b_spnr)
+                    conf.error['result_err_trash'] = f"Keine Löschung der gewählten Chargen erlaubt, da betroffene Konto-Nummern {",".join(a_pnr_err)} wiederum Freischaltcodes für Konto-Nummern {",".join(b_pnr_err)} erzeugt haben."
                 else:
-                    conf.error['result_succ_trash'] = f"{cur.rowcount} User-Einträge gelöscht."
-                cur.execute(f"DELETE from tHistory WHERE id in ({trashid})")
-                if cur.rowcount < 1:
-                    t = "Keine Chargen-Einträge gelöscht."
-                    if 'result_err_trash' in conf.error:
-                        t += "/" + conf.error['result_err_trash']
-                    conf.error['result_err_trash'] = t
-                else:
-                    t = f"{cur.rowcount} Chargen-Einträge gelöscht."
-                    if 'result_succ_trash' in conf.error:
-                        t += "/" + conf.error['result_succ_trash']
-                    conf.error['result_succ_trash'] = t
+                    cur.execute(f"DELETE from tUser WHERE histid in ({trashid})")
+                    if cur.rowcount < 1:
+                        conf.error['result_err_trash'] = "Keine User-Einträge gelöscht."
+                    else:
+                        conf.error['result_succ_trash'] = f"{cur.rowcount} User-Einträge gelöscht."
+                    cur.execute(f"DELETE from tHistory WHERE id in ({trashid})")
+                    if cur.rowcount < 1:
+                        t = "Keine Chargen-Einträge gelöscht."
+                        if 'result_err_trash' in conf.error:
+                            t += "/" + conf.error['result_err_trash']
+                        conf.error['result_err_trash'] = t
+                    else:
+                        t = f"{cur.rowcount} Chargen-Einträge gelöscht."
+                        if 'result_succ_trash' in conf.error:
+                            t += "/" + conf.error['result_succ_trash']
+                        conf.error['result_succ_trash'] = t
                 db.commit()
                 cur.close()
                 db.close()
@@ -142,25 +162,24 @@ def confcreate():
                 error = True
 
         if 'quantity' in form_data:
-            if len(form_data['quantity']) == 0:
+            quantity = form_data['quantity']
+            if len(quantity) == 0:
                 conf.error['quantity'] = "Die Anzahl darf nicht leer sein!"
                 error = True
             else:
-                quantity = form_data['quantity']
-                if not form_data['quantity'].isnumeric():
+                if not quantity.isnumeric():
                     conf.error['quantity'] = "Die Anzahl muss numerisch sein!"
                     error = True
                 else:
-                    quantity = int(form_data['quantity'])
+                    quantity = int(quantity)
+                    if quantity > conf_max_freecodes:
+                        conf.error['quantity'] = f"Die Anzahl darf z.Zt. nicht größer {conf_max_freecodes} sein!"
+                        error = True
             if len(form_data['level']) == 0 or form_data['level'] == '-1':
                 conf.error['level'] = "Die Berechtigungsebene muss ausgewählt werden!"
                 error = True
             else:
                 level = int(form_data['level'])
-            if not error:
-                if quantity > 10:
-                    conf.error['quantity'] = "Die Anzahl darf z.Zt. nicht größer 10 sein!"
-                    error = True
                 if session['dbdata']['seclevel'] == 1 and level > 0:
                     conf.error['level'] = "Die Berechtigungsebene darf nicht größer 0 sein!"
                     error = True
@@ -170,48 +189,47 @@ def confcreate():
                 elif session['dbdata']['seclevel'] == 3 and level > 2:
                     conf.error['level'] = "Die Berechtigungsebene darf nicht größer 2 sein!"
                     error = True
-                if not error:
-                    try:
-                        db = get_db()
-                        if not db:
-                            raise mariadb.PoolError("Kein Databasepool vorhanden.")
-                        db.begin()
-                        cur = db.cursor(dictionary=True)
-                        cur.execute("SELECT current_timestamp as tmst")
-                        tmst = cur.fetchone()['tmst']
-                        cur.execute("SELECT MAX(pnr)+1 as max_pnr from tUser FOR UPDATE")
-                        max_pnr = cur.fetchone()['max_pnr']
-                        cur.execute("INSERT INTO tHistory(quantity,seclevel,pnrcreate,createDate) values(?,?,?,?)", (quantity, level, session['dbdata']['pnr'], tmst))
-                        last_id = cur.lastrowid
-                        stored = []
-                        sql = "INSERT INTO tUser(pnr,seclevel,pnrcreate,histid,freecode,createDate) values(?,?,?,?,?,?)"
-                        for i in range(quantity):
-                            cur.execute(sql, (max_pnr+i, level, session['dbdata']['pnr'], last_id, generateCode(level), tmst))
-                            if cur.rowcount == 1:
-                                stored.append(cur.lastrowid)
-                        if len(stored) == quantity:
-                            conf.error['result_succ'] = f"Erstellung der Charge {last_id} wurde erfolgreich durchgeführt. Das Ergebnis wird per Download im JSON-Format bereit gestellt."
-                            conf.error['histid'] = last_id
-                            db.commit()
-                        else:
-                            conf.error['result_err'] = f"Erstellung der Charge {last_id} wurde NICHT vollständig durchgeführt."
-                            db.rollback()
-                        cur.close()
-                        db.close()
-                    except mariadb.IntegrityError as err:
-                        conf.error['result_err'] = f"Datenbankfehler: {err}. Erstellung der Charge wurde NICHT erfolgreich durchgeführt."
-                        current_app.logger.warning("Datenbank-doppelter Eintrag: %s/confcreate/%s", bp.name, err)
+            if not error:
+                try:
+                    db = get_db()
+                    if not db:
+                        raise mariadb.PoolError("Kein Databasepool vorhanden.")
+                    db.begin()
+                    cur = db.cursor(dictionary=True)
+                    cur.execute("SELECT current_timestamp as tmst")
+                    tmst = cur.fetchone()['tmst']
+                    cur.execute("SELECT MAX(pnr)+1 as max_pnr from tUser FOR UPDATE")
+                    max_pnr = cur.fetchone()['max_pnr']
+                    cur.execute("INSERT INTO tHistory(quantity,seclevel,pnrcreate,createDate) values(?,?,?,?)", (quantity, level, session['dbdata']['pnr'], tmst))
+                    last_id = cur.lastrowid
+                    stored = []
+                    sql = "INSERT INTO tUser(pnr,seclevel,pnrcreate,histid,freecode,createDate) values(?,?,?,?,?,?)"
+                    for i in range(quantity):
+                        cur.execute(sql, (max_pnr+i, level, session['dbdata']['pnr'], last_id, generateCode(level), tmst))
+                        if cur.rowcount == 1:
+                            stored.append(cur.lastrowid)
+                    if len(stored) == quantity:
+                        conf.error['result_succ'] = f"Erstellung der Charge {last_id} wurde erfolgreich durchgeführt. Das Ergebnis wird per Download im JSON-Format bereit gestellt."
+                        conf.error['histid'] = last_id
+                        db.commit()
+                    else:
+                        conf.error['result_err'] = f"Erstellung der Charge {last_id} wurde NICHT vollständig durchgeführt."
                         db.rollback()
-                        db.close()
-                    except mariadb.Error as err:
-                        conf.error['result_err'] = f"Datenbankfehler: {err}. Erstellung der Charge wurde NICHT erfolgreich durchgeführt."
-                        if db: db.rollback()
-                        if db: db.close()
-                        current_app.logger.error("Datenbank-Fehler: %s/confcreate/%s", bp.name, err)
+                    cur.close()
+                    db.close()
+                except mariadb.IntegrityError as err:
+                    conf.error['result_err'] = f"Datenbankfehler: {err}. Erstellung der Charge wurde NICHT erfolgreich durchgeführt."
+                    current_app.logger.warning("Datenbank-doppelter Eintrag: %s/confcreate/%s", bp.name, err)
+                    db.rollback()
+                    db.close()
+                except mariadb.Error as err:
+                    conf.error['result_err'] = f"Datenbankfehler: {err}. Erstellung der Charge wurde NICHT erfolgreich durchgeführt."
+                    if db: db.rollback()
+                    if db: db.close()
+                    current_app.logger.error("Datenbank-Fehler: %s/confcreate/%s", bp.name, err)
     
     if auth_code_valid:
         conf.append("show_navall", True)
-        conf.append("seclevel", session['dbdata']['seclevel'])
         if session['dbdata']['seclevel'] > 0:
             conf.append("show_navtop", True)
 
@@ -271,7 +289,7 @@ def export(level):
                 if not db:
                     raise mariadb.PoolError("Kein Databasepool vorhanden.")
                 cur = db.cursor(dictionary=True)
-                cur.execute("SELECT histid as Charge_Nr,pnr as Konto_Nr,pnrcreate as Erstellt_Von,seclevel as Berechtigungsebene,freecode as Freischaltcode,DATE_FORMAT(DATE(createDate),'%d.%m.%Y') as Erstellt_Am from tUser WHERE seclevel=? ORDER BY pnr", (level,))
+                cur.execute("SELECT histid as Charge_Nr,pnr as Konto_Nr,pnrcreate as Erstellt_Von,seclevel as Berechtigungsebene,freecode as Freischaltcode,DATE_FORMAT(DATE(createDate),'%d.%m.%Y') as Erstellt_Am from tUser WHERE seclevel<=? ORDER BY seclevel DESC,pnr", (level,))
                 dbdata = cur.fetchall()
                 cur.close()
                 db.close()

@@ -14,8 +14,29 @@
         </h4>
         <form class="needs-validation d-none" id="history-form" novalidate method="post">
           <input type="hidden" id="trashid" name="trashid">
-          <button class="w-100 btn btn-primary btn-lg mt-1 mb-2" id="btn-submit-trash-hist" type="button" title="Löschen der mit einem Haken versehenen folgenden Chargen" disabled>Löschen Auswahl = <svg class="bi me-2 opacity-100" width="1.2em" height="1.2em"><use href="#check"></use></svg></button>
+          <button class="w-100 btn btn-primary btn-lg mt-1 mb-2" id="btn-submit-trash-hist" data-bs-toggle="modal" data-bs-target="#staticBackdrop" type="button" title="Löschen der mit einem Haken versehenen folgenden Chargen" disabled>Löschen Auswahl = <svg class="bi me-2 opacity-100" width="1.2em" height="1.2em"><use href="#check"></use></svg></button>
+          <!-- Modal -->
+          <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title fs-5" id="staticBackdropLabel">Löschen Chargen mit Freischaltcodes</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">Sollen die gewählten Chargen und die zugehörigen Freischaltcodes wirklich gelöscht werden ? Wenn NICHT, dann "Abbrechen" anklicken!</div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                  <button type="button" class="btn btn-primary" id="btn-submit-trash-run">Wirklich Löschen?</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </form>
+
+
+
+
+
         {% if conf.haserror("result_succ_trash") %}<div class="alert alert-success" role="alert">{{ conf.error['result_succ_trash'] }}</div>{% endif %}
         {% if conf.haserror("result_err_trash") %}<div class="alert alert-danger" role="alert">{{ conf.error['result_err_trash'] }}</div>{% endif %}
         <div class="table-responsive">
@@ -50,18 +71,18 @@
               <label for="quantity" class="form-label">Anzahl neuer Codes</label>
               <div class="input-group has-validation">
                 <span class="input-group-text">Anzahl</span>
-                <input type="number" min="1" max="10" class="form-control{% if conf.haserror("quantity") %} is-invalid{% endif %}" id="quantity" name="quantity" required">
+                <input type="number" min="1" max="{{ conf.get('conf_max_freecodes') }}" class="form-control{% if conf.haserror("quantity") %} is-invalid{% endif %}" id="quantity" name="quantity" required">
                 <div class="invalid-feedback">{% if conf.haserror("quantity") %}{{ conf.error['quantity'] }}{% endif %}</div>
               </div>
             </div>
             <div class="col-md-6">
               <label for="level" class="form-label">Berechtigungsebene</label>
               <select class="form-select{% if conf.haserror("level") %} is-invalid{% endif %}" id="level" name="level" required>
-                {% if conf.get("seclevel") > 1  %}<option value="-1">Bitte wählen...</option>{% endif %}
+                {% if conf.credits["seclevel"] > 1  %}<option value="-1">Bitte wählen...</option>{% endif %}
                 <option value="0">Ebene 0 (Hörer): Nur Hören</option>
-                {% if conf.get("seclevel") >= 2  %}<option value="1">Ebene 1 (Redakteur): darf Freischaltcodes für Ebene 0 (Hörer) erzeugen</option>{% endif %}
-                {% if conf.get("seclevel") >= 3  %}<option value="2">Ebene 2 (Leitung): darf Freischaltcodes für Ebene 1 (Redakteur) erzeugen</option>{% endif %}
-                {% if conf.get("seclevel") >= 4  %}<option value="3">Ebene 3 (Admin): darf Freischaltcodes Ebene 2 (Leitung) erzeugen</option>{% endif %}
+                {% if conf.credits["seclevel"] >= 2  %}<option value="1">Ebene 1 (Redakteur): darf Freischaltcodes für Ebene 0 (Hörer) erzeugen</option>{% endif %}
+                {% if conf.credits["seclevel"] >= 3  %}<option value="2">Ebene 2 (Leitung): darf Freischaltcodes für Ebene 1 (Redakteur) erzeugen</option>{% endif %}
+                {% if conf.credits["seclevel"] >= 4  %}<option value="3">Ebene 3 (Admin): darf Freischaltcodes Ebene 2 (Leitung) erzeugen</option>{% endif %}
               </select>
               <div class="invalid-feedback">{% if conf.haserror("level") %}{{ conf.error['level'] }}{% endif %}</div>
             </div>

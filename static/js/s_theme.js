@@ -7,6 +7,7 @@ window.addEventListener('load', () => {
     const btn_submit = this.document.getElementById('btn-submit');
     const btn_download = this.document.getElementById('btn-download');
     const btn_trash_hist = this.document.getElementById('btn-submit-trash-hist');
+    const btn_trash_run = this.document.getElementById('btn-submit-trash-run');
     const btn_arrow_repeat = this.document.getElementById('btn-arrow-repeat');
     const main_form = this.document.getElementById('main-form');
     const history_form = this.document.getElementById('history-form');
@@ -81,7 +82,7 @@ window.addEventListener('load', () => {
                         const att = child.getAttribute('href');
                         if (btn_trash_hist && att == '#trash') {
                             child.setAttribute('href', '#check');
-                            btn_trash_hist.setAttribute('type', 'submit');
+                            btn_trash_run.setAttribute('type', 'submit');
                             btn_trash_hist.removeAttribute('disabled');
                             history_form.classList.remove('d-none');
                             trash_hist_list.push(id);
@@ -90,7 +91,7 @@ window.addEventListener('load', () => {
                             child.setAttribute('href', '#trash');
                             trash_hist_list.splice(trash_hist_list.indexOf(id), 1);
                             if (btn_trash_hist && trash_hist_list.length == 0) {
-                                btn_trash_hist.setAttribute('type', 'button');
+                                btn_trash_run.setAttribute('type', 'button');
                                 btn_trash_hist.setAttribute('disabled', true);
                                 history_form.classList.add('d-none');
                             }

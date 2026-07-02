@@ -140,23 +140,37 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarTop">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <ul class="navbar-nav mb-2 mb-lg-0">
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">Bitte auswählen</a>
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">Funktionen</a>
             <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="{{ url_for('s_service.confcreate') }}">Erstellen Freischaltcodes</a></li>
               <li><a class="dropdown-item" href="{{ url_for('s_service.confmanage') }}">Verwalten Freischaltcodes</a></li>
+            </ul>
+          </li>
+        </ul>
+        <ul class="navbar-nav mb-2 mb-lg-0">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">Exportieren</a>
+            <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="{{ url_for('s_service.export', level=0) }}">Export Liste Hörer (0)</a></li>
-              {% if conf.get("seclevel") >= 2  %}<li><a class="dropdown-item" href="{{ url_for('s_service.export', level=1) }}">Export Liste Redakteur (1)</a></li>{% endif %}
-              {% if conf.get("seclevel") >= 3  %}<li><a class="dropdown-item" href="{{ url_for('s_service.export', level=2) }}">Export Liste Leitung (2)</a></li>{% endif %}
-              {% if conf.get("seclevel") >= 4  %}<li><a class="dropdown-item" href="{{ url_for('s_service.export', level=3) }}">Export Liste Admin (3)</a></li>{% endif %}
+              {% if conf.credits["seclevel"] >= 2  %}<li><a class="dropdown-item" href="{{ url_for('s_service.export', level=1) }}">Export Liste+ Redakteur (1)</a></li>{% endif %}
+              {% if conf.credits["seclevel"] >= 3  %}<li><a class="dropdown-item" href="{{ url_for('s_service.export', level=2) }}">Export Liste+ Leitung (2)</a></li>{% endif %}
+              {% if conf.credits["seclevel"] >= 4  %}<li><a class="dropdown-item" href="{{ url_for('s_service.export', level=3) }}">Export Liste+ Admin (3)</a></li>{% endif %}
+            </ul>
+          </li>
+        </ul>
+        <ul class="navbar-nav mb-2 mb-lg-0">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">Gehe zu</a>
+            <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="{{ url_for('bx_s_start.s_album') }}">Zur Album-Übersicht</a></li>
             </ul>
           </li>
         </ul>
-        <span class="me-3">Konto Nr.: {{ conf.credits['pnr'] }}</span>
-        <span>Ber.Ebene: {{ conf.credits['seclevel'] }}</span>
-        <a class="py-2 ms-5 link-body-emphasis text-decoration-none nav-link" title="Seite neu laden" href="#" id="btn-arrow-repeat"><svg class="bi me-2 opacity-100" width="1.0em" height="1.0em"><use href="#arrow-clockwise"></use></svg></a>
+        <span class="ms-auto me-3">Konto Nr.: {{ conf.credits['pnr'] }}</span>
+        <span>Ebene: {{ conf.credits['seclevel_text'] }}</span>
+        <a class="py-2 ms-3 link-body-emphasis text-decoration-none nav-link" title="Seite neu laden" href="#" id="btn-arrow-repeat"><svg class="bi me-2 opacity-100" width="1.0em" height="1.0em"><use href="#arrow-clockwise"></use></svg></a>
         <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi me-2 opacity-100" width="1.0em" height="1.0em"><use href="#box-arrow-right"></use></svg></a>
       </div>
     </div>
@@ -167,7 +181,7 @@
 
 <div class="container">
   <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-5 mt-4 border-top">
-    <p class="col-md-4 mb-0 text-body-secondary">&copy; {{ conf.credits["version"] }} &middot; {{ conf.credits["created"] }}<br>DRK-Norderstedter-Hörzeitung<br>Konto-Nr: {{ conf.credits["pnr"] }}</p>
+    <p class="col-md-4 mb-0 text-body-secondary">&copy; {{ conf.credits["version"] }} &middot; {{ conf.credits["created"] }}<br>DRK-Norderstedter-Hörzeitung{% if 'pnr' in conf.credits %}<br>Konto-Nr: {{ conf.credits["pnr"] }}{% endif %}</p>
     <a href="{{ url_for('bx_s_start.s_album') }}" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
         <img src="{{ url_for('static', filename='Logo_Title_black_200.png') }}" alt="Logo_Title_black_200">
     </a>
