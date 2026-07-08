@@ -1,17 +1,13 @@
 import mariadb, os, random
-from math import floor
 from flask import Blueprint
-from flask import current_app, session
+from flask import current_app
 from flask import request
 from flask import render_template
 from flask import redirect, url_for
 from werkzeug.exceptions import abort
-from mutagen.mp3 import MP3
-from mutagen.id3 import CHAP
-from sox import file_info as audio_info
 import random
 from ..db import get_db
-from .. import version
+from .. import version, tools
 from ..podcast_texte import podcast_texte
 
 bp = Blueprint("srv_tool", __name__, url_prefix="/service/toolfix")
@@ -93,7 +89,7 @@ def init_episodes():
             descr = podcast_texte.get(mp3.rstrip(".mp3"))
             if descr is None: description = "----"
             else: description = descr
-            (title, mp3description, published, size, dur, chapter) = getMP3Info(rawname)
+            (title, mp3description, published, size, dur, chapter) = tools.getMP3Info(rawname)
             cur.execute("INSERT INTO tEpisode(title,kdnr,audiofile,summary,published,size,duration,chapter,image) values(?,?,?,?,?,?,?,?,?)", (title, title, mp3, description, published, size, dur, chapter, f"LogoGruppe-{imageindex}.jpg"))
             imageindex += 1
             if imageindex > 5: imageindex = 1
@@ -126,7 +122,7 @@ def reorg_duration():
         for mp3 in content:
             (id, audiofile) = mp3.items()
             rawname = current_app.instance_path + "/long/" + audiofile[1]
-            (size, duration) = getMpegInfo(rawname)
+            (size, duration) = tools.getMpegInfo(rawname)
             cur.execute("UPDATE tEpisode SET duration=? WHERE id=?", (duration, id[1]))
             max_rec += 1
     
@@ -190,7 +186,7 @@ def init_freecode():
         count = 1
         for row in content:
             id = row['id']
-            cur.execute("UPDATE tBesucher SET FreeCode=?, KundenNr=? WHERE id=?", (generateCode(''), count, id))
+            cur.execute("UPDATE tBesucher SET FreeCode=?, KundenNr=? WHERE id=?", (tools.generateCode(''), count, id))
             max_rec += 1
             count += 1
         db.commit()
@@ -203,60 +199,3 @@ def init_freecode():
         abort(500)
 
     return f"<!DOCTYPE html><html lang='en'><head></head><body><p>Anzahl Records verarbeitet: {max_rec}</p></body></html>"
-
-
-def getMP3Info(rawname:str):
-    ts = current_app.config["TS"]
-    # audio = MP3(current_app.instance_path + "/" + mp3, ID3=EasyID3)
-    audio = MP3(rawname)
-    episode_kap = {}
-    for key in audio.keys():
-        cont = audio.get(key)
-        if isinstance(cont, CHAP):
-            text = cont.sub_frames["TIT2"][0]
-            if len(text) > 0:
-                episode_kap.update({key.removeprefix("CHAP:"):text})
-    description = audio.get("COMM::eng")
-    # keys = ["TALB", "TPE1", "TDRC", "TIT2", "TENC", "TLEN"]
-    # for key in keys:
-    #     print(key, audio.get(key))
-    if description is None: description = "- - - -"
-    title = audio.get("TIT2")
-    if title is None: title = ["---"]
-    size = os.stat(rawname).st_size
-    chapter = ""
-    counter = 1
-    for key, text in episode_kap.items():
-        chapter += "{0:02}. {1}<br>".format(counter, text)
-        counter += 1
-    published = ts.fromtimestamp(os.stat(rawname).st_mtime)
-    tlen = audio.get("TLEN")
-    if tlen is None:
-        dur = audio.info.length
-    else:
-        dur = float(tlen[0]) / 1000
-    min = dur / 60
-    sec = dur % 60
-    duration = "{0:02.0f}:{1:02.0f}".format(min, sec)
-    # print(tlen, dur, min, sec, duration, audio, audio.keys())
-
-    return (title, description, published, size, duration, chapter)
-
-
-def getMpegInfo(rawname:str):
-    sec = audio_info.duration(rawname)
-    if sec is None: dur = 0.00
-    else: dur = sec
-    duration = "{0:02.0f}:{1:02.0f}".format(floor(dur / 60), floor(dur % 60))
-    size = os.stat(rawname).st_size
-    return (size, duration)
-
-
-def generateCode(prefix:str):
-    chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789'
-    chars_list = list(chars)
-    code = ''
-    for z in range(1, 5):
-        code += "".join(random.sample(chars_list, 4))
-        if z < 4: code += '-'
-    return str(prefix) + code

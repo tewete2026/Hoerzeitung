@@ -27,12 +27,12 @@ CREATE TABLE `tHistory` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `quantity` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Anzahl Freischaltcodes erstellt',
   `seclevel` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Berechtigungs Ebene',
-  `pnrcreate` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Nummer erstellt',
-  `createDate` datetime NOT NULL DEFAULT current_timestamp COMMENT 'Erstellungs Datum',
+  `pnrcreate` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Konto Nummer erstellt',
+  `createDate` date NOT NULL DEFAULT curdate() COMMENT 'Erstellungs Datum',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1987 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 TRUNCATE TABLE `tHistory`;
-INSERT INTO `tHistory`(quantity,seclevel) VALUES(1,4);
+INSERT INTO `tHistory`(quantity,seclevel) VALUES(2,4);
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

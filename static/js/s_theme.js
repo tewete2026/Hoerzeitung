@@ -4,6 +4,10 @@ window.addEventListener('load', () => {
     const level = this.document.getElementById('level');
     const histid = this.document.getElementById('histid');
     const trashid = this.document.getElementById('trashid');
+    const logininput = this.document.getElementById('logininput');
+    const go_to_guest = this.document.getElementById('go-to-guest');
+    const morepage = this.document.getElementById('morepage');
+    const setpage = this.document.getElementById('setpage');
     const btn_submit = this.document.getElementById('btn-submit');
     const btn_download = this.document.getElementById('btn-download');
     const btn_trash_hist = this.document.getElementById('btn-submit-trash-hist');
@@ -11,6 +15,9 @@ window.addEventListener('load', () => {
     const btn_arrow_repeat = this.document.getElementById('btn-arrow-repeat');
     const main_form = this.document.getElementById('main-form');
     const history_form = this.document.getElementById('history-form');
+    const morepage_form = this.document.getElementById('morepage-form');
+    const setpage_form = this.document.getElementById('setpage-form');
+    const login_form = this.document.getElementById('login-form');
 
     const trash_hist_list = [];
 
@@ -59,6 +66,32 @@ window.addEventListener('load', () => {
             if (main_form && histid && id) {
                 histid.value = id;
                 main_form.submit();
+            }
+        })
+    }
+
+    const morepages = this.document.getElementsByClassName('list-morepage');
+    for (const element of morepages) {
+        element.addEventListener('click', event => {
+            event.preventDefault(); // Verhindern, dass der Anker-Link ausgeführt wird, weil das hier nicht erwünscht ist.
+            const target = event.target;
+            const id = target.getAttribute('data-morepage');
+            if (morepage_form && morepage && id) {
+                morepage.value = id;
+                morepage_form.submit();
+            }
+        })
+    }
+
+    const setpages = this.document.getElementsByClassName('list-setpage');
+    for (const element of setpages) {
+        element.addEventListener('click', event => {
+            event.preventDefault(); // Verhindern, dass der Anker-Link ausgeführt wird, weil das hier nicht erwünscht ist.
+            const target = event.target;
+            const id = target.getAttribute('data-setpage');
+            if (setpage_form && setpage && id) {
+                setpage.value = id;
+                setpage_form.submit();
             }
         })
     }
@@ -114,6 +147,14 @@ window.addEventListener('load', () => {
     if (btn_submit) {
         btn_submit.addEventListener('click', event => {
             histid.remove();
+        })
+    }
+    
+    if (go_to_guest) {
+        go_to_guest.addEventListener('click', event => {
+            event.preventDefault(); // Verhindern, dass der Anker-Link ausgeführt wird, weil das hier nicht erwünscht ist.
+            logininput.value = SERVER_OPTIONS.guestcode;
+            login_form.submit();
         })
     }
     

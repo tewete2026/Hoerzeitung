@@ -2,7 +2,7 @@ import mariadb, os, smtplib
 from flask import current_app, render_template, session
 from datetime import date
 from dateutil.relativedelta import relativedelta
-from . import version, credentials
+from . import version, credentials, tools
 from pathlib import Path
 from werkzeug.datastructures.file_storage import FileStorage
 from werkzeug.utils import secure_filename
@@ -46,12 +46,6 @@ class Configure:
             "version":version.Configs.APP_VERSION,
             "author":version.Configs.APP_AUTHOR
         }
-        if 'dbdata' in session and 'pnr' in session['dbdata']: 
-            seclevel = session['dbdata']['seclevel']
-            rolls = ["Hörer", "Redakteur", "Leitung", "Admin", "Super-Admin"]
-            self.credits.update({'pnr': session['dbdata']['pnr']})
-            self.credits.update({'seclevel': seclevel})
-            self.credits.update({'seclevel_text': rolls[seclevel]})
         if self.credits["user"] is None: self.credits["user"] = "--"
         current_app.logger.info("%s started; Modname=%s; Remote-Addr=%s; Method=%s; Mimetype=%s", title, current_app.name, request.remote_addr, request.method, request.mimetype)
         self.today=date.today()
@@ -61,6 +55,15 @@ class Configure:
         self.map = {}
         self.error = {}
         self.javascript.add({'today':self.today, 'min_date':self.min_date, 'max_date':self.max_date, 'link_active':link})
+    def initlogin(self, dbdata):
+        rolls = ["Hörer", "Vorleser", "Redakteur", "Admin", "Super-Admin"]
+        self.credits.update({'pnr': dbdata['pnr']})
+        self.credits.update({'guest': dbdata['guest']})
+        seclevel = dbdata['seclevel']
+        self.credits.update({'seclevel': seclevel})
+        roll = rolls[seclevel]
+        if dbdata['guest']: roll = "Gast"
+        self.credits.update({'seclevel_text': roll})
     def append(self, key:str, value:str):
         self.map.update({key: value})
     def get(self, key:str):
@@ -180,6 +183,60 @@ def get_episodes(episodes, auth_code_valid, limit:bool=True):
     return rc_code
 
 
+def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1):
+    rc_code = {"status":"OK"}
+    ts = current_app.config["TS"]
+    episodes = {}
+    reverse = True
+    if subdir is not None: 
+        full_dir += "/" + subdir
+        reverse = False
+        conf.append('subdir', subdir)
+    content = sorted(os.listdir(full_dir), reverse=reverse)
+    page = 1
+    is_more = False
+    for element in content:
+        if max_pageview > 0 and page > max_pageview:
+            is_more = True
+            break
+        episode = {}
+        rawname = f"{full_dir}/{element}"
+        if os.path.isdir(rawname):
+            key = element.strip()
+            if key in episodes:
+                episode = episodes.get(key)
+            episode.update({"subdir":element})
+        else:
+            if not element.endswith(".mp3"): continue
+            key = element.split('.')[0].strip()
+            audio_name = element
+            if subdir is not None: 
+                audio_name = f"{subdir}_{element}"
+            if key in episodes:
+                episode = episodes.get(key)
+            (title, description, published, size, dur, chapter) = tools.getMP3Info(rawname)
+            (si, duration) = tools.getMpegInfo(rawname)
+            published = ts.addtimezone(published)
+            episode.update({"rawname":rawname})
+            episode.update({"name":key})
+            episode.update({"title":str(title)})
+            episode.update({"description":str(description)})
+            episode.update({"summary":str(description)})
+            episode.update({"chapter":chapter})
+            episode.update({"audio":audio_name})
+            episode.update({"length":size})
+            episode.update({"duration":duration})
+            episode.update({"image":'LogoGruppe-1k.jpg'})
+            episode.update({"size":size})
+            episode.update({"published":str(published)})
+            episode.update({"date":str(published)[:19]})
+            page += 1
+        episodes.update({key:episode})
+    rc_code['episodes'] = episodes.values()
+    rc_code['is_more'] = is_more
+    return rc_code
+
+
 def send_mail(subject:str, msg_template:str, parms:dict, send_from:str=None, send_to:str=None, attached_file:FileStorage=None, server:str=None, port:int=None, username:str=None, password:str=None, use_tls:bool=False):
     """Compose and send email with provided info and attachments.
     Args:
@@ -278,11 +335,11 @@ def getLogin(freeCode:str):
             raise mariadb.PoolError("Kein Pool gesetzt, keine Verbindung zur DB.")
         db.begin()
         cur = db.cursor(dictionary=True)
-        cur.execute("SELECT * from tUser WHERE freecode=? && active=1 FOR UPDATE", (freeCode,))
+        cur.execute("SELECT id,pnr,seclevel,pnrcreate,histid,freecode,IF(active=1,TRUE,FALSE) as active,IF(guest=1,TRUE,FALSE) as guest,createDate,lastActive,curdate() as last_access from tUser WHERE freecode=? && active=1 FOR UPDATE", (freeCode,))
         dbdata = cur.fetchone()
         if cur.rowcount > 0:
             rc_code['dbdata'] = dbdata
-            cur.execute("UPDATE tUser SET lastActive=current_timestamp WHERE id=?", (rc_code['dbdata']['id'],))
+            cur.execute("UPDATE tUser SET lastActive=curdate() WHERE id=?", (rc_code['dbdata']['id'],))
         else:
             rc_code["status"] = False
             rc_code['type'] = 'NOTFOUND'

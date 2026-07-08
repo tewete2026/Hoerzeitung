@@ -97,7 +97,7 @@ def create_app(test_config="DEV"):
         modname = "/"
         ownhost = "http://localhost:5000"
     else:
-        modname = f"/{version.Configs.APP_NAME}"
+        modname = f"/s-{version.Configs.APP_NAME}"
         ownhost = "https://hoerzeitung.drk-norderstedt.ipv64.net/s-nhz"
     app.config.from_mapping(
         SECRET_KEY=credentials.Passwords.SECRET_KEY,
@@ -113,6 +113,7 @@ def create_app(test_config="DEV"):
         TEST_RUN=False,
         DB_POOL=None,
         NO_POOL_AVAILABLE=False,
+        GUEST_CODE='0GAST-ABCD-ABCD-ABCD',
         SEND_TO=credentials.EMails.SMTPHandler, SEND_FROM=f"{version.Configs.APP_NAME}@drk-nhz.de",
         SMTP_HOST="localhost", SMTP_PORT=25, SMTP_USER=None, SMTP_PWD=None
     )

@@ -9,8 +9,7 @@ from werkzeug.utils import secure_filename
 from .db import Configure
 from .ax_episode import ax_submit_episode
 from ..db import get_db
-from .. import version
-from .srv_tool import getMP3Info, getMpegInfo
+from .. import version, tools
 
 bp = Blueprint("service", __name__, url_prefix="/service")
 
@@ -47,7 +46,7 @@ def start():
             target_name = current_app.instance_path + "/long/" + filename
             file.save(temp_name)
             # (title, mp3description, published, size, duration, chapter) = getMP3Info(temp_name)
-            (size, duration) = getMpegInfo(temp_name)
+            (size, duration) = tools.getMpegInfo(temp_name)
         rc_code = ax_submit_episode(request.form, filename, target_name, size, duration)
         if rc_code["submit_status"] == "OK":
             if target_name is not None:

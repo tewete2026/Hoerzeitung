@@ -1,4 +1,4 @@
-import os
+import mariadb, os
 from podgen import Podcast, Episode, Person, Category, Media
 from flask import Blueprint
 from flask import current_app, session
@@ -7,7 +7,7 @@ from flask import render_template, redirect
 from flask import redirect, url_for, send_from_directory
 from werkzeug.exceptions import abort
 from werkzeug.utils import secure_filename
-from .db import get_db, Configure, get_episodes, send_mail, getLogin
+from .db import get_db, Configure, get_s_episodes, send_mail, getLogin
 from . import version, credentials
 from .podcast_texte import podcast_texte
 
@@ -21,14 +21,46 @@ def media(file):
     elif file.endswith(".jpg"):path = "/galerie"
     elif file.endswith(".pdf"):path = "/docs"
     elif file.endswith(".mp3"):
-        path = "/short"
         auth_code_valid = False
         if "authcode" in session:
-            auth_code_valid = getLogin(session["authcode"])['status']
+            rc_code = getLogin(session["authcode"])
+            auth_code_valid = rc_code['status']
         elif "authcode" in request.args:
-            auth_code_valid = getLogin(request.args["authcode"])['status']
+            rc_code = getLogin(request.args["authcode"])
+            auth_code_valid = rc_code['status']
+        
         if auth_code_valid:
-            path = "/long"
+            dbdata = rc_code['dbdata']
+            auth_code_guest = dbdata['guest']
+            if auth_code_guest:
+                path = "/short"
+                is_guest = 1
+            else:
+                path = "/long"
+                is_guest = 0
+            pnr = dbdata['pnr']
+            seclevel = dbdata['seclevel']
+            freecode = dbdata['freecode']
+            last_access = dbdata['last_access']
+            # Nur für seclevel = 0 (nur externe Hörer) protokollieren
+            if seclevel == 0:
+                try:
+                    db = get_db()
+                    if not db:
+                        raise mariadb.PoolError("Kein Databasepool vorhanden.")
+                    cur = db.cursor(dictionary=True)
+                    cur.execute("INSERT INTO tLog(pnr,seclevel,freecode,accessDate,media,accesscount,guest) values(?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE accesscount=accesscount+1", (pnr, seclevel, freecode, last_access, file, 1, is_guest))
+                    if cur.rowcount <= 0:
+                        current_app.logger.error("Datenbank-Fehler INSERT INTO tLog: %s/media, Rowcount=%s", bp.name, cur.rowcount)
+                    db.commit()
+                    cur.close()
+                    db.close()
+                except mariadb.Error as err:
+                    if db: db.close()
+                    current_app.logger.error("Datenbank-Fehler: %s/media/%s", bp.name, err)
+        else:
+            path = "/short"
+
         # werkzeug.datastructures.headers.EnvironHeaders
         if current_app.config['TEST_RUN'] == 'PROD':
             current_app.logger.info("Empfangener HTTP-Header für %s, %s, %s: %s", file, request.remote_addr, request.origin, request.headers)
@@ -40,7 +72,7 @@ def media(file):
     return send_from_directory(path, file)
 
 
-@bp.route("/Abmelden")
+""" @bp.route("/Abmelden")
 def logout():
     if "authcode" in session:
         session.pop("authcode")
@@ -100,9 +132,9 @@ def start():
     galerie = []
     episodes = []
     
-    rc_code = get_episodes(episodes, auth_code_valid)
-    if not rc_code['status']:
-        abort(500)
+    # rc_code = get_episodes(episodes, auth_code_valid)
+    # if not rc_code['status']:
+    abort(500)
     if auth_code_valid:
         galerie = sorted(os.listdir(current_app.instance_path + "/galerie"))
 
@@ -157,20 +189,22 @@ def start():
     elif set_no_backgr:
         session["no_backgr"] = "True"
     return render_template(html, episodes=episodes, episodes1=episodes[1:], last_episode=episodes[0], galerie=galerie, javascript=conf.javascript.getOut(), conf=conf)
-
+ """
 
 @bp.route("/<auth_code>/feed.rss")
 def feed_rss(auth_code):
     http = current_app.config["OWN_URL"]
     ts = current_app.config["TS"]
-    auth_code_valid = False
+    auth_code_guest = True
     if auth_code is not None:
-        if getLogin(auth_code)['status']:
-            auth_code_valid = True
+        rc_code = getLogin(auth_code)
+        if rc_code['status']:
+            auth_code_guest = rc_code['dbdata']['guest']
+
     pod = Podcast()
     pod.name = "Online-Version Norderstedter Hörzeitung"
     pod.description = "Die Norderstedter Hörzeitung bietet Lokales aus Norderstedt und hat auch einen Blick auf die Welt"
-    if not auth_code_valid: pod.subtitle = "Sie hören hier nur einzelne Episoden als Kostproben. Die kompletten Episoden erhalten Sie mit dem korrekten Freischaltcode."
+    if auth_code_guest: pod.subtitle = "Sie hören hier nur einzelne Kostproben als Gast. Die kompletten Episoden erhalten Sie mit dem korrekten Freischaltcode."
     pod.website = credentials.EMails.WEBSITE
     pod.explicit = False
     pod.image = http.goTo(url_for('bx_start.media', file='Logo-NHZ.jpg'))
@@ -182,15 +216,20 @@ def feed_rss(auth_code):
     pod.owner = pod.authors[0]
     pod.web_master = pod.authors[0]
     pod.last_updated = ts.todaytime()
-    episodes = []
     position = 1
-    rc_code = get_episodes(episodes=episodes, auth_code_valid=auth_code_valid, limit=False)
+    if auth_code_guest:
+        path = "/short"
+    else:
+        path = "/long"
+    full_dir = current_app.instance_path + path
+    rc_code = get_s_episodes(full_dir)
     if not rc_code['status']:
         abort(500)
+    episodes = rc_code['episodes']
     for episode in episodes:
         pod_ep = pod.add_episode(Episode(title=episode["title"]))
         pod_ep.id = http.goTo(url_for('bx_start.media', file=episode["audio"]))
-        if auth_code_valid:
+        if not auth_code_guest:
             pod_ep.summary = episode["summary"]
             pod_ep.long_summary = episode["chapter"]
             pod_ep.publication_date = episode["published"]

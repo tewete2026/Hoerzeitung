@@ -8,17 +8,16 @@ from werkzeug.exceptions import abort
 from werkzeug.utils import secure_filename
 from ..db import Configure
 from ..db import get_db, getLogin
-from .. import version
-from .srv_tool import generateCode
+from .. import version, tools
 
 bp = Blueprint("s_service", __name__, url_prefix="/S-Service")
 
 
-@bp.route("/Verwalten-Codes", methods=['GET', 'POST'])
+""" @bp.route("/Verwalten-Codes", methods=['GET', 'POST'])
 def confmanage():
     if current_app.config["NO_POOL_AVAILABLE"]:
         abort(500)
-    if 'dbdata' not in session or session['dbdata']['seclevel'] == 0:
+    if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
         abort(403)
     
     ts = current_app.config["TS"]
@@ -27,8 +26,6 @@ def confmanage():
     auth_code_valid = False
     quantity = "1"
     level = "-1"
-    if session['dbdata']['seclevel'] == 1:
-        level = "0"
 
     if "authcode" in session:
         if getLogin(session["authcode"])['status']:
@@ -42,32 +39,29 @@ def confmanage():
     
     if auth_code_valid:
         conf.append("show_navall", True)
-        if session['dbdata']['seclevel'] > 0:
+        if session['dbdata']['seclevel'] > 1:
             conf.append("show_navtop", True)
 
     conf.javascript.add({'quantity':quantity})
     conf.javascript.add({'level':level})
     return render_template("service/confmanage.html", conf=conf, javascript=conf.javascript.getOut())
-
+ """
 
 
 @bp.route("/Neue-Codes", methods=['GET', 'POST'])
 def confcreate():
     if current_app.config["NO_POOL_AVAILABLE"]:
         abort(500)
-    if 'dbdata' not in session or session['dbdata']['seclevel'] == 0:
+    if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
         abort(403)
     
     ts = current_app.config["TS"]
     conf_max_freecodes = current_app.config["max_freecodes"]
-    max_pageview = current_app.config["max_pageview"]
     error = False
     post_request = False
     auth_code_valid = False
     quantity = "1"
     level = "-1"
-    if session['dbdata']['seclevel'] == 1:
-        level = "0"
 
     if "authcode" in session:
         if getLogin(session["authcode"])['status']:
@@ -79,6 +73,9 @@ def confcreate():
     
     conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
     conf.append('conf_max_freecodes', conf_max_freecodes)
+    
+    if auth_code_valid:
+        conf.initlogin(session['dbdata'])
     
     if auth_code_valid and post_request:
         # Löschen Chargen-Nummern aktiviert
@@ -141,7 +138,7 @@ def confcreate():
                 if not db:
                     raise mariadb.PoolError("Kein Databasepool vorhanden.")
                 cur = db.cursor(dictionary=True)
-                cur.execute("SELECT histid as Charge_Nr,pnr as Konto_Nr,pnrcreate as Erstellt_Von,seclevel as Berechtigungsebene,freecode as Freischaltcode,DATE_FORMAT(DATE(createDate),'%d.%m.%Y') as Erstellt_Am from tUser WHERE histid=? ORDER BY pnr", (histid,))
+                cur.execute("SELECT histid as Charge_Nr,pnr as Konto_Nr,pnrcreate as Erstellt_Von,seclevel as Berechtigungsebene,freecode as Freischaltcode,DATE_FORMAT(createDate,'%d.%m.%Y') as Erstellt_Am,IF(active=1,TRUE,FALSE) as Ist_Aktiv,IF(guest=1,TRUE,FALSE) as Ist_Gast from tUser WHERE histid=? ORDER BY pnr", (histid,))
                 dbdata = cur.fetchall()
                 cur.close()
                 db.close()
@@ -180,10 +177,7 @@ def confcreate():
                 error = True
             else:
                 level = int(form_data['level'])
-                if session['dbdata']['seclevel'] == 1 and level > 0:
-                    conf.error['level'] = "Die Berechtigungsebene darf nicht größer 0 sein!"
-                    error = True
-                elif session['dbdata']['seclevel'] == 2 and level > 1:
+                if session['dbdata']['seclevel'] == 2 and level > 1:
                     conf.error['level'] = "Die Berechtigungsebene darf nicht größer 1 sein!"
                     error = True
                 elif session['dbdata']['seclevel'] == 3 and level > 2:
@@ -205,7 +199,7 @@ def confcreate():
                     stored = []
                     sql = "INSERT INTO tUser(pnr,seclevel,pnrcreate,histid,freecode,createDate) values(?,?,?,?,?,?)"
                     for i in range(quantity):
-                        cur.execute(sql, (max_pnr+i, level, session['dbdata']['pnr'], last_id, generateCode(level), tmst))
+                        cur.execute(sql, (max_pnr+i, level, session['dbdata']['pnr'], last_id, tools.generateCode(level), tmst))
                         if cur.rowcount == 1:
                             stored.append(cur.lastrowid)
                     if len(stored) == quantity:
@@ -230,15 +224,14 @@ def confcreate():
     
     if auth_code_valid:
         conf.append("show_navall", True)
-        if session['dbdata']['seclevel'] > 0:
+        if session['dbdata']['seclevel'] > 1:
             conf.append("show_navtop", True)
-
         try:
             db = get_db()
             if not db:
                 raise mariadb.PoolError("Kein Databasepool vorhanden.")
             cur = db.cursor(dictionary=True)
-            cur.execute("SELECT id,DATE_FORMAT(DATE(createDate),'%d.%m.%Y') as createDate,quantity from tHistory WHERE pnrcreate=? ORDER BY id DESC", (session['dbdata']['pnr'],))
+            cur.execute("SELECT id,DATE_FORMAT(createDate,'%d.%m.%Y') as createDate,quantity from tHistory WHERE pnrcreate=? ORDER BY id DESC", (session['dbdata']['pnr'],))
             dbdata = cur.fetchall()
             conf.append('history', dbdata)
         except mariadb.Error as err:
@@ -254,7 +247,7 @@ def confcreate():
 def export(level):
     if current_app.config["NO_POOL_AVAILABLE"]:
         abort(500)
-    if 'dbdata' not in session or session['dbdata']['seclevel'] == 0:
+    if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
         abort(403)
     
     ts = current_app.config["TS"]
@@ -267,17 +260,15 @@ def export(level):
     conf = Configure("Norderstedter Hörzeitung - Export", request, current_app)
 
     if auth_code_valid:
+        conf.initlogin(session['dbdata'])
         error = False
-        if level.isnumeric:
+        if level.isnumeric():
             level = int(level)
         else:
             level = 0
             error = True
             conf.error['level'] = "Parameter 'level' ist nicht numerisch!"
-        if session['dbdata']['seclevel'] == 1 and level > 0:
-            conf.error['level'] = "Die Berechtigungsebene darf nicht größer 0 sein!"
-            error = True
-        elif session['dbdata']['seclevel'] == 2 and level > 1:
+        if session['dbdata']['seclevel'] == 2 and level > 1:
             conf.error['level'] = "Die Berechtigungsebene darf nicht größer 1 sein!"
             error = True
         elif session['dbdata']['seclevel'] == 3 and level > 2:
@@ -289,7 +280,7 @@ def export(level):
                 if not db:
                     raise mariadb.PoolError("Kein Databasepool vorhanden.")
                 cur = db.cursor(dictionary=True)
-                cur.execute("SELECT histid as Charge_Nr,pnr as Konto_Nr,pnrcreate as Erstellt_Von,seclevel as Berechtigungsebene,freecode as Freischaltcode,DATE_FORMAT(DATE(createDate),'%d.%m.%Y') as Erstellt_Am from tUser WHERE seclevel<=? ORDER BY seclevel DESC,pnr", (level,))
+                cur.execute("SELECT histid as Charge_Nr,pnr as Konto_Nr,pnrcreate as Erstellt_Von,seclevel as Berechtigungsebene,freecode as Freischaltcode,DATE_FORMAT(createDate,'%d.%m.%Y') as Erstellt_Am,IF(active=1,TRUE,FALSE) as Ist_Aktiv,IF(guest=1,TRUE,FALSE) as Ist_Gast from tUser WHERE seclevel<=? ORDER BY seclevel DESC,pnr", (level,))
                 dbdata = cur.fetchall()
                 cur.close()
                 db.close()
@@ -311,3 +302,91 @@ def export(level):
     return render_template("internalError.html", conf=conf)
 
 
+@bp.route("/Export-Liste-Letzter-Login", methods=['GET'])
+def export_last_login():
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
+        abort(403)
+    
+    ts = current_app.config["TS"]
+    auth_code_valid = False
+
+    if "authcode" in session:
+        if getLogin(session["authcode"])['status']:
+            auth_code_valid = True
+
+    conf = Configure("Norderstedter Hörzeitung - Export Liste letzter Login", request, current_app)
+
+    if auth_code_valid:
+        conf.initlogin(session['dbdata'])
+        try:
+            db = get_db()
+            if not db:
+                raise mariadb.PoolError("Kein Databasepool vorhanden.")
+            cur = db.cursor(dictionary=True)
+            cur.execute("SELECT seclevel as Berechtigungs_Ebene,pnr as Konto_Nr,freecode as Freischaltcode,IFNULL(DATE_FORMAT(lastActive,'%d.%m.%Y'),'--') as Letzter_Login_Am,IF(active=1,TRUE,FALSE) as Ist_Aktiv,IF(guest=1,TRUE,FALSE) as Ist_Gast from tUser WHERE seclevel=0 ORDER BY pnr")
+            dbdata = cur.fetchall()
+            cur.close()
+            db.close()
+            resp = make_response(dbdata)
+            resp.content_encoding = "UTF-8"
+            resp.automatically_set_content_length = True
+            resp.mimetype = "application/json"
+            resp.default_mimetype = "text/csv"
+            resp.headers['Content-Disposition']=f'attachment; filename="Export_Letzter_Login_Ber-Ebene_0.json"'
+            resp.access_control_max_age = 0
+            resp.headers['Cache-Control']='no-cache'
+            resp.headers['Pragma']='no-cache'
+            return resp
+        except mariadb.Error as err:
+            if db: db.close()
+            conf.error['result_err'] = f"Datenbankfehler: {err}. Export wurde NICHT erfolgreich durchgeführt."
+            current_app.logger.error("Datenbank-Fehler: %s/export_last_login/%s", bp.name, err)
+
+    return render_template("internalError.html", conf=conf)
+
+
+@bp.route("/Export-Liste-Media-Zugriff", methods=['GET'])
+def export_media_access():
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
+        abort(403)
+    
+    ts = current_app.config["TS"]
+    auth_code_valid = False
+
+    if "authcode" in session:
+        if getLogin(session["authcode"])['status']:
+            auth_code_valid = True
+
+    conf = Configure("Norderstedter Hörzeitung - Export Liste Media Zugriff", request, current_app)
+
+    if auth_code_valid:
+        conf.initlogin(session['dbdata'])
+        try:
+            db = get_db()
+            if not db:
+                raise mariadb.PoolError("Kein Databasepool vorhanden.")
+            cur = db.cursor(dictionary=True)
+            cur.execute("SELECT seclevel as Berechtigungs_Ebene,pnr as Konto_Nr,freecode as Freischaltcode,DATE_FORMAT(accessDate,'%d.%m.%Y') as Medien_Zugriff_Am,media as Medien_Datei,accesscount as Anzahl_Zugriffe,IF(guest=1,TRUE,FALSE) as Ist_Gast from tLog ORDER BY accessDate DESC,pnr")
+            dbdata = cur.fetchall()
+            cur.close()
+            db.close()
+            resp = make_response(dbdata)
+            resp.content_encoding = "UTF-8"
+            resp.automatically_set_content_length = True
+            resp.mimetype = "application/json"
+            resp.default_mimetype = "text/csv"
+            resp.headers['Content-Disposition']=f'attachment; filename="Export_Media_Zugriff.json"'
+            resp.access_control_max_age = 0
+            resp.headers['Cache-Control']='no-cache'
+            resp.headers['Pragma']='no-cache'
+            return resp
+        except mariadb.Error as err:
+            if db: db.close()
+            conf.error['result_err'] = f"Datenbankfehler: {err}. Export wurde NICHT erfolgreich durchgeführt."
+            current_app.logger.error("Datenbank-Fehler: %s/export_last_login/%s", bp.name, err)
+
+    return render_template("internalError.html", conf=conf)

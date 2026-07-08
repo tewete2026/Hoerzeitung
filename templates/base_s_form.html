@@ -41,7 +41,6 @@
         display: block !important;
       }
     </style>
-
     
     <!-- Custom styles for this template -->
     <link href="{{ url_for('static', filename='bootstrap/css/pricing.css') }}" rel="stylesheet">
@@ -105,27 +104,22 @@
     </svg>
 
     <div class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
-      <button class="btn btn-bd-primary py-2 dropdown-toggle d-flex align-items-center"
-              id="bd-theme"
-              type="button"
-              aria-expanded="false"
-              data-bs-toggle="dropdown"
-              aria-label="Toggle theme (auto)">
+      <button class="btn btn-bd-primary py-2 dropdown-toggle d-flex align-items-center" id="bd-theme" title="Umschalten Anzeige Design" type="button" aria-expanded="false" data-bs-toggle="dropdown" aria-label="Toggle theme (auto)">
         <svg class="bi my-1 theme-icon-active" width="1em" height="1em"><use href="#circle-half"></use></svg>
-        <span class="visually-hidden" id="bd-theme-text">Toggle theme</span>
+        <span class="visually-hidden" id="bd-theme-text">Umschalten Theme</span>
       </button>
       <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="bd-theme-text">
         <li>
           <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="true">
             <svg class="bi me-2 opacity-50" width="1em" height="1em"><use href="#moon-stars-fill"></use></svg>
-            Dark
+            Dunkles Design
             <svg class="bi ms-auto d-none" width="1em" height="1em"><use href="#check2"></use></svg>
           </button>
         </li>
         <li>
           <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
             <svg class="bi me-2 opacity-50" width="1em" height="1em"><use href="#sun-fill"></use></svg>
-            Light
+            Helles Design
             <svg class="bi ms-auto d-none" width="1em" height="1em"><use href="#check2"></use></svg>
           </button>
         </li>
@@ -145,7 +139,8 @@
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">Funktionen</a>
             <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="{{ url_for('s_service.confcreate') }}">Erstellen Freischaltcodes</a></li>
-              <li><a class="dropdown-item" href="{{ url_for('s_service.confmanage') }}">Verwalten Freischaltcodes</a></li>
+              {#<li><a class="dropdown-item" href="{{ url_for('s_service.confmanage') }}">Verwalten Freischaltcodes</a></li>#}
+              <li><a class="dropdown-item" href="/nc-archiv/index.php/s/4j9HYirCpPrTatS" target="_blank">Hochladen Episode</a></li>
             </ul>
           </li>
         </ul>
@@ -154,8 +149,8 @@
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">Exportieren</a>
             <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="{{ url_for('s_service.export', level=0) }}">Export Liste Hörer (0)</a></li>
-              {% if conf.credits["seclevel"] >= 2  %}<li><a class="dropdown-item" href="{{ url_for('s_service.export', level=1) }}">Export Liste+ Redakteur (1)</a></li>{% endif %}
-              {% if conf.credits["seclevel"] >= 3  %}<li><a class="dropdown-item" href="{{ url_for('s_service.export', level=2) }}">Export Liste+ Leitung (2)</a></li>{% endif %}
+              {% if conf.credits["seclevel"] >= 2  %}<li><a class="dropdown-item" href="{{ url_for('s_service.export', level=1) }}">Export Liste+ Vorleser (1)</a></li>{% endif %}
+              {% if conf.credits["seclevel"] >= 3  %}<li><a class="dropdown-item" href="{{ url_for('s_service.export', level=2) }}">Export Liste+ Redakteur (2)</a></li>{% endif %}
               {% if conf.credits["seclevel"] >= 4  %}<li><a class="dropdown-item" href="{{ url_for('s_service.export', level=3) }}">Export Liste+ Admin (3)</a></li>{% endif %}
             </ul>
           </li>
@@ -168,9 +163,16 @@
             </ul>
           </li>
         </ul>
-        <span class="ms-auto me-3">Konto Nr.: {{ conf.credits['pnr'] }}</span>
-        <span>Ebene: {{ conf.credits['seclevel_text'] }}</span>
-        <a class="py-2 ms-3 link-body-emphasis text-decoration-none nav-link" title="Seite neu laden" href="#" id="btn-arrow-repeat"><svg class="bi me-2 opacity-100" width="1.0em" height="1.0em"><use href="#arrow-clockwise"></use></svg></a>
+        <ul class="navbar-nav mb-2 mb-lg-0">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">Protokolle</a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ url_for('s_service.export_last_login') }}">Letzter Login</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('s_service.export_media_access') }}">Medien-Zugriffe</a></li>
+            </ul>
+          </li>
+        </ul>
+        <a class="py-2 ms-auto link-body-emphasis text-decoration-none nav-link" title="Seite neu laden" href="#" id="btn-arrow-repeat"><svg class="bi me-2 opacity-100" width="1.0em" height="1.0em"><use href="#arrow-clockwise"></use></svg></a>
         <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi me-2 opacity-100" width="1.0em" height="1.0em"><use href="#box-arrow-right"></use></svg></a>
       </div>
     </div>
@@ -181,7 +183,7 @@
 
 <div class="container">
   <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-5 mt-4 border-top">
-    <p class="col-md-4 mb-0 text-body-secondary">&copy; {{ conf.credits["version"] }} &middot; {{ conf.credits["created"] }}<br>DRK-Norderstedter-Hörzeitung{% if 'pnr' in conf.credits %}<br>Konto-Nr: {{ conf.credits["pnr"] }}{% endif %}</p>
+    <p class="col-md-4 mb-0 text-body-secondary">&copy; {{ conf.credits["version"] }} &middot; {{ conf.credits["created"] }}<br>DRK-Norderstedter-Hörzeitung{% if 'pnr' in conf.credits %}<br>{% if not conf.credits['guest'] %}Konto-Nr: {{ conf.credits["pnr"] }} &middot; Ebene: {% endif %}{{ conf.credits['seclevel_text'] }}{% endif %}</p>
     <a href="{{ url_for('bx_s_start.s_album') }}" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
         <img src="{{ url_for('static', filename='Logo_Title_black_200.png') }}" alt="Logo_Title_black_200">
     </a>

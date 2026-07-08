@@ -17,29 +17,28 @@
 /*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
 
 --
--- Table structure for table `tUser`
+-- Table structure for table `tLog`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-DROP TABLE IF EXISTS `tUser`;
-CREATE TABLE `tUser` (
+DROP TABLE IF EXISTS `tLog`;
+CREATE TABLE `tLog` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `pnr` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Nummer',
   `seclevel` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Berechtigungs Ebene',
-  `pnrcreate` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Konto Nummer erstellt',
-  `histid` int(11) DEFAULT NULL COMMENT 'ID zu tHistory',
-  `freecode` varchar(20) NOT NULL DEFAULT '' COMMENT 'Freischaltcode',
-  `active` bit(1) NOT NULL DEFAULT b'1' COMMENT 'Ist der Freischaltcode aktiv (1=J/0=N)',
+  `pnr` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Konto Nummer',
   `guest` bit(1) NOT NULL DEFAULT b'0' COMMENT 'Ist der Freischaltcode ein Gast (1=J/0=N)',
-  `createDate` date NOT NULL DEFAULT curdate() COMMENT 'Erstellungs Datum',
-  `lastActive` date DEFAULT NULL COMMENT 'Letztes Datum Aktivität',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `pnr` (`pnr`),
-  UNIQUE KEY `freecode` (`freecode`)
+  `freecode` varchar(20) NOT NULL DEFAULT '' COMMENT 'Freischaltcode',
+  `media` varchar(255) NOT NULL DEFAULT '' COMMENT 'Medien Datei',
+  `accessDate` date NOT NULL DEFAULT curdate() COMMENT 'Zugriffs Datum',
+  `accesscount` int unsigned NOT NULL DEFAULT 0 COMMENT 'Anzal der Zufriffe pro pnr,accessDate,media',
+  KEY `pnr` (`pnr`),
+  KEY `media` (`media`),
+  KEY `accessDate` (`accessDate`),
+  UNIQUE KEY `access` (`pnr`, `accessDate`, `media`),
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1987 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
-TRUNCATE TABLE `tUser`;
-INSERT INTO `tUser`(pnr,seclevel,histid,freecode,guest) VALUES (1,4,1,'4AQPW-LVB1-9E24-B7CG',0),(2,0,1,'0GAST-ABCD-ABCD-ABCD',1);
+TRUNCATE TABLE `tLog`;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

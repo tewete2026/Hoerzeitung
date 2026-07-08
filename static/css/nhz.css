@@ -21,3 +21,7 @@ audio {
 #table-history th, #table-history td {
     padding: 0;
 }
+
+a svg {
+    color: red;
+}

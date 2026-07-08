@@ -32,11 +32,6 @@
             </div>
           </div>
         </form>
-
-
-
-
-
         {% if conf.haserror("result_succ_trash") %}<div class="alert alert-success" role="alert">{{ conf.error['result_succ_trash'] }}</div>{% endif %}
         {% if conf.haserror("result_err_trash") %}<div class="alert alert-danger" role="alert">{{ conf.error['result_err_trash'] }}</div>{% endif %}
         <div class="table-responsive">
@@ -78,11 +73,11 @@
             <div class="col-md-6">
               <label for="level" class="form-label">Berechtigungsebene</label>
               <select class="form-select{% if conf.haserror("level") %} is-invalid{% endif %}" id="level" name="level" required>
-                {% if conf.credits["seclevel"] > 1  %}<option value="-1">Bitte wählen...</option>{% endif %}
+                <option value="-1">Bitte wählen...</option>
                 <option value="0">Ebene 0 (Hörer): Nur Hören</option>
-                {% if conf.credits["seclevel"] >= 2  %}<option value="1">Ebene 1 (Redakteur): darf Freischaltcodes für Ebene 0 (Hörer) erzeugen</option>{% endif %}
-                {% if conf.credits["seclevel"] >= 3  %}<option value="2">Ebene 2 (Leitung): darf Freischaltcodes für Ebene 1 (Redakteur) erzeugen</option>{% endif %}
-                {% if conf.credits["seclevel"] >= 4  %}<option value="3">Ebene 3 (Admin): darf Freischaltcodes Ebene 2 (Leitung) erzeugen</option>{% endif %}
+                <option value="1">Ebene 1 (Vorleser): Nur Hören</option>
+                {% if conf.credits["seclevel"] >= 3  %}<option value="2">Ebene 2 (Redakteur): darf Freischaltcodes für Ebene 0, 1 erzeugen</option>{% endif %}
+                {% if conf.credits["seclevel"] >= 4  %}<option value="3">Ebene 3 (Admin): darf Freischaltcodes für Ebene 0, 1, 2 erzeugen</option>{% endif %}
               </select>
               <div class="invalid-feedback">{% if conf.haserror("level") %}{{ conf.error['level'] }}{% endif %}</div>
             </div>
