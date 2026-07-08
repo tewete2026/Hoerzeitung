@@ -98,7 +98,7 @@ def create_app(test_config="DEV"):
         ownhost = "http://localhost:5000"
     else:
         modname = f"/s-{version.Configs.APP_NAME}"
-        ownhost = "https://hoerzeitung.drk-norderstedt.ipv64.net/s-nhz"
+        ownhost = "https://hoerzeitung.drk-norderstedt.ipv64.net"
     app.config.from_mapping(
         SECRET_KEY=credentials.Passwords.SECRET_KEY,
         OWN_URL=Http_Helper(ownhost),
