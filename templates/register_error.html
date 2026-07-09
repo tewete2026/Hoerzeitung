@@ -1,0 +1,15 @@
+{% extends "base_form.html" %}
+{% block main %}
+			<div class="container">
+				<div class="pl-section text-center">
+					<div class="section-title text-center">
+						<span>Wir haben Ihre Anfrage erhalten</span>
+						<h3>Ihre Anfrage konnte nicht verarbeitet werden</h3>
+						<div class="mx-auto w-75">
+							<p class="mt-3">Hallo {{ conf.map["regist_map"]["name"] }}, die Aufnahme Ihrer Anfrage wurde leider nicht erfolgreich beendet.</p>
+						</div>
+						<a href="{{ url_for('bx_start.start') }}" title="" class="home-btn"><i class="fa fa-arrow-left"></i> Zurück zur Startseite</a>
+					</div><!--section-title end-->
+				</div><!--pl-section end-->
+			</div>
+{% endblock %}

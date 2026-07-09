@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Anzeige Episode der Hörzeitung Norderstedt">
+  <meta name="author" content="Thomas Wachler-Thomsen">
+  <title>Hörzeitung - Norderstedt</title>
+  <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='bootstrap/css/css@3.css') }}" rel="stylesheet">
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="{{ url_for('static', filename='Favicon_PCafe.png') }}" sizes="29x26" type="image/png">
+  <style> 
+    div#player2 {width:90%;height:100%;margin-bottom: 20px;margin-top: 20px;} 
+  </style>
+</head>
+<body class="bg-dark bg-opacity-25">
+  <main class="d-flex flex-nowrap">
+    <section id="sec-overview" class="d-flex flex-column align-items-stretch p-3 mt-2 flex-shrink-0 bg-white rounded-5" style="width: 44%;margin-left: auto;margin-right: auto;">
+    <p class="d-flex align-items-center flex-shrink-0 text-decoration-none bg-secondary text-white rounded-3 p-1">
+      <span class="fs-5 fw-semibold">RSS-Ausgabe</span>
+    </p>
+    <div id="player1" class="g-5 ms-2"></div>
+    <div id="player2" class="g-5 ms-5"></div>
+    <div class="row g-5">
+      <div class="col-md-7 col-lg-12">
+        {{ outstr|safe }}
+      </div>
+    </div>
+    </section>
+  </main>
+<script src="https://cdn.podlove.org/web-player/4.x/embed.js"></script>  
+<script src="{{ url_for('static', filename='bootstrap/js/playerjs.js') }}"></script>  
+<script>
+  podlovePlayer('#player1', {
+    "show": {
+      "title": "{{ content['title'] }}",
+      "subtitle": "{{ content['subtitle'] }}"
+    },
+    "title": "{{ content['episode'] }}",
+    "subtitle": "{{ content['episode_subtitle'] }}",
+    "poster": "{{ content['image'] }}",
+    "summary": "{{ content['summary'] }}",
+    "publicationDate": "{{ content['published'] }}",
+    "duration": "{{ content['duration'] }}",
+    "audio": [
+      {
+        "url": "{{ content['audio'] }}",
+        "title": "MP3 Audio (mp3)",
+        "mimeType": "audio\/mpeg"
+      }
+    ],
+    "visibleComponents": [
+      'tabInfo',
+      'tabChapters',
+      // 'tabFiles',
+      'tabAudio',
+      // 'tabShare',
+      'poster',
+      'showTitle',
+      'episodeTitle',
+      'subtitle',
+      'progressbar',
+      'controlSteppers',
+      'controlChapters'
+    ]
+  });
+   var player = new Playerjs({
+    "id":"player2", 
+    "file":"{{ content['audio'] }}",
+    "title":"{{ content['episode'] }}",
+    "duration":"{{ content['duration'] }}",
+    "poster":"{{ content['image'] }}"
+    });
+</script>  
+</body>
+</html>

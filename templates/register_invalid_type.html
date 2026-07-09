@@ -1,0 +1,15 @@
+{% extends "base_form.html" %}
+{% block main %}
+			<div class="container">
+				<div class="pl-section text-center">
+					<div class="section-title text-center">
+						<span>Wir haben Ihre Anfrage erhalten</span>
+						<h3>Ihre Anfrage enthält noch einen Fehler</h3>
+						<div class="mx-auto w-75">
+							<p class="mt-3">Hallo {{ conf.map["regist_map"]["name"] }}, der angegebene Datei-/Dokumententyp ist nicht zulässig. Bitte wählen Sie einen gültigen Typ.</p>
+						</div>
+						<a href="{{ url_for('bx_start.start') }}" title="" class="home-btn"><i class="fa fa-arrow-left"></i> Zurück zur Startseite</a>
+					</div><!--section-title end-->
+				</div><!--pl-section end-->
+			</div>
+{% endblock %}

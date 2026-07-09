@@ -1,0 +1,120 @@
+import mariadb, os
+from flask import Blueprint
+from flask import current_app, session
+from flask import request
+from flask import render_template
+from flask import redirect, url_for
+from werkzeug.exceptions import abort
+from werkzeug.utils import secure_filename
+from .db import Configure
+from .ax_episode import ax_submit_episode
+from ..db import get_db
+from .. import version, tools
+
+bp = Blueprint("service", __name__, url_prefix="/service")
+
+
+@bp.before_request
+def check_authority():
+    auth_code_valid = False
+    if "authcode" in session:
+        # code = session["authcode"]
+        auth_code_valid = True
+    if not auth_code_valid:
+        abort(403)
+
+
+@bp.route("/", methods=['GET', 'POST'])
+def start():
+    ts = current_app.config["TS"]
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+
+    cks_prefix = 'ax_submit_'
+    cks = ['last_id', 'last_kdnr', 'last_mode', 'submit_status', 'upload_status', 'can_replace', 'DB_Error']
+    rc_code = {}
+    for cks_key in cks:
+        cks_value = cks_prefix + cks_key
+        if cks_value in session: rc_code.update({cks_key:session[cks_value]})
+
+    if request.method == "POST":
+        size = duration = temp_name = target_name = None
+        file = request.files['frm-main-file']
+        filename = secure_filename(file.filename)
+        if len(filename) > 0: 
+            temp_name = current_app.instance_path + "/upload/" + filename
+            target_name = current_app.instance_path + "/long/" + filename
+            file.save(temp_name)
+            # (title, mp3description, published, size, duration, chapter) = getMP3Info(temp_name)
+            (size, duration) = tools.getMpegInfo(temp_name)
+        rc_code = ax_submit_episode(request.form, filename, target_name, size, duration)
+        if rc_code["submit_status"] == "OK":
+            if target_name is not None:
+                if 'can_replace' in rc_code:
+                    can_replace = rc_code['can_replace']
+                else: can_replace = True
+                if can_replace:
+                    os.replace(temp_name, target_name)
+                    rc_code["upload_status"] = filename
+        else:
+            if temp_name is not None and os.path.exists(temp_name):
+                os.remove(temp_name)
+
+        for key, value in rc_code.items():
+            session[cks_prefix + key] = str(value)
+        return redirect(url_for("service.start"))
+
+    try:
+        db = get_db()
+        if not db:
+            raise mariadb.PoolError()
+        cur = db.cursor(dictionary=True)
+
+        cur.execute("SELECT MAX(kdnr)+1 as max_kdnr from tEpisode")
+        max_kdnr = cur.fetchone()['max_kdnr']
+
+        cur.close()
+        db.close()
+    except mariadb.Error as err:
+        db.close()
+        current_app.logger.error("Datenbank-Fehler: %s/%s", bp.name, err)
+        abort(500)
+
+    conf = Configure(request, current_app, title="Verwalten Episoden", header=["Episode Nr.", "Neue Episode erfassen Nr. " + str(max_kdnr)], prefix="03", app='episode',
+                     link='link-main', label="Episoden", category="Episoden", overview="Übersicht Episoden", pag_search="oder Titel eingeben", 
+                     btn_type="submit")
+    conf.javascript.add({"form_submit":'yes'})
+    conf.append("title_default", "Folge {0:04.0f} in Woche {1:04.0f}/{2:02.0f}".format(max_kdnr, ts.isocalendar()[0], ts.isocalendar()[1]))
+    if rc_code: conf.javascript.add(rc_code)
+
+    return render_template("service/verwEpisoden.html", conf=conf, javascript=conf.javascript.getOut())
+
+
+
+@bp.route("/Mitglieder")
+def members():
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+
+    dbdata={}
+    try:
+        db = get_db()
+        if not db:
+            raise mariadb.PoolError()
+        cur = db.cursor(dictionary=True)
+
+        cur.execute("SELECT AnredeID as id,IFNULL(AnredeBezeichnung, 'keine Bestimmung') as bezeichnung from tAnrede ORDER BY Reihenfolge")
+        dbdata.update({"anrede":cur.fetchall()})
+
+        cur.close()
+        db.close()
+    except mariadb.Error as err:
+        db.close()
+        current_app.logger.error("Datenbank-Fehler: %s/%s", bp.name, err)
+        abort(500)
+
+    conf = Configure(request, current_app, title="Verwalten Mitglieder", header=["Mitglied Nr.", "Neues Mitglied erfassen"], prefix="02", app='member',
+                     link='link-member', label="Mitglieder", category="Mitglieder", overview="Übersicht Mitglieder", pag_search="oder Name eingeben")
+
+
+    return render_template("service/verwMember.html", dbdata=dbdata, conf=conf, javascript=conf.javascript.getOut())

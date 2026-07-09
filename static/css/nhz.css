@@ -1,0 +1,27 @@
+.btn-primary {
+  --bs-btn-bg:#b90000;
+  --bs-btn-border-color:#b90000;
+}
+
+.get-touch h2 {
+    font-size: 2em;
+    padding-bottom: 1em;
+}
+
+.get-touch h4 {
+    font-size: 1.5em;
+    padding-bottom: 0.5em;
+}
+
+audio {
+    display: block;
+    width: 100%;
+}
+
+#table-history th, #table-history td {
+    padding: 0;
+}
+
+a svg {
+    color: red;
+}

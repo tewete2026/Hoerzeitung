@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Programme für Hörzeitung Norderstedt">
+    <meta name="author" content="Thomas Wachler-Thomsen">
+    <title>Hörzeitung - Norderstedt</title>
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/css@3.css') }}" rel="stylesheet">
+  
+    <!-- Favicons -->
+    <link rel="shortcut icon" href="{{ url_for('static', filename='Logo_Title.png') }}" sizes="29x26" type="image/png">
+      
+    <!-- Custom styles for this template -->
+    <link href="{{ url_for('static', filename='css/nhz.css') }}" rel="stylesheet">
+  </head>
+  <body>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+    <symbol id="arrow-right-circle" viewBox="0 0 16 16">
+      <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+    </symbol>
+  </svg>
+
+<div class="col-lg-8 mx-auto p-4 py-md-5">
+  <header class="d-flex align-items-center pb-3 mb-5 border-bottom">
+    <a href="/" class="d-flex align-items-center text-body-emphasis text-decoration-none">
+      <img src="{{ url_for('static', filename='Logo_Img.png') }}" alt="Logo_DRK">
+      <span class="fs-4 ms-5">Norderstedter Hörzeitung</span>
+    </a>
+  </header>
+
+  <main>
+    {% block main %}{% endblock %}
+  </main>
+  <footer class="pt-5 my-5 text-body-secondary border-top">
+    DRK-Norderstedter-Hörzeitung &middot; &copy; 2026
+  </footer>
+</div>
+<script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='bootstrap/js/color-modes.js') }}"></script>
+
+</body>
+</html>

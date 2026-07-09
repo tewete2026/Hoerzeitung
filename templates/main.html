@@ -1,0 +1,47 @@
+{% extends "base_form.html" %}
+{% block main %}
+			<div class="container">
+				<div class="section-title text-center">
+					<span>Hören Sie hier die bisher veröffentlichten Beiträge</span>
+					<h2>Übersicht <span>Episoden</span></h2>
+					<i class="flaticon-playlist"></i>
+				</div><!--section-title end-->
+				<div class="podcast-episodes">{% for row in episodes %}
+					<div class="podcast-epd">
+						<div class="row align-items-center">
+							<div class="col-lg-4">
+								<div class="podcast-thumb">
+									<img src="{{ url_for('bx_start.media', file=row['image']) }}" alt="Cover of Episode" class="w-100">
+								</div><!--podcast-thumb end-->
+							</div>
+							<div class="col-lg-8">
+								<div class="podcast-ep-info">
+									<ul class="pod-meta">
+										<li>
+											<i class="flaticon-playlist"></i>
+											{{ row['kdnr'] }}
+										</li>
+										<li>
+											<i class="flaticon-date"></i>
+											{{ row['published'] }}
+										</li>
+										<li>
+											<i class="flaticon-play"></i>
+											{{ row['duration'] }}
+										</li>
+									</ul>
+									<h2>{{ row['title'] }}</h2>
+									<div class="music-player">
+										<audio controls src="{{ url_for('bx_start.media', file=row['audio']) }}"></audio>
+									</div>
+									<p style="font-size: 80%;">{{ row['summary']|safe }}</p>
+								</div><!--podcast-ep-info end-->
+							</div>
+						</div>
+					</div><!--podcast-epd end-->{% endfor %}
+				</div><!--podcast-episodes end-->
+				<div class="load-more text-center">
+					<a href="#" title="" class="btn-default"><i class="flaticon-reload"></i>Weitere anzeigen <span></span></a>
+				</div><!--load-more end-->
+			</div>
+{% endblock %}
