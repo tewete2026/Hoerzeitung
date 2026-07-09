@@ -54,9 +54,8 @@
       <table class="table text-center">
         <thead>
           <tr>
-            <th style="width: 33%;">Titel</th>
+            <th style="width: 53%;">Titel</th>
             <th style="width: 5%;">Länge</th>
-            <th style="width: 20%;">Veröffentlicht</th>
             <th style="width: 37%;">Audio-Player</th>
           </tr>
         </thead>
@@ -64,7 +63,6 @@
           <tr>
             <th scope="row" class="text-start">{{ row['title'] }} <a class="list-table-rows" title="Anzeigen Beschreibung für {{ row['title'] }}" href="#"><svg class="bi me-2 opacity-100" width="1em" height="1em"><use href="#question-circle"></use></svg></a></th>
             <td>{{ row['duration'] }}</td>
-            <td>{{ row['date'] }}</td>
             <td><audio preload="none" loading="lazy" controls src="{{ url_for('bx_start.media', file=row['audio']) }}"></audio></td>
           </tr>
           <tr class="d-none"><td colspan="4" aria-details="{{ row['title'] }}">{{ row['description'] }}</td>
