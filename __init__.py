@@ -174,7 +174,7 @@ def create_app(test_config="DEV"):
     app.logger.info("Name=%s; Version detected=%s; Created=%s", app.name, app.config["VERSION"], app.config["CREATED"])
 
     if test_config == "DEV":
-        app.config.from_mapping(TEST_RUN=True, SEND_TO='Thomas@twtdiskstation.local', SMTP_HOST='192.168.168.200', SMTP_PORT=25, SMTP_USER='Thomas', SMTP_PWD='Tomgret')
+        app.config.from_mapping(TEST_RUN=True, SEND_TO=credentials.Dev.SEND_TO, SMTP_HOST=credentials.Dev.SMTP_HOST, SMTP_PORT=25, SMTP_USER=credentials.Dev.SMTP_USER, SMTP_PWD=credentials.Dev.SMTP_PWD)
         app.logger.info("Test-Dev active; Logger=%s; Parent-Logger=%s", app.logger.name, app.logger.parent.name)
         for hdlr in app.logger.parent.handlers:
             if hdlr.get_name() == "smtp":

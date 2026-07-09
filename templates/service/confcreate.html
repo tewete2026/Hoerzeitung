@@ -62,7 +62,7 @@
         <form class="needs-validation" id="main-form" novalidate autocomplete="on" method="post">
           <input type="hidden" id="histid" name="histid"{% if conf.haserror("histid") %} value="{{ conf.error['histid'] }}"{% endif %}>
           <div class="row g-3">
-            <div class="col-6">
+            <div class="col-md-4">
               <label for="quantity" class="form-label">Anzahl neuer Codes</label>
               <div class="input-group has-validation">
                 <span class="input-group-text">Anzahl</span>
@@ -70,7 +70,7 @@
                 <div class="invalid-feedback">{% if conf.haserror("quantity") %}{{ conf.error['quantity'] }}{% endif %}</div>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-8">
               <label for="level" class="form-label">Berechtigungsebene</label>
               <select class="form-select{% if conf.haserror("level") %} is-invalid{% endif %}" id="level" name="level" required>
                 <option value="-1">Bitte wählen...</option>
