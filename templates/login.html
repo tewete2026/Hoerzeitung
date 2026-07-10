@@ -12,7 +12,7 @@
       <div class="col-md-10 mx-auto col-lg-5">
         <form class="p-4 p-md-4 border rounded-3 bg-body-tertiary" id="login-form" autocomplete="off" method="post">
           <div class="form-floating mb-3">
-            <input type="text" name="authcode" class="form-control {% if conf.haserror('authcode') %}is-invalid{% endif %}" id="logininput">
+            <input type="password" name="authcode" class="form-control {% if conf.haserror('authcode') %}is-invalid{% endif %}" id="logininput">
             <label for="logininput">Freischaltcode</label>
             <div class="invalid-feedback">{% if conf.haserror('authcode') %}{{ conf.error['authcode'] }}{% endif %}</div>
           </div>

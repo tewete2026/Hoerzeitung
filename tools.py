@@ -11,19 +11,24 @@ def getMP3Info(rawname:str):
     # audio = MP3(current_app.instance_path + "/" + mp3, ID3=EasyID3)
     audio = MP3(rawname)
     episode_kap = {}
+    description = "- - - -"
+    title = "---"
+    tlen = None
     for key in audio.keys():
         cont = audio.get(key)
         if isinstance(cont, CHAP):
             text = cont.sub_frames["TIT2"][0]
             if len(text) > 0:
                 episode_kap.update({key.removeprefix("CHAP:"):text})
-    description = audio.get("COMM::eng")
+        if key == 'TIT2':
+            title = str(cont)
+        if key == 'TLEN':
+            tlen = str(cont)
+        if key[:5] == 'COMM:':
+            description = str(cont)
     # keys = ["TALB", "TPE1", "TDRC", "TIT2", "TENC", "TLEN"]
     # for key in keys:
     #     print(key, audio.get(key))
-    if description is None: description = "- - - -"
-    title = audio.get("TIT2")
-    if title is None: title = ["---"]
     size = os.stat(rawname).st_size
     chapter = ""
     counter = 1
@@ -31,7 +36,6 @@ def getMP3Info(rawname:str):
         chapter += "{0:02}. {1}<br>".format(counter, text)
         counter += 1
     published = ts.fromtimestamp(os.stat(rawname).st_mtime)
-    tlen = audio.get("TLEN")
     if tlen is None:
         dur = audio.info.length
     else:
@@ -40,7 +44,6 @@ def getMP3Info(rawname:str):
     sec = dur % 60
     duration = "{0:02.0f}:{1:02.0f}".format(min, sec)
     # print(tlen, dur, min, sec, duration, audio, audio.keys())
-
     return (title, description, published, size, duration, chapter)
 
 

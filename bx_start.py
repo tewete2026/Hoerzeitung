@@ -193,21 +193,23 @@ def start():
 
 @bp.route("/<auth_code>/feed.rss")
 def feed_rss(auth_code):
+    """
+    https://hoerzeitung.drk-norderstedt.ipv64.net/s-nhz/0C145-C5UI-YD72-NKQ1/feed.rss
+    """
     http = current_app.config["OWN_URL"]
     ts = current_app.config["TS"]
     auth_code_guest = True
+    auth_code_valid = False
     if auth_code is not None:
         rc_code = getLogin(auth_code)
         if rc_code['status']:
             auth_code_guest = rc_code['dbdata']['guest']
-
+            auth_code_valid = True
     pod = Podcast()
-    pod.name = "Online-Version Norderstedter Hörzeitung"
     pod.description = "Die Norderstedter Hörzeitung bietet Lokales aus Norderstedt und hat auch einen Blick auf die Welt"
-    if auth_code_guest: pod.subtitle = "Sie hören hier nur einzelne Kostproben als Gast. Die kompletten Episoden erhalten Sie mit dem korrekten Freischaltcode."
+    if auth_code_guest: pod.subtitle = "Sie hören hier als Gast nicht die reguläre Version der Hörzeitung, sondern Ausschnitte aus einigen Produktionen. Die kompletten Episoden erhalten Sie mit dem korrekten Freischaltcode."
     pod.website = credentials.EMails.WEBSITE
     pod.explicit = False
-    pod.image = http.goTo(url_for('bx_start.media', file='Logo-NHZ.jpg'))
     pod.copyright = credentials.EMails.COPYRIGHT
     pod.language = "de-DE"
     pod.authors = [Person(name="DRK-Norderstedt", email=credentials.EMails.OFFICE)]
@@ -219,8 +221,12 @@ def feed_rss(auth_code):
     position = 1
     if auth_code_guest:
         path = "/short"
+        pod.name = "Open-Version Norderstedter Hörzeitung"
+        pod.image = http.goTo(url_for('bx_start.media', file='LogoGruppe-4.jpg'))
     else:
         path = "/long"
+        pod.name = "Online-Version Norderstedter Hörzeitung"
+        pod.image = http.goTo(url_for('bx_start.media', file='Logo-NHZ.jpg'))
     full_dir = current_app.instance_path + path
     rc_code = get_s_episodes(full_dir)
     if not rc_code['status']:
@@ -229,18 +235,19 @@ def feed_rss(auth_code):
     for episode in episodes:
         pod_ep = pod.add_episode(Episode(title=episode["title"]))
         pod_ep.id = http.goTo(url_for('bx_start.media', file=episode["audio"]))
-        if not auth_code_guest:
-            pod_ep.summary = episode["summary"]
-            pod_ep.long_summary = episode["chapter"]
-            pod_ep.publication_date = episode["published"]
-            pod_ep.image = http.goTo(url_for('bx_start.media', file=episode["image"]))
+        if auth_code_valid: 
             attach = "?authcode=" + auth_code
-            pod_ep.media = Media(url=http.goTo(url_for('bx_start.media', file=episode["audio"]) + attach), 
-                                size=episode["length"], 
-                                type="audio/mpeg")
+            image = episode["image"]
         else: 
-            pod_ep.media = Media(url=http.goTo(url_for('bx_start.media', file=episode["audio"])), 
-                                type="audio/mpeg")
+            attach = ""
+            image = "LogoGruppe-4k.jpg"
+        pod_ep.summary = episode["summary"]
+        pod_ep.long_summary = episode["chapter"]
+        pod_ep.publication_date = episode["published"]
+        pod_ep.image = http.goTo(url_for('bx_start.media', file=image))
+        pod_ep.media = Media(url=http.goTo(url_for('bx_start.media', file=episode["audio"]) + attach), 
+                            size=episode["length"], 
+                            type="audio/mpeg")
         pod_ep.media.populate_duration_from(episode["rawname"])
         pod_ep.position = position
         position += 1
