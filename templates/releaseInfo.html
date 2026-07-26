@@ -1,0 +1,34 @@
+{% extends "base_s_form.html" %}
+{% block content %}
+
+<div class="container py-3">
+  <header>
+    <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
+      <a href="{{ url_for('bx_s_start.s_album') }}" class="d-flex align-items-center link-body-emphasis text-decoration-none">
+        <img src="{{ url_for('static', filename='Logo_Title_black_200.png') }}" alt="Logo_Title_black_200">
+      </a>
+      
+      <nav class="nav nav-underline d-inline-flex mt-2 mt-md-0 ms-md-auto">
+        {% if conf.has("show_navall") %}
+        <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
+        {% endif %}
+        <a class="py-2 link-body-emphasis text-decoration-none nav-link" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
+      </nav>
+    </div>
+    
+  </header>
+  
+  <main>
+    <div class="container">
+      <div class="row">
+        <div class="get-touch">
+          <h1>Release Historie</h1>
+          <h4>Erläuterungen zu den bisherigen Änderungen</h4>
+          {{ conf.get('content')|safe }}
+        </div><!--get-touch end-->
+      </div>
+    </div>
+  </main>
+</div>
+
+{% endblock %}

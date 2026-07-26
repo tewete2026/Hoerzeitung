@@ -6,10 +6,27 @@ from flask import request
 from flask import render_template, session
 from flask import redirect, url_for
 from werkzeug.exceptions import abort
+from markdown import markdown
 from .db import get_db, Configure, getLogin, get_s_episodes
 from . import version
 
 bp = Blueprint("bx_s_start", __name__)
+
+
+@bp.route("/Open", methods=['GET'])
+def s_open():
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    clear_session()
+    return show_content("album.html", " - Album Übersicht - Open-Version", guest=True)
+
+
+@bp.route("/Online/<authcode>", methods=['GET'])
+def s_online(authcode):
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    clear_session()
+    return show_content("album.html", " - Album Übersicht - Online-Version", online=True, parm_authcode=authcode)
 
 
 @bp.route("/S-Album", methods=['GET', 'POST'])
@@ -34,16 +51,32 @@ def s_impress():
     return render_template("impressum.html", conf=conf)
 
 
+@bp.route("/S-Release-Info", methods=['GET'])
+def s_releases():
+    conf = Configure("Norderstedter Hörzeitung - Aktualisierungen", request, current_app)
+    if "authcode" in session:
+        conf.append("show_navall", True)
+    with open(current_app.root_path + "/static/doc/history.md") as markdn:
+        conf.append("content", markdown(text=markdn.read(), output_format='html'))
+        
+    return render_template("releaseInfo.html", conf=conf)
+
+
 @bp.route("/S-Abmelden", methods=['GET'])
 def s_logout():
-    session.pop('dbdata')
-    session.pop('authcode')
-    session.pop('max_pageview')
-    session.pop('guest')
+    clear_session()
     return redirect(url_for('bx_s_start.s_album'))
 
 
-def show_content(html_form, header, subdir=None):
+def clear_session():
+    if 'dbdata' in session:
+        session.pop('dbdata')
+        session.pop('authcode')
+        session.pop('max_pageview')
+        session.pop('guest')
+
+
+def show_content(html_form, header, subdir=None, guest=False, online=False, parm_authcode=None):
     ts = current_app.config["TS"]
     auth_code_valid = False
     auth_code_set = False
@@ -59,7 +92,13 @@ def show_content(html_form, header, subdir=None):
         if getLogin(session["authcode"])['status']:
             auth_code_valid = True
     
-    if request.method == "POST":
+    if guest:
+        form_data = {"authcode":current_app.config["GUEST_CODE"]}
+        post_request = True
+    elif online:
+        form_data = {"authcode":parm_authcode}
+        post_request = True
+    elif request.method == "POST":
         form_data = request.form
         post_request = True
 

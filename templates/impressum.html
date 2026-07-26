@@ -9,14 +9,13 @@
       </a>
       
       <nav class="nav nav-underline d-inline-flex mt-2 mt-md-0 ms-md-auto">
-{% if conf.has("show_navall") %}
+        {% if conf.has("show_navall") %}
         <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
-{% endif %}
+        {% endif %}
         <a class="py-2 link-body-emphasis text-decoration-none nav-link active" aria-current="page" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
       </nav>
     </div>
     
-   </div>
   </header>
   
   <main>
@@ -31,18 +30,9 @@
           <p><strong>Steuerliche Angaben</strong><br>Steuernummer: 11 290 711 29</p>
           <p><strong>Internet-Redaktion</strong><br>info(at)drk-norderstedt(dot)de</p>
           <ul class="contact-dtts">
-            <li>
-              <i class="flaticon-cursor"></i>
-              <span>Deutsches Rotes Kreuz Ortsverein Norderstedt e.V., Ochsenzoller Straße 124, 22848 Norderstedt</span>
-            </li>
-            <li>
-              <i class="flaticon-telephone"></i>
-              <span>(040) 523 18 26</span>
-            </li>
-            <li>
-              <i class="flaticon-mail"></i>
-              <span>info(at)drk-norderstedt(dot)de</span>
-            </li>
+            <li>Deutsches Rotes Kreuz Ortsverein Norderstedt e.V., Ochsenzoller Straße 124, 22848 Norderstedt</li>
+            <li>Telefon: (040) 523 18 26</li>
+            <li>E-Mail: info(at)drk-norderstedt(dot)de</li>
           </ul>
           <p><strong>Nachweis der Sehbehinderung</strong><br>Zum Hören der Norderstedter Hörzeitung benötigen Sie einen Freischaltcode. Falls Sie noch über keinen Freischaltcode verfügen, können Sie einen beantragen, indem Sie <a href="{{ url_for('bx_start.media', file='Nachweis.pdf') }}">hier ein PDF-Dokument herunterladen zum Nachweis der Seh- oder Lesebehinderung</a>, es ausfüllen und uns zusenden.</p>
           {#<!--<ul class="socio-links">

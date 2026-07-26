@@ -214,7 +214,7 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1):
                 audio_name = f"{subdir}_{element}"
             if key in episodes:
                 episode = episodes.get(key)
-            (title, description, published, size, dur, chapter) = tools.getMP3Info(rawname)
+            (title, description, published, size, dur, chapter, image_dict) = tools.getMP3Info(rawname)
             (si, duration) = tools.getMpegInfo(rawname)
             published = ts.addtimezone(published)
             episode.update({"rawname":rawname})
@@ -226,7 +226,7 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1):
             episode.update({"audio":audio_name})
             episode.update({"length":size})
             episode.update({"duration":duration})
-            episode.update({"image":'LogoGruppe-1k.jpg'})
+            if 'data' in image_dict: episode.update({"image":f'{audio_name}_ximg.jpg'})
             episode.update({"size":size})
             episode.update({"published":str(published)})
             episode.update({"date":str(published)[:19]})

@@ -11,6 +11,7 @@ def getMP3Info(rawname:str):
     # audio = MP3(current_app.instance_path + "/" + mp3, ID3=EasyID3)
     audio = MP3(rawname)
     episode_kap = {}
+    image_dict = {}
     description = "- - - -"
     title = "---"
     tlen = None
@@ -26,6 +27,10 @@ def getMP3Info(rawname:str):
             tlen = str(cont)
         if key[:5] == 'COMM:':
             description = str(cont)
+        if key == 'APIC:':
+            image_dict.update({'mime': cont.mime})
+            image_dict.update({'desc': cont.desc})
+            image_dict.update({'data': cont.data})
     # keys = ["TALB", "TPE1", "TDRC", "TIT2", "TENC", "TLEN"]
     # for key in keys:
     #     print(key, audio.get(key))
@@ -44,7 +49,7 @@ def getMP3Info(rawname:str):
     sec = dur % 60
     duration = "{0:02.0f}:{1:02.0f}".format(min, sec)
     # print(tlen, dur, min, sec, duration, audio, audio.keys())
-    return (title, description, published, size, duration, chapter)
+    return (title, description, published, size, duration, chapter, image_dict)
 
 
 def getMpegInfo(rawname:str):

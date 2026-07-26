@@ -8,18 +8,57 @@ from flask import redirect, url_for, send_from_directory
 from werkzeug.exceptions import abort
 from werkzeug.utils import secure_filename
 from .db import get_db, Configure, get_s_episodes, send_mail, getLogin
-from . import version, credentials
+from . import version, credentials, tools
 from .podcast_texte import podcast_texte
 
 bp = Blueprint("bx_start", __name__)
 
 
 @bp.route("/media/<file>")
-def media(file):
+def media(file:str):
     path = ""
     if file.startswith("Logo"):path = ""
-    elif file.endswith(".jpg"):path = "/galerie"
     elif file.endswith(".pdf"):path = "/docs"
+    elif file.endswith("_ximg.jpg"):
+        if "authcode" in session:
+            rc_code = getLogin(session["authcode"])
+            auth_code_valid = rc_code['status']
+        elif "authcode" in request.args:
+            rc_code = getLogin(request.args["authcode"])
+            auth_code_valid = rc_code['status']
+        if auth_code_valid:
+            dbdata = rc_code['dbdata']
+            auth_code_guest = dbdata['guest']
+            if auth_code_guest:
+                path = "/short"
+            else:
+                path = "/long"
+        else:
+            path = "/short"
+        fname = file.rstrip("_ximg.jpg")
+        path = current_app.instance_path + path
+        file_arr = fname.split('_')
+        if len(file_arr) > 1:
+            path += "/" + file_arr[0]
+            fname = file_arr[1]
+        rawname = path + "/" + fname
+        if not os.path.exists(rawname):
+            abort(404)
+        (title, description, published, size, dur, chapter, image_dict) = tools.getMP3Info(rawname)
+        if not 'data' in image_dict:
+            abort(404)
+        resp = make_response(image_dict['data'])
+        resp.content_encoding = "UTF-8"
+        resp.automatically_set_content_length = True
+        resp.mimetype = image_dict['mime']
+        resp.access_control_max_age = 0
+        resp.default_mimetype = "text/xml"
+        resp.headers['Cache-Control']='no-cache'
+        resp.headers['Pragma']='no-cache'
+        return resp
+    
+    elif file.endswith(".jpg"):path = "/galerie"
+
     elif file.endswith(".mp3"):
         auth_code_valid = False
         if "authcode" in session:
@@ -28,7 +67,6 @@ def media(file):
         elif "authcode" in request.args:
             rc_code = getLogin(request.args["authcode"])
             auth_code_valid = rc_code['status']
-        
         if auth_code_valid:
             dbdata = rc_code['dbdata']
             auth_code_guest = dbdata['guest']
@@ -231,20 +269,17 @@ def feed_rss(auth_code):
     rc_code = get_s_episodes(full_dir)
     if not rc_code['status']:
         abort(500)
-    episodes = rc_code['episodes']
-    for episode in episodes:
+    for episode in rc_code['episodes']:
         pod_ep = pod.add_episode(Episode(title=episode["title"]))
         pod_ep.id = http.goTo(url_for('bx_start.media', file=episode["audio"]))
         if auth_code_valid: 
             attach = "?authcode=" + auth_code
-            image = episode["image"]
         else: 
             attach = ""
-            image = "LogoGruppe-4k.jpg"
         pod_ep.summary = episode["summary"]
         pod_ep.long_summary = episode["chapter"]
         pod_ep.publication_date = episode["published"]
-        pod_ep.image = http.goTo(url_for('bx_start.media', file=image))
+        if 'image' in episode: pod_ep.image = http.goTo(url_for('bx_start.media', file=episode["image"]) + attach)
         pod_ep.media = Media(url=http.goTo(url_for('bx_start.media', file=episode["audio"]) + attach), 
                             size=episode["length"], 
                             type="audio/mpeg")

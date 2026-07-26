@@ -183,7 +183,7 @@
 
 <div class="container">
   <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-5 mt-4 border-top">
-    <p class="col-md-4 mb-0 text-body-secondary">&copy; {{ conf.credits["version"] }} &middot; {{ conf.credits["created"] }}<br>DRK-Norderstedter-Hörzeitung{% if 'pnr' in conf.credits %}<br>{% if not conf.credits['guest'] %}Konto-Nr: {{ conf.credits["pnr"] }} &middot; Ebene: {% endif %}{{ conf.credits['seclevel_text'] }}{% endif %}</p>
+    <p class="col-md-4 mb-0 text-body-secondary">&copy; <a href="{{ url_for('bx_s_start.s_releases') }}">{{ conf.credits["version"] }} &middot; {{ conf.credits["created"] }}</a><br>DRK-Norderstedter-Hörzeitung{% if 'pnr' in conf.credits %}<br>{% if not conf.credits['guest'] %}Konto-Nr: {{ conf.credits["pnr"] }} &middot; Ebene: {% endif %}{{ conf.credits['seclevel_text'] }}{% endif %}</p>
     <a href="{{ url_for('bx_s_start.s_album') }}" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
         <img src="{{ url_for('static', filename='Logo_Title_black_200.png') }}" alt="Logo_Title_black_200">
     </a>
