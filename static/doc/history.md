@@ -1,6 +1,6 @@
 ---
 
-### Release: 1.1.5
+### Release: 1.1.6
 
 RSS-Feed: Die Ausgabe im Link der im MP3-Audio eingebetteten Images war unvollständig und ist jetzt vollständig implementiert.  
 In einer MP3-Datei eingebette Grafiken, Bilder werden im RSS-Feed berücksichtigt und können von MP3-Playern angezeigt werden.  
