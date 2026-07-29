@@ -18,19 +18,6 @@
               <li class="nav-item">
                 <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link" title="Zur Album-Übersicht" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
               </li>
-              <li class="nav-item dropdown">
-                <a class="me-4 nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Ansicht({{ conf.get('show_max_pageview') }})</a>
-                <form id="setpage-form" novalidate method="post">
-                  <input type="hidden" id="setpage" name="setpage">
-                  <ul class="dropdown-menu">
-                    <li><a class="dropdown-item list-setpage" href="#5" data-setpage="5">bis 5 Positionen</a></li>
-                    <li><a class="dropdown-item list-setpage" href="#10" data-setpage="10">bis 10 Positionen</a></li>
-                    <li><a class="dropdown-item list-setpage" href="#20" data-setpage="20">bis 20 Positionen</a></li>
-                    <li><a class="dropdown-item list-setpage" href="#40" data-setpage="40">bis 40 Positionen</a></li>
-                    <li><a class="dropdown-item list-setpage" href="#ALL" data-setpage="ALL">Alles</a></li>
-                  </ul>
-                </form>
-              </li>
               <li class="nav-item">
                 <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
               </li>
@@ -70,20 +57,6 @@
         </tbody>
       </table>
     </div>
-    {% if conf.has("is_more") %}
-    <!-- More content button -->
-    <div class="mt-1 ms-auto text-center">
-      <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Mehr anzeigen</button>
-      <form id="morepage-form" novalidate method="post">
-        <input type="hidden" id="morepage" name="morepage">
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item list-morepage" href="#5" data-morepage="5">Weitere 5 Positionen</a></li>
-          <li><a class="dropdown-item list-morepage" href="#10" data-morepage="10">Weitere 10 Positionen</a></li>
-          <li><a class="dropdown-item list-morepage" href="#ALL" data-morepage="ALL">Alles</a></li>
-        </ul>
-      </form>
-    </div>
-    {% endif %}
   </main>
 </div>
 

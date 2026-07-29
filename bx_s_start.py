@@ -82,11 +82,16 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
     auth_code_set = False
     auth_code_empty = False
     post_request = False
-    if 'max_pageview' not in session:
-        max_pageview = current_app.config["max_pageview"]
-        session['max_pageview'] = max_pageview
+    single_view = True
+    if subdir is None: 
+        single_view = False
+        if 'max_pageview' not in session:
+            max_pageview = current_app.config["max_pageview"]
+            session['max_pageview'] = max_pageview
+        else:
+            max_pageview = session['max_pageview']
     else:
-        max_pageview = session['max_pageview']
+        max_pageview = -1
     
     if "authcode" in session:
         if getLogin(session["authcode"])['status']:
@@ -131,7 +136,7 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
         conf.initlogin(session['dbdata'])
         auth_code_guest = session['guest']
         html = html_form
-        if post_request:
+        if post_request and not single_view:
             if 'morepage' in form_data:
                 morepage = form_data['morepage']
                 if morepage.isnumeric():
