@@ -75,7 +75,7 @@ def create_app(test_config="DEV"):
             },
             "smtp": {
                 "class": "logging.handlers.SMTPHandler",
-                "mailhost": ("localhost",825),
+                "mailhost": ("localhost",25),
                 "fromaddr": f"{version.Configs.APP_NAME}-noreply@drk-nhz.de",
                 "toaddrs": credentials.EMails.SMTPHandler,
                 "subject": "Flask-Mail-Handler",

@@ -1,5 +1,9 @@
 ---
 
+### Release: 1.1.10
+
+Korrektur SEND MAIL an ADMIN. Bei Systemfehlern wurde keine Mail an den Admin gesendet.
+
 ### Release: 1.1.9
 
 Korrektur Systemfehler bei der Medienausgabe.
