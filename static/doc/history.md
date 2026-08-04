@@ -1,5 +1,9 @@
 ---
 
+### Release: 1.1.9
+
+Korrektur Systemfehler bei der Medienausgabe.
+
 ### Release: 1.1.8
 
 Ab 1.1.8 wird nun auch der Nextcloud-Teamordner "Historie" berücksichtigt. Hier werden unterhalb des jeweiligen Jahrgangs-Ordners

@@ -21,6 +21,7 @@ def media(file:str):
     elif file.endswith(".pdf"):path = "/docs"
     elif file.endswith("_ximg.jpg"):
         fname = file.rstrip("_ximg.jpg")
+        auth_code_valid = False
         if "authcode" in session:
             rc_code = getLogin(session["authcode"])
             auth_code_valid = rc_code['status']
