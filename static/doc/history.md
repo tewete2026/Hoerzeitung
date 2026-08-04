@@ -1,5 +1,14 @@
 ---
 
+### Release: 1.1.8
+
+Ab 1.1.8 wird nun auch der Nextcloud-Teamordner "Historie" berücksichtigt. Hier werden unterhalb des jeweiligen Jahrgangs-Ordners
+die einzelnen älteren Audio-Dateien abgelegt. Auch können hier die Einzelbeiträge genau so wie im Team-Ordner "Episoden" in einem Unterordner,
+der genau so heißt, wie die Album-Datei (ohne .mp3), abgelegt werden.
+In der Web-Anzeige gibt es den neuen Navigations-Punkt "Archiv". Hier wird zunächst der Jahrgang gewählt, dann erfolgt die zugehörige Album-Ansicht.
+Auch können hier wieder über "Details" die Einzelbeiträge angezeigt und abgehört werden.
+Voraussetzung für "Archiv" ist die Befüllung des Nextcloud-Teamordners "Historie" der jeweiligen Jahrgänge.
+
 ### Release: 1.1.7
 
 Die Paginierung der Anzahl Zeilen in der Detail-Ansicht wurde entfernt. Die Zeilen in der Detail-Ansicht werden nun immer komplett angezeigt.   

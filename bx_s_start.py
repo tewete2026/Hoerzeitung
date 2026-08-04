@@ -43,6 +43,27 @@ def s_episodes(subdir):
     return show_content("episodes.html", " - Einzel Beiträge", subdir=subdir)
 
 
+@bp.route("/S-Archiv", methods=['GET', 'POST'])
+def s_archive():
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    return show_content("archive.html", " - Archiv Übersicht", archive=True)
+
+
+@bp.route("/S-Archiv-Album/<year>", methods=['GET', 'POST'])
+def s_arc_album(year):
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    return show_content("album.html", " - Archiv Beiträge", archive_dir=year)
+
+
+@bp.route("/S-Archiv-Episoden/<year>/<subdir>", methods=['GET', 'POST'])
+def s_arc_episodes(year, subdir):
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    return show_content("episodes.html", " - Archiv-Einzel Beiträge", archive_dir=year, subdir=subdir)
+
+
 @bp.route("/S-Impressum", methods=['GET'])
 def s_impress():
     conf = Configure("Norderstedter Hörzeitung - Impressum", request, current_app)
@@ -58,7 +79,6 @@ def s_releases():
         conf.append("show_navall", True)
     with open(current_app.root_path + "/static/doc/history.md") as markdn:
         conf.append("content", markdown(text=markdn.read(), output_format='html'))
-        
     return render_template("releaseInfo.html", conf=conf)
 
 
@@ -76,7 +96,7 @@ def clear_session():
         session.pop('guest')
 
 
-def show_content(html_form, header, subdir=None, guest=False, online=False, parm_authcode=None):
+def show_content(html_form, header, subdir=None, guest=False, online=False, parm_authcode=None, archive=False, archive_dir=None):
     ts = current_app.config["TS"]
     auth_code_valid = False
     auth_code_set = False
@@ -160,10 +180,14 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
         if auth_code_guest:
             path = "/short"
         else:
-            path = "/long"
+            if archive or archive_dir is not None:
+                path = "/archive"
+            else:
+                path = "/long"
         full_dir = current_app.instance_path + path
-        rc_code = get_s_episodes(full_dir, subdir, conf, max_pageview)
+        rc_code = get_s_episodes(full_dir, subdir, conf, max_pageview, archive=archive, archive_dir=archive_dir)
         conf.append('episodes', rc_code['episodes'])
         if rc_code['is_more']:
             conf.append('is_more', True)
+
     return render_template(html, conf=conf, javascript=conf.javascript.getOut())

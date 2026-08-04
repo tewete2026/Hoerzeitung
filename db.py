@@ -183,16 +183,20 @@ def get_episodes(episodes, auth_code_valid, limit:bool=True):
     return rc_code
 
 
-def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1):
+def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=False, archive_dir=None):
     rc_code = {"status":"OK"}
     ts = current_app.config["TS"]
     episodes = {}
     reverse = True
+    if archive_dir is not None: 
+        full_dir += "/" + archive_dir
+        conf.append('archive_dir', archive_dir)
     if subdir is not None: 
         full_dir += "/" + subdir
         reverse = False
         conf.append('subdir', subdir)
     content = sorted(os.listdir(full_dir), reverse=reverse)
+    print("get_s_episodes", max_pageview, full_dir)
     page = 1
     is_more = False
     for element in content:
@@ -201,7 +205,14 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1):
             break
         episode = {}
         rawname = f"{full_dir}/{element}"
-        if os.path.isdir(rawname):
+        if os.path.isdir(rawname) and archive:
+            key = element.strip()
+            episode.update({"dirname":key})
+            nextdir = f"{full_dir}/{key}"
+            dir_list = sorted(os.listdir(nextdir))
+            episode.update({"amount":len(dir_list)})
+            page += 1
+        elif os.path.isdir(rawname):
             key = element.strip()
             if key in episodes:
                 episode = episodes.get(key)
@@ -211,7 +222,9 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1):
             key = element.split('.')[0].strip()
             audio_name = element
             if subdir is not None: 
-                audio_name = f"{subdir}_{element}"
+                audio_name = f"{subdir},{audio_name}"
+            if archive_dir is not None: 
+                audio_name = f"{archive_dir};{audio_name}"
             if key in episodes:
                 episode = episodes.get(key)
             (title, description, published, size, dur, chapter, image_dict) = tools.getMP3Info(rawname)

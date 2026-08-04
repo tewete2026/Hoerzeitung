@@ -20,6 +20,7 @@ def media(file:str):
     if file.startswith("Logo"):path = ""
     elif file.endswith(".pdf"):path = "/docs"
     elif file.endswith("_ximg.jpg"):
+        fname = file.rstrip("_ximg.jpg")
         if "authcode" in session:
             rc_code = getLogin(session["authcode"])
             auth_code_valid = rc_code['status']
@@ -33,14 +34,17 @@ def media(file:str):
                 path = "/short"
             else:
                 path = "/long"
+                file_arr = fname.split(';')
+                if len(file_arr) > 1:
+                    path = "/archive/" + file_arr[0]
+                    fname = file_arr[1]
+                file_arr = fname.split(',')
+                if len(file_arr) > 1:
+                    path += "/" + file_arr[0]
+                    fname = file_arr[1]
         else:
             path = "/short"
-        fname = file.rstrip("_ximg.jpg")
         path = current_app.instance_path + path
-        file_arr = fname.split('_')
-        if len(file_arr) > 1:
-            path += "/" + file_arr[0]
-            fname = file_arr[1]
         rawname = path + "/" + fname
         if not os.path.exists(rawname):
             abort(404)
@@ -52,7 +56,7 @@ def media(file:str):
         resp.automatically_set_content_length = True
         resp.mimetype = image_dict['mime']
         resp.access_control_max_age = 0
-        resp.default_mimetype = "text/xml"
+        resp.default_mimetype = image_dict['mime']
         resp.headers['Cache-Control']='no-cache'
         resp.headers['Pragma']='no-cache'
         return resp
@@ -76,6 +80,14 @@ def media(file:str):
             else:
                 path = "/long"
                 is_guest = 0
+                file_arr = file.split(';')
+                if len(file_arr) > 1:
+                    path = "/archive/" + file_arr[0]
+                    file = file_arr[1]
+                file_arr = file.split(',')
+                if len(file_arr) > 1:
+                    path += "/" + file_arr[0]
+                    file = file_arr[1]
             pnr = dbdata['pnr']
             seclevel = dbdata['seclevel']
             freecode = dbdata['freecode']
@@ -103,10 +115,7 @@ def media(file:str):
         if current_app.config['TEST_RUN'] == 'PROD':
             current_app.logger.info("Empfangener HTTP-Header für %s, %s, %s: %s", file, request.remote_addr, request.origin, request.headers)
     path = current_app.instance_path + path
-    file_arr = file.split('_')
-    if len(file_arr) > 1:
-        path += "/" + file_arr[0]
-        file = file_arr[1]
+    print("media", path, file)
     return send_from_directory(path, file)
 
 

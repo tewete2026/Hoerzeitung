@@ -16,14 +16,10 @@
           <div class="collapse navbar-collapse" id="navbarNavDropdown">
             <ul class="navbar-nav">
               <li class="nav-item">
-                {% set nav_act = 'active' if conf.has("archive_dir") is false else '' %}
-                {% set nav_pag = 'aria-current="page"' if conf.has("archive_dir") is false else '' %}
-                <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link {{ nav_act|safe }}" {{ nav_pag|safe }} title="Zur Album-Übersicht" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
+                <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link" title="Zur Album-Übersicht" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
               </li>
               <li class="nav-item">
-                {% set nav_act = 'active' if conf.has("archive_dir") is true else '' %}
-                {% set nav_pag = 'aria-current="page"' if conf.has("archive_dir") is true else '' %}
-                <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link {{ nav_act|safe }}" {{ nav_pag|safe }} title="Zur Archiv-Übersicht" href="{{ url_for('bx_s_start.s_archive') }}">Archiv</a>
+                <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link active" title="Zur Archiv-Übersicht" aria-current="page" href="{{ url_for('bx_s_start.s_archive') }}">Archiv</a>
               </li>
               <li class="nav-item dropdown">
                 <a class="me-4 nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Ansicht({{ conf.get('show_max_pageview') }})</a>
@@ -50,60 +46,26 @@
       </nav>
     </div>
     
-    {% if conf.has("archive_dir") %}
-    <div class="container my-1">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb breadcrumb-chevron p-3 bg-body-tertiary rounded-3">
-          <li class="breadcrumb-item">
-            <a class="link-body-emphasis" href="{{ url_for('bx_s_start.s_album') }}">
-              <svg class="bi" width="16" height="16"><use xlink:href="#house-door-fill"></use></svg>
-              <span class="visually-hidden">Home</span>
-            </a>
-          </li>
-          <li class="breadcrumb-item">
-            <a class="link-body-emphasis fw-semibold text-decoration-none" href="{{ url_for('bx_s_start.s_archive') }}">Archiv-Übersicht</a>
-          </li>
-          <li class="breadcrumb-item active" aria-current="page">
-            Album-Übersicht (Jahrgang {{ conf.get('archive_dir') }})
-          </li>
-        </ol>
-      </nav>
-    </div>
-    {% endif %}
-
     <div class="pricing-header p-3 pb-md-4 mx-auto text-center">
-      <h1 class="display-4 fw-normal text-body-emphasis">Album-Übersicht</h1>
-      <p class="fs-5 text-body-secondary">Die bisher veröffentlichten Hörzeitungen <br>als Album-Podcast{% if conf.has("archive_dir") %} (Jahrgang {{ conf.get('archive_dir') }}){% endif %}.</p>
+      <h1 class="display-4 fw-normal text-body-emphasis">Archiv-Übersicht</h1>
+      <p class="fs-5 text-body-secondary">Die bisher archivierten Hörzeitungen pro Jahrgang.</p>
     </div>
   </header>
   
   <main>
-    <div class="table-responsive">
+    <div class="table-responsive col-md-6 mx-auto">
       <table class="table text-center">
         <thead>
           <tr>
-            <th style="width: 15%;">Ausgabe</th>
-            <th style="width: 5%;">Länge</th>
-            <th style="width: 23%;">Veröffentlicht</th>
-            <th style="width: 52%;">Audio-Player</th>
-            <th style="width: 5%;">Details</th>
+            <th style="width: 75%;">Jahrgang</th>
+            <th style="width: 25%;">Inhalte</th>
           </tr>
         </thead>
         <tbody>{% for row in conf.get('episodes') %}
           <tr>
-            <th scope="row" class="text-start">{{ row['title'] }} <a class="list-table-rows" title="Anzeigen Beschreibung für {{ row['title'] }}" href="#"><svg class="bi me-2 opacity-100" width="1em" height="1em"><use href="#question-circle"></use></svg></a><a class="list-table-rows-chapter" title="Anzeigen Kapitel für {{ row['title'] }}" href="#"><svg class="bi opacity-100" width="1em" height="1em"><use href="#book"></use></svg></a></th>
-            <td>{{ row['duration'] }}</td>
-            <td>{{ row['date'] }}</td>
-            <td><audio preload="none" loading="lazy" controls src="{{ url_for('bx_start.media', file=row['audio']) }}"></audio></td>
-            <td>{% if 'subdir' in row %}
-              {% if conf.has("archive_dir") %}<a href="{{ url_for('bx_s_start.s_arc_episodes', year=conf.get('archive_dir'), subdir=row['subdir']) }}">
-              {% else %}<a href="{{ url_for('bx_s_start.s_episodes', subdir=row['subdir']) }}">{% endif %}
-                <svg class="bi me-2 opacity-100" width="1.6em" height="1.6em"><use href="#chevron-double-down"></use></svg>
-              </a>{% endif %}
-            </td>
+            <th scope="row" class="text-start"><div class="text-center"><a href="{{ url_for('bx_s_start.s_arc_album', year=row['dirname']) }}">{{ row['dirname'] }} </a></div></th>
+            <td>{{ row['amount'] }}</td>
           </tr>
-          <tr class="d-none"><td colspan="5" aria-details="{{ row['title'] }}">{{ row['description'] }}</td></tr>
-          <tr class="d-none"><td colspan="5" aria-details="{{ row['title'] }}">{{ row['chapter']|safe }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
