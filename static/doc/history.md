@@ -1,5 +1,11 @@
 ---
 
+### Release: 1.1.11
+
+Feed.rss: Der Freischaltcode im Link für den RSS-Feed wird nun strenger überprüft. Dieser muss nun formal einem Freischaltcode entsprechen,
+oder "0" oder "open" enthalten. Bei letzteren wird "Gast" angenommen, ebenso bei einem formal korrekten aber ungültigen Freischaltcode.
+Alle anderen Angaben erzeugen einen "nicht gefunden" Fehler (404).
+
 ### Release: 1.1.10
 
 Korrektur SEND MAIL an ADMIN. Bei Systemfehlern wurde keine Mail an den Admin gesendet.

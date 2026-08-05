@@ -1,4 +1,4 @@
-import mariadb, os
+import mariadb, os, re
 from podgen import Podcast, Episode, Person, Category, Media
 from flask import Blueprint
 from flask import current_app, session
@@ -249,10 +249,14 @@ def feed_rss(auth_code):
     auth_code_guest = True
     auth_code_valid = False
     if auth_code is not None:
-        rc_code = getLogin(auth_code)
-        if rc_code['status']:
-            auth_code_guest = rc_code['dbdata']['guest']
-            auth_code_valid = True
+        re_m = re.fullmatch(r'^([0-4][1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}|open|0)', auth_code)
+        if re_m is None:
+            abort(404)
+        else:
+            rc_code = getLogin(auth_code)
+            if rc_code['status']:
+                auth_code_guest = rc_code['dbdata']['guest']
+                auth_code_valid = True
     pod = Podcast()
     pod.description = "Die Norderstedter Hörzeitung bietet Lokales aus Norderstedt und hat auch einen Blick auf die Welt"
     if auth_code_guest: pod.subtitle = "Sie hören hier als Gast nicht die reguläre Version der Hörzeitung, sondern Ausschnitte aus einigen Produktionen. Die kompletten Episoden erhalten Sie mit dem korrekten Freischaltcode."
