@@ -1,4 +1,4 @@
-import mariadb, os, smtplib
+import mariadb, os, smtplib, re
 from flask import current_app, render_template, session
 from datetime import date
 from dateutil.relativedelta import relativedelta
@@ -143,7 +143,7 @@ def get_episodes(episodes, auth_code_valid, limit:bool=True):
             cur.close()
             db.close()
         except mariadb.Error as err:
-            current_app.logger.error("Datenbank-Fehler: %s", err)
+            current_app.logger.error("Datenbank-Fehler get_episodes: %s", err)
             rc_code['status'] = False
             rc_code['type'] = 'DBERR'
             db.close()
@@ -207,11 +207,13 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=Fa
         rawname = f"{full_dir}/{element}"
         if os.path.isdir(rawname) and archive:
             key = element.strip()
-            episode.update({"dirname":key})
             nextdir = f"{full_dir}/{key}"
-            dir_list = sorted(os.listdir(nextdir))
-            episode.update({"amount":len(dir_list)})
-            page += 1
+            dir_list = os.listdir(nextdir)
+            content_count = len(dir_list)
+            if content_count > 0:
+                episode.update({"dirname":key})
+                episode.update({"amount":content_count})
+                page += 1
         elif os.path.isdir(rawname):
             key = element.strip()
             if key in episodes:
@@ -244,7 +246,7 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=Fa
             episode.update({"published":str(published)})
             episode.update({"date":str(published)[:19]})
             page += 1
-        episodes.update({key:episode})
+        if len(episode) > 0: episodes.update({key:episode})
     rc_code['episodes'] = episodes.values()
     rc_code['is_more'] = is_more
     return rc_code
@@ -346,9 +348,12 @@ def getLogin(freeCode:str):
         db = get_db()
         if not db:
             raise mariadb.PoolError("Kein Pool gesetzt, keine Verbindung zur DB.")
+        re_m = re.fullmatch(r'^[0-4][1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}', freeCode.upper())
+        if re_m is None:
+            raise mariadb.NotSupportedError("Kein gültiges Freischaltcode-Format.")
         db.begin()
         cur = db.cursor(dictionary=True)
-        cur.execute("SELECT id,pnr,seclevel,pnrcreate,histid,freecode,IF(active=1,TRUE,FALSE) as active,IF(guest=1,TRUE,FALSE) as guest,createDate,lastActive,curdate() as last_access from tUser WHERE freecode=? && active=1 FOR UPDATE", (freeCode,))
+        cur.execute("SELECT id,pnr,seclevel,pnrcreate,histid,freecode,IF(active=1,TRUE,FALSE) as active,IF(guest=1,TRUE,FALSE) as guest,createDate,lastActive,curdate() as last_access from tUser WHERE freecode=? && active=1 FOR UPDATE", (freeCode.upper(),))
         dbdata = cur.fetchone()
         if cur.rowcount > 0:
             rc_code['dbdata'] = dbdata
@@ -359,8 +364,13 @@ def getLogin(freeCode:str):
         db.commit()
         cur.close()
         db.close()
+    except mariadb.NotSupportedError as err:
+        current_app.logger.warning("Format-Fehler getLogin: %s - %s", freeCode, err)
+        rc_code['status'] = False
+        rc_code['type'] = 'FORMERR'
+        if db: db.close()
     except mariadb.Error as err:
-        current_app.logger.error("Datenbank-Fehler: %s", err)
+        current_app.logger.error("Datenbank-Fehler getLogin: %s - %s", freeCode, err)
         rc_code['status'] = False
         rc_code['type'] = 'DBERR'
         if db: db.close()

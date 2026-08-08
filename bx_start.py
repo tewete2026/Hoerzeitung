@@ -242,17 +242,17 @@ def start():
 @bp.route("/<auth_code>/feed.rss")
 def feed_rss(auth_code):
     """
-    https://hoerzeitung.drk-norderstedt.ipv64.net/s-nhz/0C145-C5UI-YD72-NKQ1/feed.rss
+    https://hoerzeitung.drk-norderstedt.ipv64.net/s-nhz/0IGKY-HG85-CFEP-PAD2/feed.rss
     """
     http = current_app.config["OWN_URL"]
     ts = current_app.config["TS"]
     auth_code_guest = True
     auth_code_valid = False
     if auth_code is not None:
-        re_m = re.fullmatch(r'^([0-4][1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}|open|0)', auth_code)
+        re_m = re.fullmatch(r'^([0-4][1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}|OPEN|0)', auth_code.upper())
         if re_m is None:
             abort(404)
-        else:
+        elif re.fullmatch(r'^[0-4][1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}', auth_code.upper()) is not None:
             rc_code = getLogin(auth_code)
             if rc_code['status']:
                 auth_code_guest = rc_code['dbdata']['guest']

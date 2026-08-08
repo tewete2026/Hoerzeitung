@@ -136,7 +136,7 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
             auth_code_set = True
             authcode = form_data["authcode"].strip()
             if len(authcode) > 0:
-                rc_code = getLogin(authcode.upper())
+                rc_code = getLogin(authcode)
                 if rc_code['status']:
                     auth_code_valid = True
                     if not session.permanent: session.permanent = True

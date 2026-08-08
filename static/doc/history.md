@@ -1,5 +1,10 @@
 ---
 
+### Release: 1.1.12
+
+In der Übersicht Archiv werden nur noch Jahrgänge aufgelistet, die Inhalte enthalten. Leere Verzeichnisse werden ignoriert. Das verbessert die Übersicht.
+Der Freischaltcode muss einem formalen Konzept entsprechen und kann Groß- oder Kleingeschrieben sein.
+
 ### Release: 1.1.11
 
 Feed.rss: Der Freischaltcode im Link für den RSS-Feed wird nun strenger überprüft. Dieser muss nun formal einem Freischaltcode entsprechen,
