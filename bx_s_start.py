@@ -75,6 +75,9 @@ def s_impress():
 @bp.route("/S-Release-Info", methods=['GET'])
 def s_releases():
     conf = Configure("Norderstedter Hörzeitung - Aktualisierungen", request, current_app)
+    if "guest" in session:
+        if session['guest']:
+            return redirect(url_for('bx_s_start.s_album'))
     if "authcode" in session:
         conf.append("show_navall", True)
     with open(current_app.root_path + "/static/doc/history.md") as markdn:
