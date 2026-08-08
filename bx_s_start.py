@@ -179,6 +179,9 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
             conf.append("show_navtop", True)
         if auth_code_guest:
             path = "/short"
+            conf.append("is_guest", True)
+            if archive or archive_dir is not None:
+                abort(404)
         else:
             if archive or archive_dir is not None:
                 path = "/archive"

@@ -20,11 +20,12 @@
                 {% set nav_pag = 'aria-current="page"' if conf.has("archive_dir") is false else '' %}
                 <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link {{ nav_act|safe }}"{{ nav_pag|safe }} title="Zur Album-Übersicht" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
               </li>
+              {% if not conf.has("is_guest") %}
               <li class="nav-item">
                 {% set nav_act = 'active' if conf.has("archive_dir") is true else '' %}
                 {% set nav_pag = 'aria-current="page"' if conf.has("archive_dir") is true else '' %}
                 <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link {{ nav_act|safe }}" {{ nav_pag|safe }} title="Zur Archiv-Übersicht" href="{{ url_for('bx_s_start.s_archive') }}">Archiv</a>
-              </li>
+              </li>{% endif %}
               <li class="nav-item">
                 <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
               </li>

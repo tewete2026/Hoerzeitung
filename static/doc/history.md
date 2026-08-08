@@ -1,5 +1,9 @@
 ---
 
+### Release: 1.1.13
+
+Gäste dürfen keinen Zugriff auf das Archiv haben. Der Navigationspunkt "Archiv" wird bei Gästen ausgeblendet.
+
 ### Release: 1.1.12
 
 In der Übersicht Archiv werden nur noch Jahrgänge aufgelistet, die Inhalte enthalten. Leere Verzeichnisse werden ignoriert. Das verbessert die Übersicht.
