@@ -37,8 +37,7 @@ CREATE TABLE `tLog` (
   KEY `accessDate` (`accessDate`),
   UNIQUE KEY `access` (`pnr`, `accessDate`, `media`),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1987 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
-TRUNCATE TABLE `tLog`;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

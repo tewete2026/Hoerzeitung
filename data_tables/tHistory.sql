@@ -30,8 +30,7 @@ CREATE TABLE `tHistory` (
   `pnrcreate` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Konto Nummer erstellt',
   `createDate` date NOT NULL DEFAULT curdate() COMMENT 'Erstellungs Datum',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1987 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
-TRUNCATE TABLE `tHistory`;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 INSERT INTO `tHistory`(quantity,seclevel) VALUES(2,4);
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

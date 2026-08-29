@@ -70,6 +70,64 @@ window.addEventListener('load', () => {
         })
     }
 
+    const favorites = this.document.getElementsByClassName('set-favorites');
+    for (const element of favorites) {
+        const audio = element.getAttribute('data-audio');
+        const target = element.firstChild.firstChild; // Durchhangeln zum <use> Element
+        const favs = SERVER_OPTIONS.drk_nhz_favorites.audios;
+        if (favs.includes(audio)) {
+            target.setAttribute('href', '#heart-fill');
+        } else {
+            target.setAttribute('href', '#heart');
+        }
+        element.addEventListener('click', event => {
+            let allow_fav = false;
+            if (SERVER_OPTIONS.drk_nhz_favorites.audios.length < SERVER_OPTIONS.max_favorites) {
+                allow_fav = true;
+            }
+            let target = event.target;
+            let is_set = false;
+            if (target.nodeName == 'use') target = target.parentElement;  // zum <svg> Element
+            if (target.nodeName == 'svg') {
+                const anchor = target.parentElement;  // das <a> Element bereithalten
+                for (const child of target.children) {
+                    if (child.nodeName == 'use') {
+                        const att = child.getAttribute('href');
+                        if (att == '#heart' || att == '#heartbreak') {
+                            if (allow_fav) {
+                                child.setAttribute('href', '#heart-fill');
+                                anchor.setAttribute('title', 'Favoriten wieder entfernen');
+                                is_set = true;
+                            } else {
+                                child.setAttribute('href', '#heartbreak');
+                                anchor.setAttribute('title', 'Die maximale Anzahl Favoriten ist überschritten');
+                            }
+                        }
+                        else {
+                            child.setAttribute('href', '#heart');
+                            anchor.setAttribute('title', 'Als Favoriten auswählen');
+                        }
+                    }
+                }
+                target = anchor
+            }
+            if (is_set) {
+                const audio = target.getAttribute('data-audio');
+                SERVER_OPTIONS.drk_nhz_favorites.audios.push(audio);
+            } else {
+                const audio = target.getAttribute('data-audio');
+                const i = SERVER_OPTIONS.drk_nhz_favorites.audios.indexOf(audio);
+                if (i >= 0) {
+                    SERVER_OPTIONS.drk_nhz_favorites.audios.splice(i, 1);
+                }
+            }
+            const fav_string = JSON.stringify(SERVER_OPTIONS.drk_nhz_favorites);
+            this.document.cookie = `drk-nhz-favorites=${fav_string};path=${SERVER_OPTIONS.modpath}`;
+
+            event.preventDefault(); // Verhindern, dass der Anker-Link ausgeführt wird, weil das hier nicht erwünscht ist.
+        })
+    }
+
     const morepages = this.document.getElementsByClassName('list-morepage');
     for (const element of morepages) {
         element.addEventListener('click', event => {
@@ -164,5 +222,6 @@ window.addEventListener('load', () => {
             window.location.replace(window.location.href);
         })
     }
+
 });
 

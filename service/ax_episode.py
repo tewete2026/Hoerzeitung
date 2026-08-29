@@ -115,7 +115,7 @@ def ax_get_episode_overview():
     rc_code = {"status":"OK", "contentlength":request.content_length, "contentype":request.content_type, "remoteaddr":request.remote_addr}
     overview_search = result_map["overview-search"]
     overview_page = int(result_map["overview-page"])
-    overview_maxlines = int(current_app.config["max-line-overview"])
+    overview_maxlines = current_app.config["max-line-overview"]
     overview_offset = (overview_page - 1) * overview_maxlines
     overview_readlines = overview_maxlines + 1
 

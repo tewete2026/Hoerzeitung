@@ -16,15 +16,21 @@ from email.utils import COMMASPACE, formatdate
 class Javascript:
     def __init__(self, app:str, user:str):
         if user is None: user = "--"
+        self.content = {}
         self.__outline = "const SERVER_OPTIONS = {'APP':'" + app + "', 'USER':'" + user + "'"
     def add(self, attr:dict):
-        for key, value in attr.items():
+        self.content.update(attr)
+    def getOut(self) -> str:
+        for key, value in self.content.items():
             if isinstance(value, list):
                 value = str(value).replace("'", '"')
+                self.__outline += ", '" + key + "':'" + value + "'"
+            elif isinstance(value, dict) or isinstance(value, int):
+                self.__outline += ", '" + key + "':" + str(value)
             elif not isinstance(value, str):
-                value = str(value)
-            self.__outline += ", '" + key + "':'" + value + "'"
-    def getOut(self) -> str:
+                self.__outline += ", '" + key + "':'" + str(value) + "'"
+            else:
+                self.__outline += ", '" + key + "':'" + value + "'"
         return self.__outline + "}"
     
     @staticmethod
@@ -55,6 +61,8 @@ class Configure:
         self.map = {}
         self.error = {}
         self.javascript.add({'today':self.today, 'min_date':self.min_date, 'max_date':self.max_date, 'link_active':link})
+        cpath = current_app.config["SESSION_COOKIE_PATH"]
+        self.javascript.add({'drk_nhz_favorites':{'audios':[]}, 'modpath':cpath})
     def initlogin(self, dbdata):
         rolls = ["Hörer", "Vorleser", "Redakteur", "Admin", "Super-Admin"]
         self.credits.update({'pnr': dbdata['pnr']})
@@ -116,9 +124,14 @@ def init_app(app):
                 raise mariadb.PoolError("Fehler bei get_connection().")
             cur = db.cursor()
             """ Einlesen Konfigurations-Elemente aus der Datenbanktabelle _Config """
-            cur.execute("select item,value from _Config order by id")
-            app.config.update(cur.fetchall())
-            app.logger.debug("Import _Config")
+            cur.execute("select item,value,amount as value from _Config order by id")
+            result = cur.fetchall()
+            cache = []
+            for item, value, amount in result:
+                if value is None: cache.append((item, amount))
+                else: cache.append((item, value))
+            app.config.update(cache)
+            app.logger.debug(f"Import _Config {len(cache)} Einträge.")
             cur.close()
             db.close()
             rc = "OK"
@@ -148,7 +161,7 @@ def get_episodes(episodes, auth_code_valid, limit:bool=True):
             rc_code['type'] = 'DBERR'
             db.close()
         if rc_code['status']:
-            max_entries = int(current_app.config['max-line-episodes'])
+            max_entries = current_app.config['max-line-episodes']
             for mp3 in dbdata:
                 path = "/long"
                 rawname = current_app.instance_path + path + "/" + mp3["audiofile"]
@@ -196,7 +209,6 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=Fa
         reverse = False
         conf.append('subdir', subdir)
     content = sorted(os.listdir(full_dir), reverse=reverse)
-    print("get_s_episodes", max_pageview, full_dir)
     page = 1
     is_more = False
     for element in content:
@@ -226,7 +238,7 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=Fa
             if subdir is not None: 
                 audio_name = f"{subdir},{audio_name}"
             if archive_dir is not None: 
-                audio_name = f"{archive_dir};{audio_name}"
+                audio_name = f"{archive_dir}!{audio_name}"
             if key in episodes:
                 episode = episodes.get(key)
             (title, description, published, size, dur, chapter, image_dict) = tools.getMP3Info(rawname)
@@ -246,6 +258,53 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=Fa
             episode.update({"published":str(published)})
             episode.update({"date":str(published)[:19]})
             page += 1
+        if len(episode) > 0: episodes.update({key:episode})
+    rc_code['episodes'] = episodes.values()
+    rc_code['is_more'] = is_more
+    return rc_code
+
+
+def get_s_favorites(base_dir, path_sub, content, conf=None, max_pageview=-1):
+    rc_code = {"status":"OK"}
+    ts = current_app.config["TS"]
+    episodes = {}
+    page = 1
+    is_more = False
+    for element in content['audios']:
+        path = path_sub
+        if max_pageview > 0 and page > max_pageview:
+            is_more = True
+            break
+        episode = {}
+        audio_name = element
+        file_arr = audio_name.split('!')
+        if len(file_arr) > 1:
+            path = "/archive/" + file_arr[0]
+            audio_name = file_arr[1]
+        file_arr = audio_name.split(',')
+        if len(file_arr) > 1:
+            path += "/" + file_arr[0]
+            audio_name = file_arr[1]
+        rawname = f"{base_dir}{path}/{audio_name}"
+        if not audio_name.endswith(".mp3"): continue
+        key = audio_name.split('.')[0].strip()
+        (title, description, published, size, dur, chapter, image_dict) = tools.getMP3Info(rawname)
+        (si, duration) = tools.getMpegInfo(rawname)
+        published = ts.addtimezone(published)
+        episode.update({"rawname":rawname})
+        episode.update({"name":key})
+        episode.update({"title":str(title)})
+        episode.update({"description":str(description)})
+        episode.update({"summary":str(description)})
+        episode.update({"chapter":chapter})
+        episode.update({"audio":element})
+        episode.update({"length":size})
+        episode.update({"duration":duration})
+        if 'data' in image_dict: episode.update({"image":f'{audio_name}_ximg.jpg'})
+        episode.update({"size":size})
+        episode.update({"published":str(published)})
+        episode.update({"date":str(published)[:19]})
+        page += 1
         if len(episode) > 0: episodes.update({key:episode})
     rc_code['episodes'] = episodes.values()
     rc_code['is_more'] = is_more
@@ -342,7 +401,7 @@ def send_mail(subject:str, msg_template:str, parms:dict, send_from:str=None, sen
     return rc_code
 
 
-def getLogin(freeCode:str):
+def getLogin(freeCode:str, fav_cookie:str=None):
     rc_code = {'status':True}
     try:
         db = get_db()
@@ -353,11 +412,17 @@ def getLogin(freeCode:str):
             raise mariadb.NotSupportedError("Kein gültiges Freischaltcode-Format.")
         db.begin()
         cur = db.cursor(dictionary=True)
-        cur.execute("SELECT id,pnr,seclevel,pnrcreate,histid,freecode,IF(active=1,TRUE,FALSE) as active,IF(guest=1,TRUE,FALSE) as guest,createDate,lastActive,curdate() as last_access from tUser WHERE freecode=? && active=1 FOR UPDATE", (freeCode.upper(),))
+        cur.execute("SELECT id,pnr,seclevel,pnrcreate,lastVersion,histid,freecode,IF(active=1,TRUE,FALSE) as active,IF(guest=1,TRUE,FALSE) as guest,createDate,lastActive,curdate() as last_access from tUser WHERE freecode=? && active=1 FOR UPDATE", (freeCode.upper(),))
         dbdata = cur.fetchone()
         if cur.rowcount > 0:
             rc_code['dbdata'] = dbdata
-            cur.execute("UPDATE tUser SET lastActive=curdate() WHERE id=?", (rc_code['dbdata']['id'],))
+            cur.execute("UPDATE tUser SET lastActive=curdate(),lastVersion=? WHERE id=?", (version.Configs.APP_VERSION, rc_code['dbdata']['id']))
+            if fav_cookie is not None:
+                cur.execute("INSERT INTO tUser_fav(pnr_id,favorites) VALUES(?,?) ON DUPLICATE KEY UPDATE favorites=?", (rc_code['dbdata']['id'], fav_cookie, fav_cookie))
+            else:
+                cur.execute("SELECT id,pnr_id,favorites from tUser_fav WHERE pnr_id=?", (rc_code['dbdata']['id'],))
+                if cur.rowcount > 0:
+                    dbdata['favorites'] = cur.fetchone()
         else:
             rc_code["status"] = False
             rc_code['type'] = 'NOTFOUND'
@@ -368,10 +433,14 @@ def getLogin(freeCode:str):
         current_app.logger.warning("Format-Fehler getLogin: %s - %s", freeCode, err)
         rc_code['status'] = False
         rc_code['type'] = 'FORMERR'
-        if db: db.close()
+        if db: 
+            db.rollback()
+            db.close()
     except mariadb.Error as err:
         current_app.logger.error("Datenbank-Fehler getLogin: %s - %s", freeCode, err)
         rc_code['status'] = False
         rc_code['type'] = 'DBERR'
-        if db: db.close()
+        if db: 
+            db.rollback()
+            db.close()
     return rc_code

@@ -3,7 +3,7 @@ from datetime import datetime
 from datetime import timedelta
 
 def getTS(config):
-    period = int(config["wait-for-unlock-record"])
+    period = config["wait-for-unlock-record"]
     ts = datetime.now() + timedelta(minutes=period)
     return ts.strftime("%Y%m%d%H%M%S%f")
 
@@ -40,7 +40,6 @@ def setVisiterWL(cur, veranst_list=[], force=False):
                     wl = False
                     if pos > max_Bes:
                         wl = True
-                    print("setVisiterWL", row, wl)
                     if wl != row["BesucherWL"] or force:
                         row["BesucherWL"] = wl
                         result_list.append(row)

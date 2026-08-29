@@ -35,7 +35,7 @@ def media(file:str):
                 path = "/short"
             else:
                 path = "/long"
-                file_arr = fname.split(';')
+                file_arr = fname.split('!')
                 if len(file_arr) > 1:
                     path = "/archive/" + file_arr[0]
                     fname = file_arr[1]
@@ -81,7 +81,7 @@ def media(file:str):
             else:
                 path = "/long"
                 is_guest = 0
-                file_arr = file.split(';')
+                file_arr = file.split('!')
                 if len(file_arr) > 1:
                     path = "/archive/" + file_arr[0]
                     file = file_arr[1]
@@ -93,8 +93,8 @@ def media(file:str):
             seclevel = dbdata['seclevel']
             freecode = dbdata['freecode']
             last_access = dbdata['last_access']
-            # Nur für seclevel = 0 (nur externe Hörer) protokollieren
-            if seclevel == 0:
+            # Nur für seclevel < 3 (Hörer, Vorleser, Redakteure) protokollieren
+            if seclevel < 3:
                 try:
                     db = get_db()
                     if not db:
@@ -116,7 +116,6 @@ def media(file:str):
         if current_app.config['TEST_RUN'] == 'PROD':
             current_app.logger.info("Empfangener HTTP-Header für %s, %s, %s: %s", file, request.remote_addr, request.origin, request.headers)
     path = current_app.instance_path + path
-    print("media", path, file)
     return send_from_directory(path, file)
 
 

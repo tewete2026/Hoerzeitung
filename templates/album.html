@@ -42,8 +42,11 @@
               <li class="nav-item">
                 <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
               </li>
+              {% if not conf.has("is_guest") %}<li class="nav-item">
+                <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Anzeigen Favoriten" href="{{ url_for('bx_s_start.s_favorites') }}"><svg class="mt-1 bi opacity-100" width="1.35em" height="1.35em"><use href="#heart"></use></svg></a>
+              </li>{% endif %}
               <li class="nav-item">
-                <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi me-2 opacity-100" width="1.6em" height="1.6em"><use href="#box-arrow-right"></use></svg></a>
+                <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi opacity-100" width="1.6em" height="1.6em"><use href="#box-arrow-right"></use></svg></a>
               </li>
             </ul>
           </div>
@@ -92,7 +95,12 @@
         </thead>
         <tbody>{% for row in conf.get('episodes') %}
           <tr>
-            <th scope="row" class="text-start">{{ row['title'] }} <a class="list-table-rows" title="Anzeigen Beschreibung für {{ row['title'] }}" href="#"><svg class="bi me-2 opacity-100" width="1em" height="1em"><use href="#question-circle"></use></svg></a><a class="list-table-rows-chapter" title="Anzeigen Kapitel für {{ row['title'] }}" href="#"><svg class="bi opacity-100" width="1em" height="1em"><use href="#book"></use></svg></a></th>
+            <th scope="row" class="text-start">
+              {{ row['title'] }} 
+              <a class="list-table-rows" title="Anzeigen Beschreibung für {{ row['title'] }}" href="#"><svg class="bi me-2 opacity-100" width="1em" height="1em"><use href="#question-circle"></use></svg></a>
+              <a class="list-table-rows-chapter" title="Anzeigen Kapitel für {{ row['title'] }}" href="#"><svg class="bi me-2 opacity-100" width="1em" height="1em"><use href="#book"></use></svg></a>
+              {% if not conf.has("is_guest") %}<a class="set-favorites" title="{{ row['title'] }} als Favorit merken" href="#" data-audio="{{ row['audio'] }}"><svg class="bi opacity-100" width="1em" height="1em"><use href="#heart"></use></svg></a>{% endif %}
+            </th>
             <td>{{ row['duration'] }}</td>
             <td>{{ row['date'] }}</td>
             <td><audio preload="none" loading="lazy" controls src="{{ url_for('bx_start.media', file=row['audio']) }}"></audio></td>

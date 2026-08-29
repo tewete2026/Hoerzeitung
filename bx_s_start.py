@@ -1,13 +1,14 @@
 # import mariadb
 # import feedparser
+import json
 from flask import Blueprint
 from flask import current_app
 from flask import request
 from flask import render_template, session
-from flask import redirect, url_for
+from flask import redirect, url_for, make_response
 from werkzeug.exceptions import abort
 from markdown import markdown
-from .db import get_db, Configure, getLogin, get_s_episodes
+from .db import get_db, Configure, getLogin, get_s_episodes, get_s_favorites
 from . import version
 
 bp = Blueprint("bx_s_start", __name__)
@@ -27,6 +28,13 @@ def s_online(authcode):
         abort(500)
     clear_session()
     return show_content("album.html", " - Album Übersicht - Online-Version", online=True, parm_authcode=authcode)
+
+
+@bp.route("/S-Favoriten", methods=['GET', 'POST'])
+def s_favorites():
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    return show_content("favorites.html", " - Favoriten Übersicht", favorites=True)
 
 
 @bp.route("/S-Album", methods=['GET', 'POST'])
@@ -85,10 +93,25 @@ def s_releases():
     return render_template("releaseInfo.html", conf=conf)
 
 
+@bp.route("/S-Was-ist-neu", methods=['GET'])
+def s_newsrequest():
+    conf = Configure("Norderstedter Hörzeitung - Was ist neu", request, current_app)
+    if "guest" in session:
+        if session['guest']:
+            return redirect(url_for('bx_s_start.s_album'))
+    if "authcode" in session:
+        conf.append("show_navall", True)
+    with open(current_app.root_path + "/static/doc/whatsnew.md") as markdn:
+        conf.append("content", markdown(text=markdn.read(), output_format='html'))
+    return render_template("whatsNew.html", conf=conf)
+
+
 @bp.route("/S-Abmelden", methods=['GET'])
 def s_logout():
     clear_session()
-    return redirect(url_for('bx_s_start.s_album'))
+    resp = make_response(redirect(url_for('bx_s_start.s_album')))
+    resp.delete_cookie('drk-nhz-favorites', current_app.config['SESSION_COOKIE_PATH'])
+    return resp
 
 
 def clear_session():
@@ -99,13 +122,15 @@ def clear_session():
         session.pop('guest')
 
 
-def show_content(html_form, header, subdir=None, guest=False, online=False, parm_authcode=None, archive=False, archive_dir=None):
+def show_content(html_form, header, subdir=None, guest=False, online=False, parm_authcode=None, archive=False, archive_dir=None, favorites=False):
     ts = current_app.config["TS"]
     auth_code_valid = False
     auth_code_set = False
     auth_code_empty = False
     post_request = False
+    news_request = False
     single_view = True
+    raw_fav_cookie = None
     if subdir is None: 
         single_view = False
         if 'max_pageview' not in session:
@@ -115,10 +140,6 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
             max_pageview = session['max_pageview']
     else:
         max_pageview = -1
-    
-    if "authcode" in session:
-        if getLogin(session["authcode"])['status']:
-            auth_code_valid = True
     
     if guest:
         form_data = {"authcode":current_app.config["GUEST_CODE"]}
@@ -131,7 +152,19 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
         post_request = True
 
     conf = Configure("Norderstedter Hörzeitung" + header, request, current_app)
+
+    if 'drk-nhz-favorites' in request.cookies:
+        raw_fav_cookie = request.cookies['drk-nhz-favorites']
     
+    if "authcode" in session:
+        rc_code = getLogin(session["authcode"], raw_fav_cookie)
+        if rc_code['status']:
+            auth_code_valid = True
+            if rc_code['dbdata']['lastVersion'] != version.Configs.APP_VERSION:
+                news_request = True
+            if 'favorites' in rc_code['dbdata']:
+                raw_fav_cookie = rc_code['dbdata']['favorites']['favorites']
+
     if not auth_code_valid:
         html = 'login.html'
         conf.javascript.add({'guestcode':current_app.config['GUEST_CODE']})
@@ -146,7 +179,11 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
                     session['dbdata'] = rc_code['dbdata']
                     session['authcode'] = rc_code['dbdata']['freecode']
                     session['guest'] = rc_code['dbdata']['guest']
-                    current_app.logger.info("Login erfolgreich: pnr=%s, seclevel=%s, freecode=%s", rc_code['dbdata']['pnr'], rc_code['dbdata']['seclevel'], rc_code['dbdata']['freecode'])
+                    if rc_code['dbdata']['lastVersion'] != version.Configs.APP_VERSION:
+                        news_request = True
+                    if 'favorites' in rc_code['dbdata']:
+                        raw_fav_cookie = rc_code['dbdata']['favorites']['favorites']
+                    current_app.logger.info("Login erfolgreich: pnr=%s, seclevel=%s, freecode=%s, Guest=%s", rc_code['dbdata']['pnr'], rc_code['dbdata']['seclevel'], rc_code['dbdata']['freecode'], rc_code['dbdata']['guest'])
             else:
                 auth_code_empty = True
     
@@ -155,7 +192,9 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
     elif auth_code_set and not auth_code_valid:
         conf.error['authcode'] = "Der eingegebene Code ist nicht gültig."
     
-    if auth_code_valid:
+    if news_request:
+        return redirect(url_for('bx_s_start.s_newsrequest'))
+    elif auth_code_valid:
         conf.initlogin(session['dbdata'])
         auth_code_guest = session['guest']
         html = html_form
@@ -178,22 +217,31 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
         if max_pageview < 0: show_max_pageview ="Alles"
         conf.append("show_max_pageview", show_max_pageview)
         conf.append("show_navall", True)
+        conf.javascript.add({'max_favorites':current_app.config["max-favorites"]})
+        if raw_fav_cookie is not None:
+            fav_cookie = json.loads(raw_fav_cookie)
+            conf.javascript.add({'drk_nhz_favorites':fav_cookie})
+        else:
+            fav_cookie = {'audios':''}
         if session['dbdata']['seclevel'] > 1:
             conf.append("show_navtop", True)
         if auth_code_guest:
             path = "/short"
             conf.append("is_guest", True)
-            if archive or archive_dir is not None:
+            if archive or favorites or archive_dir is not None:
                 abort(404)
         else:
             if archive or archive_dir is not None:
                 path = "/archive"
             else:
                 path = "/long"
-        full_dir = current_app.instance_path + path
-        rc_code = get_s_episodes(full_dir, subdir, conf, max_pageview, archive=archive, archive_dir=archive_dir)
+        if favorites:
+            rc_code = get_s_favorites(current_app.instance_path, path, fav_cookie, conf, max_pageview)
+        else:
+            full_dir = current_app.instance_path + path
+            rc_code = get_s_episodes(full_dir, subdir, conf, max_pageview, archive=archive, archive_dir=archive_dir)
         conf.append('episodes', rc_code['episodes'])
         if rc_code['is_more']:
             conf.append('is_more', True)
 
-    return render_template(html, conf=conf, javascript=conf.javascript.getOut())
+    return render_template(html, conf=conf)

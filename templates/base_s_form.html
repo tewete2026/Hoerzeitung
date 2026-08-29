@@ -47,7 +47,6 @@
     <link href="{{ url_for('static', filename='bootstrap/css/heroes.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='bootstrap/css/breadcrumbs.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/nhz.css') }}" rel="stylesheet">
-    <script>{{ javascript|safe }}</script>
   </head>
 
   <body>
@@ -104,6 +103,15 @@
       </symbol>
       <symbol id="house-door-fill" viewBox="0 0 16 16">
         <path d="M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5z"/>
+      </symbol>
+      <symbol id="heart" viewBox="0 0 16 16">
+        <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+      </symbol>
+      <symbol id="heart-fill" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
+      </symbol>
+      <symbol id="heartbreak" viewBox="0 0 16 16">
+        <path d="M8.867 14.41c13.308-9.322 4.79-16.563.064-13.824L7 3l1.5 4-2 3L8 15a38 38 0 0 0 .867-.59m-.303-1.01-.971-3.237 1.74-2.608a1 1 0 0 0 .103-.906l-1.3-3.468 1.45-1.813c1.861-.948 4.446.002 5.197 2.11.691 1.94-.055 5.521-6.219 9.922m-1.25 1.137a36 36 0 0 1-1.522-1.116C-5.077 4.97 1.842-1.472 6.454.293c.314.12.618.279.904.477L5.5 3 7 7l-1.5 3zm-2.3-3.06-.442-1.106a1 1 0 0 1 .034-.818l1.305-2.61L4.564 3.35a1 1 0 0 1 .168-.991l1.032-1.24c-1.688-.449-3.7.398-4.456 2.128-.711 1.627-.413 4.55 3.706 8.229Z"/>
       </symbol>
     </svg>
 
@@ -194,13 +202,15 @@
     </a>
     <ul class="nav col-md-4 justify-content-end">
 {% if conf.has("show_navall") %}
-      <li class="nav-item"><a href="{{ url_for('bx_s_start.s_album') }}" class="nav-link px-2 text-body-secondary">Album-Übersicht</a></li>
+      {% if not conf.has("is_guest") %}<li class="nav-item"><a href="{{ url_for('bx_s_start.s_newsrequest') }}" class="nav-link px-1 text-body-secondary">Was-ist-neu</a></li>{% endif %}
+      <li class="nav-item"><a href="{{ url_for('bx_s_start.s_album') }}" class="nav-link px-1 text-body-secondary">Album</a></li>
 {% endif %}
       <li class="nav-item"><a href="{{ url_for('bx_s_start.s_impress') }}" class="nav-link px-1 text-body-secondary">Impressum</a></li>
     </ul>
   </footer>
 </div>
 
+<script>{{ conf.javascript.getOut()|safe }}</script>
 <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ url_for('static', filename='bootstrap/js/color-modes.js') }}"></script>
 <script src="{{ url_for('static', filename='js/s_theme.js') }}"></script>

@@ -1,9 +1,9 @@
 /*M!999999\- enable the sandbox mode */ 
--- MariaDB dump 10.19-11.8.3-MariaDB, for debian-linux-gnu (x86_64)
+-- MariaDB dump 10.19-11.8.6-MariaDB, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: bv
+-- Host: localhost    Database: nhz
 -- ------------------------------------------------------
--- Server version	11.8.3-MariaDB-1build1 from Ubuntu
+-- Server version	11.8.6-MariaDB-5ubuntu0.1 from Ubuntu
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -17,29 +17,38 @@
 /*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
 
 --
--- Table structure for table `tUser`
+-- Table structure for table `_Config`
 --
 
+DROP TABLE IF EXISTS `_Config`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-DROP TABLE IF EXISTS `tUser`;
-CREATE TABLE `tUser` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `pnr` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Nummer',
-  `seclevel` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Berechtigungs Ebene',
-  `pnrcreate` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Konto Nummer erstellt',
-  `histid` int(11) DEFAULT NULL COMMENT 'ID zu tHistory',
-  `freecode` varchar(20) NOT NULL DEFAULT '' COMMENT 'Freischaltcode',
-  `active` bit(1) NOT NULL DEFAULT b'1' COMMENT 'Ist der Freischaltcode aktiv (1=J/0=N)',
-  `guest` bit(1) NOT NULL DEFAULT b'0' COMMENT 'Ist der Freischaltcode ein Gast (1=J/0=N)',
-  `createDate` date NOT NULL DEFAULT curdate() COMMENT 'Erstellungs Datum',
-  `lastActive` date DEFAULT NULL COMMENT 'Letztes Datum Aktivität',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `pnr` (`pnr`),
-  UNIQUE KEY `freecode` (`freecode`)
+CREATE TABLE `_Config` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `item` varchar(50) DEFAULT NULL,
+  `value` varchar(50) DEFAULT NULL,
+  `amount` int DEFAULT NULL,
+  PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
-INSERT INTO `tUser`(pnr,seclevel,histid,freecode,guest) VALUES (1,4,1,'4AQPW-LVB1-9E24-B7CG',0),(2,0,1,'0GAST-ABCD-ABCD-ABCD',1);
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_Config`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `_Config` WRITE;
+/*!40000 ALTER TABLE `_Config` DISABLE KEYS */;
+INSERT INTO `_Config` VALUES
+(1,'wait-for-unlock-record',null,10),
+(2,'style-bg-visiter-wl','bg-warning-subtle',null),
+(3,'max-line-overview',null,25),
+(4,'max-line-episodes',null,20),
+(5,'max-favorites',null,100);
+/*!40000 ALTER TABLE `_Config` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -50,4 +59,4 @@ INSERT INTO `tUser`(pnr,seclevel,histid,freecode,guest) VALUES (1,4,1,'4AQPW-LVB
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-05-16 18:40:45
+-- Dump completed on 2026-08-28 12:55:39
