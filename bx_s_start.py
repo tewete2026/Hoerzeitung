@@ -160,7 +160,7 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
         rc_code = getLogin(session["authcode"], raw_fav_cookie)
         if rc_code['status']:
             auth_code_valid = True
-            if rc_code['dbdata']['lastVersion'] != version.Configs.APP_VERSION:
+            if version.Configs.APP_IMPORTANT and rc_code['dbdata']['lastVersion'] != version.Configs.APP_VERSION:
                 news_request = True
             if 'favorites' in rc_code['dbdata']:
                 raw_fav_cookie = rc_code['dbdata']['favorites']['favorites']
@@ -179,7 +179,7 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
                     session['dbdata'] = rc_code['dbdata']
                     session['authcode'] = rc_code['dbdata']['freecode']
                     session['guest'] = rc_code['dbdata']['guest']
-                    if rc_code['dbdata']['lastVersion'] != version.Configs.APP_VERSION:
+                    if version.Configs.APP_IMPORTANT and rc_code['dbdata']['lastVersion'] != version.Configs.APP_VERSION:
                         news_request = True
                     if 'favorites' in rc_code['dbdata']:
                         raw_fav_cookie = rc_code['dbdata']['favorites']['favorites']
