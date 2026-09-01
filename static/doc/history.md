@@ -1,5 +1,9 @@
 ---
 
+### Release: 1.1.16
+
+Nachbesserungen für 1.1.15
+
 ### Release: 1.1.15
 
 Ab 1.1.15 können Favoriten hinterlegt werden (maximal 100). In jeder Episoden-Zeile wird nach dem Titel-Namen ein Herz-Symbol angezeigt.   
