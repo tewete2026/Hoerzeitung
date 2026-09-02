@@ -2,7 +2,7 @@
 
 ### Release: 1.1.16
 
-Nachbesserungen für 1.1.15
+Nachbesserungen für 1.1.15. Z.B. rückt das Favoriten-"Herz" in einer Zeile an erster Position, zur Verbesserung der Übersichtlichkeit.
 
 ### Release: 1.1.15
 

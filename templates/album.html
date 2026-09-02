@@ -97,9 +97,9 @@
           <tr>
             <th scope="row" class="text-start">
               {{ row['title'] }} 
-              <a class="list-table-rows" title="Anzeigen Beschreibung für {{ row['title'] }}" href="#"><svg class="bi me-2 opacity-100" width="1em" height="1em"><use href="#question-circle"></use></svg></a>
-              <a class="list-table-rows-chapter" title="Anzeigen Kapitel für {{ row['title'] }}" href="#"><svg class="bi me-2 opacity-100" width="1em" height="1em"><use href="#book"></use></svg></a>
-              {% if not conf.has("is_guest") %}<a class="set-favorites" title="{{ row['title'] }} als Favorit merken" href="#" data-audio="{{ row['audio'] }}"><svg class="bi opacity-100" width="1em" height="1em"><use href="#heart"></use></svg></a>{% endif %}
+              {% if not conf.has("is_guest") %}<a class="set-favorites" title="{{ row['title'] }} als Favorit merken" href="#" data-audio="{{ row['audio'] }}"><svg class="bi me-1 opacity-100" width="1em" height="1em"><use href="#heart"></use></svg></a>{% endif %}
+              <a class="list-table-rows" title="Anzeigen Beschreibung für {{ row['title'] }}" href="#"><svg class="bi me-1 opacity-100" width="1em" height="1em"><use href="#question-circle"></use></svg></a>
+              <a class="list-table-rows-chapter" title="Anzeigen Kapitel für {{ row['title'] }}" href="#"><svg class="bi opacity-100" width="1em" height="1em"><use href="#book"></use></svg></a>
             </th>
             <td>{{ row['duration'] }}</td>
             <td>{{ row['date'] }}</td>
