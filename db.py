@@ -416,7 +416,7 @@ def getLogin(freeCode:str, fav_cookie:str=None):
         dbdata = cur.fetchone()
         if cur.rowcount > 0:
             rc_code['dbdata'] = dbdata
-            cur.execute("UPDATE tUser SET lastActive=curdate(),lastVersion=? WHERE id=?", (version.Configs.APP_VERSION, rc_code['dbdata']['id']))
+            cur.execute("UPDATE tUser SET lastActive=curdate(),lastVersion=? WHERE id=?", (version.Configs.APP_RELEASE, rc_code['dbdata']['id']))
             if fav_cookie is not None:
                 cur.execute("INSERT INTO tUser_fav(pnr_id,favorites) VALUES(?,?) ON DUPLICATE KEY UPDATE favorites=?", (rc_code['dbdata']['id'], fav_cookie, fav_cookie))
             else:

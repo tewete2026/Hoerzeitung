@@ -1,9 +1,9 @@
 /*M!999999\- enable the sandbox mode */ 
--- MariaDB dump 10.19-11.8.3-MariaDB, for debian-linux-gnu (x86_64)
+-- MariaDB dump 10.19-11.8.6-MariaDB, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: bv
+-- Host: localhost    Database: nhz
 -- ------------------------------------------------------
--- Server version	11.8.3-MariaDB-1build1 from Ubuntu
+-- Server version	11.8.6-MariaDB-5ubuntu0.1 from Ubuntu
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -20,20 +20,21 @@
 -- Table structure for table `tUser`
 --
 
+DROP TABLE IF EXISTS `tUser`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-DROP TABLE IF EXISTS `tUser`;
 CREATE TABLE `tUser` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `pnr` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Nummer',
-  `seclevel` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Berechtigungs Ebene',
-  `pnrcreate` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Konto Nummer erstellt',
+  `pnr` smallint(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Nummer',
+  `seclevel` smallint(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Berechtigungs Ebene',
+  `pnrcreate` smallint(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Konto Nummer erstellt',
   `histid` int(11) DEFAULT NULL COMMENT 'ID zu tHistory',
   `freecode` varchar(20) NOT NULL DEFAULT '' COMMENT 'Freischaltcode',
   `active` bit(1) NOT NULL DEFAULT b'1' COMMENT 'Ist der Freischaltcode aktiv (1=J/0=N)',
   `guest` bit(1) NOT NULL DEFAULT b'0' COMMENT 'Ist der Freischaltcode ein Gast (1=J/0=N)',
   `createDate` date NOT NULL DEFAULT curdate() COMMENT 'Erstellungs Datum',
   `lastActive` date DEFAULT NULL COMMENT 'Letztes Datum Aktivität',
+  `lastVersion` int(10) unsigned DEFAULT 0 COMMENT 'Letzte Version, die der User gelesen hat',
   PRIMARY KEY (`id`),
   UNIQUE KEY `pnr` (`pnr`),
   UNIQUE KEY `freecode` (`freecode`)
@@ -50,4 +51,4 @@ INSERT INTO `tUser`(pnr,seclevel,histid,freecode,guest) VALUES (1,4,1,'4AQPW-LVB
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-05-16 18:40:45
+-- Dump completed on 2026-09-03 18:55:23

@@ -1,5 +1,9 @@
 ---
 
+### Release: 1.1.17
+
+Überarbeiten des Build-Prozesses
+
 ### Release: 1.1.16
 
 Nachbesserungen für 1.1.15. Z.B. rückt das Favoriten-"Herz" in einer Zeile an erster Position, zur Verbesserung der Übersichtlichkeit.
