@@ -16,24 +16,42 @@
           <div class="collapse navbar-collapse" id="navbarNavDropdown">
             <ul class="navbar-nav">
               <li class="nav-item">
-                {% set nav_act = 'active' if conf.has("archive_dir") is false else '' %}
-                {% set nav_pag = 'aria-current="page"' if conf.has("archive_dir") is false else '' %}
-                <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link {{ nav_act|safe }}"{{ nav_pag|safe }} title="Zur Album-Übersicht" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
+                {% set nav_act = 'active' if conf.has("archive_dir") is false and conf.has("show_bonus") is false else '' %}
+                {% set nav_pag = 'aria-current="page"' if conf.has("archive_dir") is false and conf.has("show_bonus") is false else '' %}
+                <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link {{ nav_act|safe }}"{{ nav_pag|safe }} title="Zur Album-Übersicht" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
               </li>
               {% if not conf.has("is_guest") %}
               <li class="nav-item">
                 {% set nav_act = 'active' if conf.has("archive_dir") is true else '' %}
                 {% set nav_pag = 'aria-current="page"' if conf.has("archive_dir") is true else '' %}
-                <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link {{ nav_act|safe }}" {{ nav_pag|safe }} title="Zur Archiv-Übersicht" href="{{ url_for('bx_s_start.s_archive') }}">Archiv</a>
+                <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link {{ nav_act|safe }}" {{ nav_pag|safe }} title="Zur Archiv-Übersicht" href="{{ url_for('bx_s_start.s_archive') }}">Archiv</a>
+              </li>
+              <li class="nav-item">
+                {% set nav_act = 'active' if conf.has("show_bonus") is true else '' %}
+                {% set nav_pag = 'aria-current="page"' if conf.has("show_bonus") is true else '' %}
+                <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link {{ nav_act|safe }}" {{ nav_pag|safe }} title="Zur Bonus-Übersicht" href="{{ url_for('bx_s_start.s_bonus_episodes') }}">Bonus</a>
+              </li>{% endif %}
+              {% if conf.has("show_bonus") %}<li class="nav-item dropdown">
+                <a class="me-3 nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Ansicht({{ conf.get('show_max_pageview') }})</a>
+                <form id="setpage-form" novalidate method="post">
+                  <input type="hidden" id="setpage" name="setpage">
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item list-setpage" href="#5" data-setpage="5">bis 5 Positionen</a></li>
+                    <li><a class="dropdown-item list-setpage" href="#10" data-setpage="10">bis 10 Positionen</a></li>
+                    <li><a class="dropdown-item list-setpage" href="#20" data-setpage="20">bis 20 Positionen</a></li>
+                    <li><a class="dropdown-item list-setpage" href="#40" data-setpage="40">bis 40 Positionen</a></li>
+                    <li><a class="dropdown-item list-setpage" href="#ALL" data-setpage="ALL">Alles</a></li>
+                  </ul>
+                </form>
               </li>{% endif %}
               <li class="nav-item">
-                <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
+                <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
               </li>
               {% if not conf.has("is_guest") %}<li class="nav-item">
                 <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Anzeigen Favoriten" href="{{ url_for('bx_s_start.s_favorites') }}"><svg class="mt-1 bi opacity-100" width="1.35em" height="1.35em"><use href="#heart"></use></svg></a>
               </li>{% endif %}
               <li class="nav-item">
-                <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi me-2 opacity-100" width="1.6em" height="1.6em"><use href="#box-arrow-right"></use></svg></a>
+                <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi opacity-100" width="1.6em" height="1.6em"><use href="#box-arrow-right"></use></svg></a>
               </li>
             </ul>
           </div>
@@ -58,15 +76,20 @@
             {% else %}<a class="link-body-emphasis fw-semibold text-decoration-none" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>{% endif %}
           </li>
           <li class="breadcrumb-item active" aria-current="page">
-            Einzel Beiträge zum Album {{ conf.map['subdir'] }}{% if conf.has("archive_dir") %} (Jahrgang {{ conf.get('archive_dir') }}){% endif %}
+            {% if conf.has("show_bonus") %}Bonus-Beiträge
+            {% else %}Einzel Beiträge zum Album {{ conf.map['subdir'] }}{% if conf.has("archive_dir") %} (Jahrgang {{ conf.get('archive_dir') }}){% endif %}
+            {% endif %}
           </li>
         </ol>
       </nav>
     </div>
     
     <div class="pricing-header p-3 pb-md-4 mx-auto text-center">
-      <h1 class="display-4 fw-normal text-body-emphasis">Einzel Beiträge</h1>
+      {% if conf.has("show_bonus") %}<h1 class="display-4 fw-normal text-body-emphasis">Bonus Beiträge</h1>
+      <p class="fs-5 text-body-secondary">Einzelne Beiträge, die nicht in den regulären Alben enthalten sind.</p>
+      {% else %}<h1 class="display-4 fw-normal text-body-emphasis">Einzel Beiträge</h1>
       <p class="fs-5 text-body-secondary">Alle einzelnen Beiträge zum Album {{ conf.map['subdir'] }}{% if conf.has("archive_dir") %} (Jahrgang {{ conf.get('archive_dir') }}){% endif %}.</p>
+      {% endif %}
     </div>
   </header>
   
@@ -95,6 +118,20 @@
         </tbody>
       </table>
     </div>
+    {% if conf.has("show_bonus") and conf.has("is_more") %}
+    <!-- More content button -->
+    <div class="mt-1 ms-auto text-center">
+      <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Mehr anzeigen</button>
+      <form id="morepage-form" novalidate method="post">
+        <input type="hidden" id="morepage" name="morepage">
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item list-morepage" href="#5" data-morepage="5">Weitere 5 Positionen</a></li>
+          <li><a class="dropdown-item list-morepage" href="#10" data-morepage="10">Weitere 10 Positionen</a></li>
+          <li><a class="dropdown-item list-morepage" href="#ALL" data-morepage="ALL">Alles</a></li>
+        </ul>
+      </form>
+    </div>
+    {% endif %}
   </main>
 </div>
 

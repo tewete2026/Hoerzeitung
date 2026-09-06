@@ -16,13 +16,16 @@
           <div class="collapse navbar-collapse" id="navbarNavDropdown">
             <ul class="navbar-nav">
               <li class="nav-item">
-                <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link" title="Zur Album-Übersicht" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
+                <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link" title="Zur Album-Übersicht" href="{{ url_for('bx_s_start.s_album') }}">Album-Übersicht</a>
               </li>
               <li class="nav-item">
-                <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link active" title="Zur Archiv-Übersicht" aria-current="page" href="{{ url_for('bx_s_start.s_archive') }}">Archiv</a>
+                <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link active" title="Zur Archiv-Übersicht" aria-current="page" href="{{ url_for('bx_s_start.s_archive') }}">Archiv</a>
+              </li>
+              <li class="nav-item">
+                <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link" title="Zur Bonus-Übersicht" href="{{ url_for('bx_s_start.s_bonus_episodes') }}">Bonus</a>
               </li>
               <li class="nav-item dropdown">
-                <a class="me-4 nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Ansicht({{ conf.get('show_max_pageview') }})</a>
+                <a class="me-3 nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Ansicht({{ conf.get('show_max_pageview') }})</a>
                 <form id="setpage-form" novalidate method="post">
                   <input type="hidden" id="setpage" name="setpage">
                   <ul class="dropdown-menu">
@@ -35,10 +38,10 @@
                 </form>
               </li>
               <li class="nav-item">
-                <a class="me-4 py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
+                <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
               </li>
               <li class="nav-item">
-                <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi me-2 opacity-100" width="1.6em" height="1.6em"><use href="#box-arrow-right"></use></svg></a>
+                <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi opacity-100" width="1.6em" height="1.6em"><use href="#box-arrow-right"></use></svg></a>
               </li>
             </ul>
           </div>

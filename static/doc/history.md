@@ -1,5 +1,11 @@
 ---
 
+### Release: 1.1.18
+
+Neues Feature: Bonus-Beiträge
+
+Neue Anzeige für Beiträge, welche es z.B. aus Platzgründen nicht in die reguläre CD-Produktion geschafft haben. Dafür gibt es den neuen Navigationspunkt "Bonus". Darüber werden alle Einträge im **neuen Teamordner "Bonus"** angezeigt.
+
 ### Release: 1.1.17
 
 Überarbeiten des Build-Prozesses

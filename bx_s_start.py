@@ -72,6 +72,13 @@ def s_arc_episodes(year, subdir):
     return show_content("episodes.html", " - Archiv-Einzel Beiträge", archive_dir=year, subdir=subdir)
 
 
+@bp.route("/S-Bonus-Episoden", methods=['GET', 'POST'])
+def s_bonus_episodes():
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    return show_content("episodes.html", " - Bonus-Beiträge", bonus=True)
+
+
 @bp.route("/S-Impressum", methods=['GET'])
 def s_impress():
     conf = Configure("Norderstedter Hörzeitung - Impressum", request, current_app)
@@ -122,7 +129,7 @@ def clear_session():
         session.pop('guest')
 
 
-def show_content(html_form, header, subdir=None, guest=False, online=False, parm_authcode=None, archive=False, archive_dir=None, favorites=False):
+def show_content(html_form, header, subdir=None, guest=False, online=False, parm_authcode=None, archive=False, archive_dir=None, favorites=False, bonus=False):
     ts = current_app.config["TS"]
     auth_code_valid = False
     auth_code_set = False
@@ -233,13 +240,16 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
         else:
             if archive or archive_dir is not None:
                 path = "/archive"
+            elif bonus:
+                path = "/bonus"
+                conf.append("show_bonus", True)
             else:
                 path = "/long"
         if favorites:
-            rc_code = get_s_favorites(current_app.instance_path, path, fav_cookie, conf, max_pageview)
+            rc_code = get_s_favorites(current_app.instance_path, fav_cookie, conf, max_pageview)
         else:
             full_dir = current_app.instance_path + path
-            rc_code = get_s_episodes(full_dir, subdir, conf, max_pageview, archive=archive, archive_dir=archive_dir)
+            rc_code = get_s_episodes(full_dir, subdir, conf, max_pageview, archive=archive, archive_dir=archive_dir, bonus=bonus)
         conf.append('episodes', rc_code['episodes'])
         if rc_code['is_more']:
             conf.append('is_more', True)

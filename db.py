@@ -196,7 +196,7 @@ def get_episodes(episodes, auth_code_valid, limit:bool=True):
     return rc_code
 
 
-def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=False, archive_dir=None):
+def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=False, archive_dir=None, bonus=False):
     rc_code = {"status":"OK"}
     ts = current_app.config["TS"]
     episodes = {}
@@ -239,6 +239,8 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=Fa
                 audio_name = f"{subdir},{audio_name}"
             if archive_dir is not None: 
                 audio_name = f"{archive_dir}!{audio_name}"
+            if bonus: 
+                audio_name = f"B!{audio_name}"
             if key in episodes:
                 episode = episodes.get(key)
             (title, description, published, size, dur, chapter, image_dict) = tools.getMP3Info(rawname)
@@ -264,27 +266,19 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=Fa
     return rc_code
 
 
-def get_s_favorites(base_dir, path_sub, content, conf=None, max_pageview=-1):
+def get_s_favorites(base_dir, content, conf=None, max_pageview=-1):
     rc_code = {"status":"OK"}
     ts = current_app.config["TS"]
     episodes = {}
     page = 1
     is_more = False
     for element in content['audios']:
-        path = path_sub
         if max_pageview > 0 and page > max_pageview:
             is_more = True
             break
         episode = {}
         audio_name = element
-        file_arr = audio_name.split('!')
-        if len(file_arr) > 1:
-            path = "/archive/" + file_arr[0]
-            audio_name = file_arr[1]
-        file_arr = audio_name.split(',')
-        if len(file_arr) > 1:
-            path += "/" + file_arr[0]
-            audio_name = file_arr[1]
+        (path, audio_name) = tools.calcFileName(audio_name)
         rawname = f"{base_dir}{path}/{audio_name}"
         if not audio_name.endswith(".mp3"): continue
         key = audio_name.split('.')[0].strip()

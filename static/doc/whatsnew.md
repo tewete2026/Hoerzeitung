@@ -1,5 +1,13 @@
 ---
 
+### Version: 1.1.18
+
+Neu ist das Feature: Bonus-Beiträge. Dafür gibt es den neuen Navigations-Punkt "Bonus".
+
+Hier werden alle bisherigen Beiträge angezeigt, welche nicht für die reguläre CD-Produktion verwendet wurden (z.B. aus Platzgründen), jedoch trotzdem hier per Auswahl im Audio-Player abgehört werden können.
+
+[Und hier geht es zu den Bonus-Beiträgen](/S-Bonus-Episoden)
+
 ### Version: 1.1.15
 
 Ab sofort kann ein Album oder können einzelne Beiträge (Details) **als Favorit hinterlegt werden**. Favoriten sind einem einzelnen Konto zugeordnet.

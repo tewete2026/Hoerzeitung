@@ -32,17 +32,9 @@ def media(file:str):
             dbdata = rc_code['dbdata']
             auth_code_guest = dbdata['guest']
             if auth_code_guest:
-                path = "/short"
+                (path, fname) = tools.calcFileName(fname, "/short", guest=True)
             else:
-                path = "/long"
-                file_arr = fname.split('!')
-                if len(file_arr) > 1:
-                    path = "/archive/" + file_arr[0]
-                    fname = file_arr[1]
-                file_arr = fname.split(',')
-                if len(file_arr) > 1:
-                    path += "/" + file_arr[0]
-                    fname = file_arr[1]
+                (path, fname) = tools.calcFileName(fname)
         else:
             path = "/short"
         path = current_app.instance_path + path
@@ -76,19 +68,11 @@ def media(file:str):
             dbdata = rc_code['dbdata']
             auth_code_guest = dbdata['guest']
             if auth_code_guest:
-                path = "/short"
                 is_guest = 1
+                (path, file) = tools.calcFileName(file, "/short", guest=True)
             else:
-                path = "/long"
                 is_guest = 0
-                file_arr = file.split('!')
-                if len(file_arr) > 1:
-                    path = "/archive/" + file_arr[0]
-                    file = file_arr[1]
-                file_arr = file.split(',')
-                if len(file_arr) > 1:
-                    path += "/" + file_arr[0]
-                    file = file_arr[1]
+                (path, file) = tools.calcFileName(file)
             pnr = dbdata['pnr']
             seclevel = dbdata['seclevel']
             freecode = dbdata['freecode']

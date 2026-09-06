@@ -61,6 +61,24 @@ def getMpegInfo(rawname:str):
     return (size, duration)
 
 
+def calcFileName(fname:str, path:str=None, guest:bool=False):
+    if not path: path = "/long"
+    if not guest and fname.startswith('B!'):
+        path = "/bonus/"
+        fname = fname[2:]
+    else:
+        if not guest:
+            file_arr = fname.split('!')
+            if len(file_arr) > 1:
+                path = "/archive/" + file_arr[0]
+                fname = file_arr[1]
+        file_arr = fname.split(',')
+        if len(file_arr) > 1:
+            path += "/" + file_arr[0]
+            fname = file_arr[1]
+    return (path, fname)
+
+
 def generateCode(prefix:str):
     chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789'
     chars_list = list(chars)
