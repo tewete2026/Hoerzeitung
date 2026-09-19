@@ -2,32 +2,47 @@ import os, random
 from math import floor
 from flask import current_app
 from mutagen.mp3 import MP3
-from mutagen.id3 import CHAP
+from mutagen.id3 import CHAP, TIT2, TLEN
 from sox import file_info as audio_info
 
+''' mutagen.id3.Encoding.UTF8 has the value 3 so I presume that encoding=3 forces utf-8 encoding.
+    # Encoding the string to UTF-16
+    utf16_encoded = text.encode('utf-16')
+'''
 
 def getMP3Info(rawname:str):
     ts = current_app.config["TS"]
     # audio = MP3(current_app.instance_path + "/" + mp3, ID3=EasyID3)
     audio = MP3(rawname)
-    episode_kap = {}
+    # print(audio)
+    chapter_dict = {}
     image_dict = {}
     description = "- - - -"
     title = "---"
     tlen = None
+    current_app.logger.debug(rawname)
     for key in audio.keys():
         cont = audio.get(key)
+        current_app.logger.debug((key, type(cont)))
         if isinstance(cont, CHAP):
-            text = cont.sub_frames["TIT2"][0]
+            text = cont.sub_frames["TIT2"].text[0]
+            current_app.logger.debug("%s, %s, %s", text, cont.start_time, cont.end_time)
             if len(text) > 0:
-                episode_kap.update({key.removeprefix("CHAP:"):text})
+                chapter_dict.update({key.removeprefix("CHAP:"):(text, cont.start_time)})
         if key == 'TIT2':
-            title = str(cont)
-        if key == 'TLEN':
-            tlen = str(cont)
-        if key[:5] == 'COMM:':
-            description = str(cont)
-        if key == 'APIC:':
+            title = cont.text[0]
+            current_app.logger.debug("%s, %s", title, cont.encoding)
+        elif key == 'TLEN':
+            tlen = cont.text[0]
+            current_app.logger.debug("%s, %s", tlen, cont.encoding)
+        elif key[:5] == 'CTOC:':
+            current_app.logger.debug("%s, flags=%s", cont.child_element_ids, cont.flags)
+        elif key[:5] == 'TXXX:':
+            current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
+        elif key[:5] == 'COMM:':
+            description = cont.text[0]
+            current_app.logger.debug("%s, %s", description, cont.encoding)
+        elif key == 'APIC:':
             image_dict.update({'mime': cont.mime})
             image_dict.update({'desc': cont.desc})
             image_dict.update({'data': cont.data})
@@ -37,7 +52,7 @@ def getMP3Info(rawname:str):
     size = os.stat(rawname).st_size
     chapter = ""
     counter = 1
-    for key, text in episode_kap.items():
+    for key, (text, start) in chapter_dict.items():
         chapter += "{0:02}. {1}<br>".format(counter, text)
         counter += 1
     published = ts.fromtimestamp(os.stat(rawname).st_mtime)
@@ -49,7 +64,7 @@ def getMP3Info(rawname:str):
     sec = dur % 60
     duration = "{0:02.0f}:{1:02.0f}".format(min, sec)
     # print(tlen, dur, min, sec, duration, audio, audio.keys())
-    return (title, description, published, size, duration, chapter, image_dict)
+    return (title, description, published, size, duration, chapter, chapter_dict, image_dict)
 
 
 def getMpegInfo(rawname:str):

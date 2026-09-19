@@ -243,7 +243,7 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=Fa
                 audio_name = f"B!{audio_name}"
             if key in episodes:
                 episode = episodes.get(key)
-            (title, description, published, size, dur, chapter, image_dict) = tools.getMP3Info(rawname)
+            (title, description, published, size, dur, chapter, chapter_dict, image_dict) = tools.getMP3Info(rawname)
             (si, duration) = tools.getMpegInfo(rawname)
             published = ts.addtimezone(published)
             episode.update({"rawname":rawname})
@@ -252,6 +252,7 @@ def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=Fa
             episode.update({"description":str(description)})
             episode.update({"summary":str(description)})
             episode.update({"chapter":chapter})
+            episode.update({"chapter_dict":chapter_dict})
             episode.update({"audio":audio_name})
             episode.update({"length":size})
             episode.update({"duration":duration})
@@ -282,7 +283,7 @@ def get_s_favorites(base_dir, content, conf=None, max_pageview=-1):
         rawname = f"{base_dir}{path}/{audio_name}"
         if not audio_name.endswith(".mp3"): continue
         key = audio_name.split('.')[0].strip()
-        (title, description, published, size, dur, chapter, image_dict) = tools.getMP3Info(rawname)
+        (title, description, published, size, dur, chapter, chapter_dict, image_dict) = tools.getMP3Info(rawname)
         (si, duration) = tools.getMpegInfo(rawname)
         published = ts.addtimezone(published)
         episode.update({"rawname":rawname})

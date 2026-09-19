@@ -41,7 +41,7 @@ def media(file:str):
         rawname = path + "/" + fname
         if not os.path.exists(rawname):
             abort(404)
-        (title, description, published, size, dur, chapter, image_dict) = tools.getMP3Info(rawname)
+        (title, description, published, size, dur, chapter, chapter_dict, image_dict) = tools.getMP3Info(rawname)
         if not 'data' in image_dict:
             abort(404)
         resp = make_response(image_dict['data'])
@@ -226,6 +226,36 @@ def start():
 def feed_rss(auth_code):
     """
     https://hoerzeitung.drk-norderstedt.ipv64.net/s-nhz/0IGKY-HG85-CFEP-PAD2/feed.rss
+
+    from podgen import Podcast, Episode, Media
+
+    # 1. Podcast und Episode wie gewohnt erstellen
+    p = Podcast(
+        name="Mein toller Podcast",
+        description="Ein Podcast über Python-Projekte.",
+        website="https://example.org"
+    )
+
+    ep = Episode(
+        title="Folge 1: Der Start",
+        media=Media("https://example.org", 45000000),
+        summary="In dieser Folge sprechen wir über..."
+    )
+
+    # 2. Die Podlove-Kapitel-Erweiterung über die zugrundeliegende feedgen-Instanz laden
+    # (Hierzu registrieren wir die Erweiterung direkt an der Episode)
+    chapters_ext = ep.feedgen_entry.load_extension('podcast', cb_default=True)
+
+    # 3. Kapitel hinzufügen (Format: Startzeit, Titel)
+    chapters_ext.add_chapter("00:00:00", "Intro")
+    chapters_ext.add_chapter("00:05:30", "Hauptthema: Podgen-Nutzung")
+    chapters_ext.add_chapter("00:45:15", "Outro & Verabschiedung")
+
+    # Episode zum Podcast hinzufügen
+    p.episodes.append(ep)
+
+    # RSS-Feed generieren
+    rss_xml = p.rss_str()
     """
     http = current_app.config["OWN_URL"]
     ts = current_app.config["TS"]
@@ -281,6 +311,8 @@ def feed_rss(auth_code):
                             size=episode["length"], 
                             type="audio/mpeg")
         pod_ep.media.populate_duration_from(episode["rawname"])
+        for cname, (titel, start) in episode['chapter_dict'].items():
+            pod_ep.add_chapter(titel, start/1000)
         pod_ep.position = position
         position += 1
         
