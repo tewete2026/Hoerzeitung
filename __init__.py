@@ -189,9 +189,8 @@ def create_app(test_config="DEV"):
         app.config.from_mapping(NO_POOL_AVAILABLE=True)
 
     # apply the blueprints to the app
-    from . import bx_start, bx_s_start
+    from . import bx_start
     from .service import service, s_service, ax_member, ax_default, srv_tool, ax_episode
-    app.register_blueprint(bx_s_start.bp)
     app.register_blueprint(bx_start.bp)
     # app.register_blueprint(service.bp)
     app.register_blueprint(s_service.bp)
