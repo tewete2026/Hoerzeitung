@@ -2,7 +2,7 @@ import os, random
 from math import floor
 from flask import current_app
 from mutagen.mp3 import MP3
-from mutagen.id3 import CHAP, TIT2, TLEN
+from mutagen.id3 import CHAP, TIT2, TLEN, COMM, TXXX, ID3, TPE1, TDRC, TALB, TCON, APIC, TYER
 from sox import file_info as audio_info
 
 ''' mutagen.id3.Encoding.UTF8 has the value 3 so I presume that encoding=3 forces utf-8 encoding.
@@ -14,7 +14,7 @@ def getMP3Info(rawname:str):
     ts = current_app.config["TS"]
     # audio = MP3(current_app.instance_path + "/" + mp3, ID3=EasyID3)
     audio = MP3(rawname)
-    # print(audio)
+    if rawname.endswith("1105.mp3"): print(audio)
     chapter_dict = {}
     image_dict = {}
     description = "- - - -"
@@ -39,6 +39,20 @@ def getMP3Info(rawname:str):
             current_app.logger.debug("%s, flags=%s", cont.child_element_ids, cont.flags)
         elif key[:5] == 'TXXX:':
             current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
+        elif key == 'TPE1':
+            current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
+        elif key == 'TDRC':
+            current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
+        elif key == 'TCON':
+            current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
+        elif key == 'TSSE':
+            current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
+        elif key == 'TENC':
+            current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
+        elif key == 'TALB':
+            current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
+        elif key == 'TYER':
+            current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
         elif key[:5] == 'COMM:':
             description = cont.text[0]
             current_app.logger.debug("%s, %s", description, cont.encoding)
@@ -46,6 +60,7 @@ def getMP3Info(rawname:str):
             image_dict.update({'mime': cont.mime})
             image_dict.update({'desc': cont.desc})
             image_dict.update({'data': cont.data})
+            current_app.logger.debug("Mime: %s, Desc: %s, Len: %s", cont.mime, cont.desc, len(cont.data))
     # keys = ["TALB", "TPE1", "TDRC", "TIT2", "TENC", "TLEN"]
     # for key in keys:
     #     print(key, audio.get(key))
@@ -65,6 +80,22 @@ def getMP3Info(rawname:str):
     duration = "{0:02.0f}:{1:02.0f}".format(min, sec)
     # print(tlen, dur, min, sec, duration, audio, audio.keys())
     return (title, description, published, size, duration, chapter, chapter_dict, image_dict)
+
+
+def setMp3Info(rawname:str, fields:tuple):
+    audio = ID3(rawname)
+    audio['TIT2'] = TIT2(text=[fields[0]], encoding=3) # Titel / Encoding 3 = UTF-8
+    audio['COMM'] = COMM(desc="summary", lang='ger', text=[fields[1]], encoding=3) # Beschreibung
+    audio['TDRC'] = TDRC(text=[fields[2]], encoding=3) # Produktionsdatum
+    audio.add(TXXX(desc="Supporter", text=[fields[3]], encoding=3)) # Techniker
+    audio.add(TXXX(desc="Team", text=[fields[4]], encoding=3)) # Team
+    audio['TPE1'] = TPE1(text=["DRK-OV-Norderstedt"], encoding=3) # Künstler
+    audio['TALB'] = TALB(text=["Hörzeitung"], encoding=3) # Album
+    audio['TCON'] = TCON(text=["Podcast"], encoding=3) # Genre
+    audio['TYER'] = TYER(text=[current_app.config['TS'].year()], encoding=3) # Aufnahmejahr
+    playtime = audio_info.duration(rawname)
+    audio['TLEN'] = TLEN(text=[str(playtime*1000)], encoding=3) # Spiellänge Millisekunden
+    audio.save()
 
 
 def getMpegInfo(rawname:str):

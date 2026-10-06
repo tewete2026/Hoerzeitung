@@ -111,7 +111,7 @@
               <a class="list-table-rows" title="Anzeigen Beschreibung für {{ row['title'] }}" href="#"><svg class="bi opacity-100" width="1em" height="1em"><use href="#question-circle"></use></svg></a>
             </th>
             <td>{{ row['duration'] }}</td>
-            <td><audio preload="none" loading="lazy" controls src="{{ url_for('bx_start.media', file=row['audio']) }}"></audio></td>
+            <td><audio preload="none" loading="lazy" controls src="{{ url_for('bx_s_start.media', file=row['audio']) }}"></audio></td>
           </tr>
           <tr class="d-none"><td colspan="4" aria-details="{{ row['title'] }}">{{ row['description'] }}</td>
           </tr>{% endfor %}

@@ -22,8 +22,12 @@ class TimeSet:
     def today(self):
         # return self.__dt.fromtimestamp(timestamp=datetime.datetime.today().timestamp(), tz=self.__tz)
         return self.todaytime().today()
+    def year(self):
+        return self.todaytime().year
     def todaytime(self):
         return self.__dt.now(tz=self.__tz)
+    def now_local(self):
+        return self.todaytime().strftime('%Y-%m-%dT%H:%M:%S')
     def isocalendar(self, ts=None):
         if not ts: ts = self.todaytime()
         return self.__dt.isocalendar(ts)
@@ -134,12 +138,27 @@ def create_app(test_config="DEV"):
         # else:
         #     return redirect(url_for("bx_start.start"))
         return redirect(url_for("bx_s_start.s_album"))
+                
+    @app.route("/favicon.ico")
+    def favicon():
+        path = app.root_path + '/static'
+        return send_from_directory(path, 'Logo_Title.png')
+
+    @app.errorhandler(403)
+    def access_not_allowed(e):
+        conf = Configure(title="Norderstedter Hörzeitung - Keine Berechtigung", app='notFound', link='link-main', request=request, current_app=app)
+        return render_template('notAllowed.html', conf=conf, javascript=conf.javascript.getOut()), 403
 
     @app.errorhandler(404)
     def page_not_found(e):
         # note that we set the 404 status explicitly
         conf = Configure(title="Norderstedter Hörzeitung - Seite nicht gefunden", app='notFound', link='link-main', request=request, current_app=app)
         return render_template('pageNotFound.html', conf=conf, javascript=conf.javascript.getOut()), 404
+
+    @app.errorhandler(405)
+    def method_not_valid(e):
+        conf = Configure(title="Norderstedter Hörzeitung - Methode nicht erlaubt", app='notFound', link='link-main', request=request, current_app=app)
+        return render_template('methodNotAllowed.html', conf=conf, javascript=conf.javascript.getOut()), 405
 
     @app.errorhandler(413)
     def requestEntityTooLarge(e):
@@ -155,21 +174,6 @@ def create_app(test_config="DEV"):
     def internal_server_error(e):
         conf = Configure(title="Norderstedter Hörzeitung - Interner Fehler", app='notFound', link='link-main', request=request, current_app=app)
         return render_template('internalError.html', conf=conf, javascript=conf.javascript.getOut()), 500
-
-    @app.errorhandler(403)
-    def access_not_allowed(e):
-        conf = Configure(title="Norderstedter Hörzeitung - Keine Berechtigung", app='notFound', link='link-main', request=request, current_app=app)
-        return render_template('notAllowed.html', conf=conf, javascript=conf.javascript.getOut()), 403
-
-    @app.errorhandler(405)
-    def method_not_valid(e):
-        conf = Configure(title="Norderstedter Hörzeitung - Methode nicht erlaubt", app='notFound', link='link-main', request=request, current_app=app)
-        return render_template('methodNotAllowed.html', conf=conf, javascript=conf.javascript.getOut()), 405
-                
-    @app.route("/favicon.ico")
-    def favicon():
-        path = app.root_path + '/static'
-        return send_from_directory(path, 'Logo_Title.png')
 
     app.logger.info("Name=%s; Version detected=%s; Created=%s", app.name, app.config["VERSION"], app.config["CREATED"])
 
@@ -189,14 +193,10 @@ def create_app(test_config="DEV"):
         app.config.from_mapping(NO_POOL_AVAILABLE=True)
 
     # apply the blueprints to the app
-    from . import bx_start
-    from .service import service, s_service, ax_member, ax_default, srv_tool, ax_episode
-    app.register_blueprint(bx_start.bp)
-    # app.register_blueprint(service.bp)
+    from . import bx_s_start
+    from .service import s_service, srv_tool
+    app.register_blueprint(bx_s_start.bp)
     app.register_blueprint(s_service.bp)
-    # app.register_blueprint(ax_default.bp)
-    # app.register_blueprint(ax_member.bp)
-    # app.register_blueprint(ax_episode.bp)
     app.register_blueprint(srv_tool.bp)
     app.logger.debug(f"Registered Blueprint Count: {len(app.blueprints.items())}")
     for bp_name, blpr in app.blueprints.items():

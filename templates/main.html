@@ -11,7 +11,7 @@
 						<div class="row align-items-center">
 							<div class="col-lg-4">
 								<div class="podcast-thumb">
-									<img src="{{ url_for('bx_start.media', file=row['image']) }}" alt="Cover of Episode" class="w-100">
+									<img src="{{ url_for('bx_s_start.media', file=row['image']) }}" alt="Cover of Episode" class="w-100">
 								</div><!--podcast-thumb end-->
 							</div>
 							<div class="col-lg-8">
@@ -32,7 +32,7 @@
 									</ul>
 									<h2>{{ row['title'] }}</h2>
 									<div class="music-player">
-										<audio controls src="{{ url_for('bx_start.media', file=row['audio']) }}"></audio>
+										<audio controls src="{{ url_for('bx_s_start.media', file=row['audio']) }}"></audio>
 									</div>
 									<p style="font-size: 80%;">{{ row['summary']|safe }}</p>
 								</div><!--podcast-ep-info end-->

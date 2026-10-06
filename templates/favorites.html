@@ -80,7 +80,7 @@
             </th>
             <td>{{ row['duration'] }}</td>
             <td>{{ row['date'] }}</td>
-            <td><audio preload="none" loading="lazy" controls src="{{ url_for('bx_start.media', file=row['audio']) }}"></audio></td>
+            <td><audio preload="none" loading="lazy" controls src="{{ url_for('bx_s_start.media', file=row['audio']) }}"></audio></td>
           </tr>
           <tr class="d-none"><td colspan="5" aria-details="{{ row['title'] }}">{{ row['description'] }}</td></tr>
           <tr class="d-none"><td colspan="5" aria-details="{{ row['title'] }}">{{ row['chapter']|safe }}</td></tr>

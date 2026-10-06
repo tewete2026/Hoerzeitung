@@ -1,4 +1,4 @@
-import mariadb, os
+import mariadb, os, subprocess, sys
 from flask import Blueprint
 from flask import current_app, session
 from flask import request, make_response
@@ -13,7 +13,7 @@ from .. import version, tools
 bp = Blueprint("s_service", __name__, url_prefix="/S-Service")
 
 
-""" @bp.route("/Verwalten-Codes", methods=['GET', 'POST'])
+'''@bp.route("/Verwalten-Codes", methods=['GET', 'POST'])
 def confmanage():
     if current_app.config["NO_POOL_AVAILABLE"]:
         abort(500)
@@ -38,6 +38,9 @@ def confmanage():
     conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
     
     if auth_code_valid:
+        conf.initlogin(session['dbdata'])
+    
+    if auth_code_valid:
         conf.append("show_navall", True)
         if session['dbdata']['seclevel'] > 1:
             conf.append("show_navtop", True)
@@ -45,7 +48,71 @@ def confmanage():
     conf.javascript.add({'quantity':quantity})
     conf.javascript.add({'level':level})
     return render_template("service/confmanage.html", conf=conf, javascript=conf.javascript.getOut())
- """
+'''
+
+
+@bp.route("/Upload-Episode", methods=['GET', 'POST'])
+def confupload():
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
+        abort(403)
+    
+    ts = current_app.config["TS"]
+
+    if "authcode" in session:
+        if getLogin(session["authcode"])['status']:
+            auth_code_valid = True
+    
+    if request.method == "POST":
+        form_data = request.form
+        post_request = True
+        file = request.files['frm-main-file']
+        filename = secure_filename(file.filename)
+        print(form_data)
+        # if len(filename) > 0 and "frm-main-set-base" in form_data: 
+        if len(filename) > 0: 
+            frm_main_datum = form_data["frm-main-datum"]
+            frm_main_title = form_data["frm-main-title"]
+            frm_main_summary = form_data["frm-main-summary"]
+            frm_main_supporter = form_data["frm-main-supporter"]
+            frm_main_team = form_data["frm-main-team"]
+            suff = filename.rsplit('.')[1]
+            basename = filename.rstrip(suff) + 'mp3'
+            temp_name = current_app.instance_path + "/upload/" + filename
+            temp_target = current_app.instance_path + "/upload/" + basename
+            target_name = current_app.instance_path + "/long/" + basename
+            file.save(temp_name)
+            if not suff == 'mp3':
+                shell_path = current_app.root_path + '/static/service/shell/convert_audio.sh'
+                subprocess.run([shell_path, temp_name, temp_target])
+            tools.setMp3Info(temp_target, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_supporter, frm_main_team))
+            # (title, description, published, size, duration, chapter, chapter_dict, image_dict) = tools.getMP3Info(temp_target)
+            # print(title, description, published, size, duration, chapter, chapter_dict, image_dict)
+            (size, duration) = tools.getMpegInfo(temp_target)
+            # rc_code = submit_album(request.form, filename, target_name, size, duration)
+            rc_code = {'submit_status':'OK'}
+            if rc_code["submit_status"] == "OK":
+                if target_name is not None:
+                    os.replace(temp_target, target_name)
+            else:
+                if temp_name is not None and os.path.exists(temp_name):
+                    os.remove(temp_name)
+                if temp_target is not None and os.path.exists(temp_target):
+                    os.remove(temp_target)
+
+            return redirect(url_for("bx_s_start.s_album"))
+    
+    conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
+    conf.append('datetimenow', ts.now_local())
+    
+    if auth_code_valid:
+        conf.initlogin(session['dbdata'])
+        conf.append("show_navall", True)
+        if session['dbdata']['seclevel'] > 1:
+            conf.append("show_navtop", True)
+
+    return render_template("service/confupload.html", conf=conf)
 
 
 @bp.route("/Neue-Codes", methods=['GET', 'POST'])
@@ -240,7 +307,7 @@ def confcreate():
 
     conf.javascript.add({'quantity':quantity})
     conf.javascript.add({'level':level})
-    return render_template("service/confcreate.html", conf=conf, javascript=conf.javascript.getOut())
+    return render_template("service/confcreate.html", conf=conf)
 
 
 @bp.route("/Export-Liste-<level>", methods=['GET'])
@@ -390,3 +457,119 @@ def export_media_access():
             current_app.logger.error("Datenbank-Fehler: %s/export_last_login/%s", bp.name, err)
 
     return render_template("internalError.html", conf=conf)
+
+
+def submit_album(form_data, episode_filename, file_path, size, duration):
+    rc_code = {"submit_status":"OK", "last_id":"(Neu)", "last_mode":"(none)"}
+    try:
+        item_id = item_timestamp = None
+        episode_datum = form_data["frm-main-datum"]
+        episode_title = form_data["frm-main-title"]
+        episode_summary = form_data["frm-main-summary"]
+        episode_chapter = form_data["frm-main-chapter"]
+        episode_image = form_data["frm-main-team"]
+        if "frm-main-aktiv" in form_data:
+            episode_aktiv = form_data["frm-main-aktiv"]
+        else: episode_aktiv = ''
+        if "frm-main-replace" in form_data:
+            episode_replace = form_data["frm-main-replace"]
+        else: episode_replace = ''
+        if len(form_data["frm-main-id"]) > 0:
+            item_id = form_data["frm-main-id"]
+        if len(form_data["frm-item-timestamp"]) > 0:
+            item_timestamp = form_data["frm-item-timestamp"]
+        if episode_aktiv == 'on': episode_aktiv = True
+        else: episode_aktiv = False
+        if episode_replace == 'on':episode_replace = True
+        else: episode_replace = False
+        if item_id and episode_filename:
+            can_replace = episode_replace
+            rc_code["can_replace"] = can_replace
+        else: 
+            can_replace = False
+            
+        if episode_filename and os.path.exists(file_path):
+            rc_code["submit_status"] = "NO_Upload"
+            rc_code["upload_status"] = episode_filename
+        
+        try:
+            db = get_db()
+            if not db:
+                raise mariadb.PoolError("Kein Pool gesetzt.")
+            db.begin()
+            cur = db.cursor(dictionary=True)
+
+            update_allowed = True
+            if item_id is not None:
+                rc_code["last_id"] = item_id
+                last_id = item_id
+                cur.execute("SELECT IFNULL(Sperre,'INVALID') as sperre,kdnr FROM tEpisode WHERE id=? FOR UPDATE", (item_id,))
+                row_data = cur.fetchone()
+                timestamp = str(row_data["sperre"])
+                rc_code["last_kdnr"] = str(row_data["kdnr"])
+                if timestamp == item_timestamp:
+                    if can_replace:
+                        cur.execute("update tEpisode set Sperre=null,title=?,summary=?,chapter=NULLIF(?,''),image=NULLIF(?,''),active=?,published=?,audiofile=? where id=?", 
+                                    (episode_title, episode_summary, episode_chapter, episode_image, episode_aktiv, episode_datum, episode_filename, item_id))
+                    else:
+                        cur.execute("update tEpisode set Sperre=null,title=?,summary=?,chapter=NULLIF(?,''),image=NULLIF(?,''),active=?,published=? where id=?", 
+                                    (episode_title, episode_summary, episode_chapter, episode_image, episode_aktiv, episode_datum, item_id))
+                elif timestamp == "INVALID":
+                    update_allowed = False
+                    rc_code["submit_status"] = "INVALID"
+                else:
+                    update_allowed = False
+                    rc_code["submit_status"] = "NOTALWD"
+            else:
+                cur.execute("select GET_LOCK('tEpisode',20) as get_lock")
+                is_locked = cur.fetchone()
+                if is_locked["get_lock"] == 0:
+                    current_app.logger.error("Für Datensatz: Titel=%s, konnte kein GET_LOCK ausgeführt werden.", episode_title)
+                    raise mariadb.OperationalError("Kein Lock für tEpisode möglich.")
+                cur.execute("select MAX(kdnr)+1 as kdnr from tEpisode")
+                max_kdnr = cur.fetchone()["kdnr"]
+                cur.execute("select RELEASE_LOCK('tEpisode') as unlocked")
+                is_unlocked = cur.fetchone()
+                if is_unlocked["unlocked"] == 0:
+                    current_app.logger.error("Für Datensatz: ID=%s, Titel=%s, Kd-Nr=%s, konnte kein RELEASE_LOCK ausgeführt werden.", last_id, episode_title, max_kdnr)
+                if not episode_filename or not size or not duration:
+                    rc_code["submit_status"] = "MISS"
+                    current_app.logger.error("Werte für filename=%s, size=%s, oder duration=%s fehlen.", episode_filename, size, duration)
+                    update_allowed = False
+                else:
+                    cur.execute("insert into tEpisode(kdnr,title,audiofile,summary,chapter,image,size,duration,published,active) \
+                                values(?,?,?,?,NULLIF(?,''),NULLIF(?,''),?,?,?,?)", 
+                                (max_kdnr, episode_title, episode_filename, episode_summary, episode_chapter, episode_image, size, duration, episode_datum, episode_aktiv))
+                    last_id = str(cur.lastrowid)
+                    rc_code["last_id"] = last_id
+                    rc_code["last_kdnr"] = max_kdnr
+
+            if update_allowed:
+                if item_id is not None:
+                    current_app.logger.info("Datensatz aktualisiert: ID=%s, Titel=%s", last_id, episode_title)
+                    rc_code["last_mode"] = "CHG"
+                else:
+                    current_app.logger.info("Datensatz hinzugefügt: ID=%s, Titel=%s, Dateiname=%s", last_id, episode_title, episode_filename)
+                    rc_code["last_mode"] = "INS"
+            db.commit()
+            cur.close()
+            db.close()
+        except mariadb.IntegrityError as err:
+            rc_code["submit_status"] = "DBL"
+            current_app.logger.warning("Datenbank-doppelter Eintrag: %s/ax-submit-episode/%s", bp.name, err)
+            rc_code["DB_Error"] = err
+            db.rollback()
+            db.close()
+            current_app.logger.warning("Datenbank-Rollback-doppelter Eintrag")
+        except mariadb.Error as err:
+            current_app.logger.error("Datenbank-Fehler: %s/ax-submit-episode/%s", bp.name, err)
+            rc_code["submit_status"] = "ERR"
+            db.rollback()
+            db.close()
+            current_app.logger.error("Datenbank-Rollback")
+    except:
+        (type, value, traceback) = sys.exc_info()
+        current_app.logger.critical("Unexpected error: Type=%s; Exception=%s; Trace-Line=%s",type, value, traceback.tb_lineno)
+        rc_code["submit_status"] = "ERR"
+
+    return rc_code

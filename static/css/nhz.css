@@ -25,3 +25,11 @@ audio {
 a svg {
     color: red;
 }
+
+#cover-images-select .list-group-item {
+    display: inline-block;
+    border: none;
+}
+#cover-images-select.list-group {
+    padding-left: inherit;
+}

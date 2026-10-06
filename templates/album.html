@@ -106,7 +106,7 @@
             </th>
             <td>{{ row['duration'] }}</td>
             <td>{{ row['date'] }}</td>
-            <td><audio preload="none" loading="lazy" controls src="{{ url_for('bx_start.media', file=row['audio']) }}"></audio></td>
+            <td><audio preload="none" loading="lazy" controls src="{{ url_for('bx_s_start.media', file=row['audio']) }}"></audio></td>
             <td>{% if 'subdir' in row %}
               {% if conf.has("archive_dir") %}<a href="{{ url_for('bx_s_start.s_arc_episodes', year=conf.get('archive_dir'), subdir=row['subdir']) }}">
               {% else %}<a href="{{ url_for('bx_s_start.s_episodes', subdir=row['subdir']) }}">{% endif %}

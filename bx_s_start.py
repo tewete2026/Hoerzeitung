@@ -1,15 +1,16 @@
-# import mariadb
+import mariadb
 # import feedparser
-import json
+import json, os, re
 from flask import Blueprint
 from flask import current_app
 from flask import request
 from flask import render_template, session
-from flask import redirect, url_for, make_response
+from flask import redirect, url_for, make_response, send_from_directory
 from werkzeug.exceptions import abort
+from podgen import Podcast, Episode, Person, Category, Media
 from markdown import markdown
 from .db import get_db, Configure, getLogin, get_s_episodes, get_s_favorites
-from . import version
+from . import version, credentials, tools
 
 bp = Blueprint("bx_s_start", __name__)
 
@@ -118,6 +119,174 @@ def s_logout():
     clear_session()
     resp = make_response(redirect(url_for('bx_s_start.s_album')))
     resp.delete_cookie('drk-nhz-favorites', current_app.config['SESSION_COOKIE_PATH'])
+    return resp
+
+
+@bp.route("/media/<file>")
+def media(file:str):
+    path = ""
+    if file.startswith("Logo"):path = ""
+    elif file.endswith(".pdf"):path = "/docs"
+    elif file.endswith("_ximg.jpg"):
+        fname = file.rstrip("_ximg.jpg")
+        auth_code_valid = False
+        if "authcode" in session:
+            rc_code = getLogin(session["authcode"])
+            auth_code_valid = rc_code['status']
+        elif "authcode" in request.args:
+            rc_code = getLogin(request.args["authcode"])
+            auth_code_valid = rc_code['status']
+        if auth_code_valid:
+            dbdata = rc_code['dbdata']
+            auth_code_guest = dbdata['guest']
+            if auth_code_guest:
+                (path, fname) = tools.calcFileName(fname, "/short", guest=True)
+            else:
+                (path, fname) = tools.calcFileName(fname)
+        else:
+            path = "/short"
+        path = current_app.instance_path + path
+        rawname = path + "/" + fname
+        if not os.path.exists(rawname):
+            abort(404)
+        (title, description, published, size, dur, chapter, chapter_dict, image_dict) = tools.getMP3Info(rawname)
+        if not 'data' in image_dict:
+            abort(404)
+        resp = make_response(image_dict['data'])
+        resp.content_encoding = "UTF-8"
+        resp.automatically_set_content_length = True
+        resp.mimetype = image_dict['mime']
+        resp.access_control_max_age = 0
+        resp.default_mimetype = image_dict['mime']
+        resp.headers['Cache-Control']='no-cache'
+        resp.headers['Pragma']='no-cache'
+        return resp
+    
+    elif file.endswith(".jpg"):path = "/galerie"
+
+    elif file.endswith(".mp3"):
+        auth_code_valid = False
+        if "authcode" in session:
+            rc_code = getLogin(session["authcode"])
+            auth_code_valid = rc_code['status']
+        elif "authcode" in request.args:
+            rc_code = getLogin(request.args["authcode"])
+            auth_code_valid = rc_code['status']
+        if auth_code_valid:
+            dbdata = rc_code['dbdata']
+            auth_code_guest = dbdata['guest']
+            if auth_code_guest:
+                is_guest = 1
+                (path, file) = tools.calcFileName(file, "/short", guest=True)
+            else:
+                is_guest = 0
+                (path, file) = tools.calcFileName(file)
+            pnr = dbdata['pnr']
+            seclevel = dbdata['seclevel']
+            freecode = dbdata['freecode']
+            last_access = dbdata['last_access']
+            # Nur für seclevel < 3 (Hörer, Vorleser, Redakteure) protokollieren
+            if seclevel < 3:
+                try:
+                    db = get_db()
+                    if not db:
+                        raise mariadb.PoolError("Kein Databasepool vorhanden.")
+                    cur = db.cursor(dictionary=True)
+                    cur.execute("INSERT INTO tLog(pnr,seclevel,freecode,accessDate,media,accesscount,guest) values(?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE accesscount=accesscount+1", (pnr, seclevel, freecode, last_access, file, 1, is_guest))
+                    if cur.rowcount <= 0:
+                        current_app.logger.error("Datenbank-Fehler INSERT INTO tLog: %s/media, Rowcount=%s", bp.name, cur.rowcount)
+                    db.commit()
+                    cur.close()
+                    db.close()
+                except mariadb.Error as err:
+                    if db: db.close()
+                    current_app.logger.error("Datenbank-Fehler: %s/media/%s", bp.name, err)
+        else:
+            path = "/short"
+
+        # werkzeug.datastructures.headers.EnvironHeaders
+        if current_app.config['TEST_RUN'] == 'PROD':
+            current_app.logger.info("Empfangener HTTP-Header für %s, %s, %s: %s", file, request.remote_addr, request.origin, request.headers)
+    path = current_app.instance_path + path
+    return send_from_directory(path, file)
+
+
+@bp.route("/<auth_code>/feed.rss")
+def feed_rss(auth_code):
+    """
+    https://hoerzeitung.drk-norderstedt.ipv64.net/s-nhz/0IGKY-HG85-CFEP-PAD2/feed.rss
+    """
+    http = current_app.config["OWN_URL"]
+    ts = current_app.config["TS"]
+    auth_code_guest = True
+    auth_code_valid = False
+    if auth_code is not None:
+        re_m = re.fullmatch(r'^([0-4][1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}|OPEN|0)', auth_code.upper())
+        if re_m is None:
+            abort(404)
+        elif re.fullmatch(r'^[0-4][1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}-[1-9A-Z]{4}', auth_code.upper()) is not None:
+            rc_code = getLogin(auth_code)
+            if rc_code['status']:
+                auth_code_guest = rc_code['dbdata']['guest']
+                auth_code_valid = True
+    pod = Podcast()
+    pod.description = "Die Norderstedter Hörzeitung bietet Lokales aus Norderstedt und hat auch einen Blick auf die Welt"
+    if auth_code_guest: pod.subtitle = "Sie hören hier als Gast nicht die reguläre Version der Hörzeitung, sondern Ausschnitte aus einigen Produktionen. Die kompletten Episoden erhalten Sie mit dem korrekten Freischaltcode."
+    pod.website = credentials.EMails.WEBSITE
+    pod.explicit = False
+    pod.copyright = credentials.EMails.COPYRIGHT
+    pod.language = "de-DE"
+    pod.authors = [Person(name="DRK-Norderstedt", email=credentials.EMails.OFFICE)]
+    pod.feed_url = http.goTo(url_for('bx_s_start.feed_rss', auth_code='reqired-auth-code'))
+    pod.category = Category("News", "Daily News")
+    pod.owner = pod.authors[0]
+    pod.web_master = pod.authors[0]
+    pod.last_updated = ts.todaytime()
+    position = 1
+    if auth_code_guest:
+        path = "/short"
+        pod.name = "Open-Version Norderstedter Hörzeitung"
+        pod.image = http.goTo(url_for('bx_s_start.media', file='LogoGruppe-4.jpg'))
+    else:
+        path = "/long"
+        pod.name = "Online-Version Norderstedter Hörzeitung"
+        pod.image = http.goTo(url_for('bx_s_start.media', file='Logo-NHZ.jpg'))
+    full_dir = current_app.instance_path + path
+    rc_code = get_s_episodes(full_dir)
+    if not rc_code['status']:
+        abort(500)
+    for episode in rc_code['episodes']:
+        pod_ep = pod.add_episode(Episode(title=episode["title"]))
+        pod_ep.id = http.goTo(url_for('bx_s_start.media', file=episode["audio"]))
+        if auth_code_valid: 
+            attach = "?authcode=" + auth_code
+        else: 
+            attach = ""
+        pod_ep.summary = episode["summary"]
+        pod_ep.long_summary = episode["chapter"]
+        pod_ep.publication_date = episode["published"]
+        if 'image' in episode: pod_ep.image = http.goTo(url_for('bx_s_start.media', file=episode["image"]) + attach)
+        pod_ep.media = Media(url=http.goTo(url_for('bx_s_start.media', file=episode["audio"]) + attach), 
+                            size=episode["length"], 
+                            type="audio/mpeg")
+        pod_ep.media.populate_duration_from(episode["rawname"])
+        for cname, (titel, start) in episode['chapter_dict'].items():
+            pod_ep.add_chapter(titel, start/1000)
+        pod_ep.position = position
+        position += 1
+        
+    resp = make_response(pod.rss_str())
+    resp.content_encoding = "UTF-8"
+    resp.automatically_set_content_length = True
+    if current_app.config["TEST_RUN"]:
+        resp.mimetype = "text/xml"
+    else:
+        resp.mimetype = "application/rss+xml"
+    resp.access_control_max_age = 0
+    resp.default_mimetype = "text/xml"
+    resp.headers['Accept']='application/rss+xml, application/rdf+xml;q=0.8, application/atom+xml;q=0.6, application/xml;q=0.4, text/xml;q=0.4'
+    resp.headers['Cache-Control']='no-cache'
+    resp.headers['Pragma']='no-cache'
     return resp
 
 
