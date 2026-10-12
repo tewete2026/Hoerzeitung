@@ -56,7 +56,7 @@ def getMP3Info(rawname:str):
         elif key[:5] == 'COMM:':
             description = cont.text[0]
             current_app.logger.debug("%s, %s", description, cont.encoding)
-        elif key == 'APIC:':
+        elif key[:5] == 'APIC:':
             image_dict.update({'mime': cont.mime})
             image_dict.update({'desc': cont.desc})
             image_dict.update({'data': cont.data})
@@ -89,12 +89,14 @@ def setMp3Info(rawname:str, fields:tuple):
     audio['TDRC'] = TDRC(text=[fields[2]], encoding=3) # Produktionsdatum
     audio.add(TXXX(desc="Supporter", text=[fields[3]], encoding=3)) # Techniker
     audio.add(TXXX(desc="Team", text=[fields[4]], encoding=3)) # Team
-    audio['TPE1'] = TPE1(text=["DRK-OV-Norderstedt"], encoding=3) # Künstler
-    audio['TALB'] = TALB(text=["Hörzeitung"], encoding=3) # Album
-    audio['TCON'] = TCON(text=["Podcast"], encoding=3) # Genre
-    audio['TYER'] = TYER(text=[current_app.config['TS'].year()], encoding=3) # Aufnahmejahr
     playtime = audio_info.duration(rawname)
-    audio['TLEN'] = TLEN(text=[str(playtime*1000)], encoding=3) # Spiellänge Millisekunden
+    audio['TLEN'] = TLEN(text=[str(playtime*1000)], encoding=3) # Spiellänge in Millisekunden
+    with open(fields[5], mode='rb') as image_file:
+        audio['APIC'] = APIC(mime='image/jpeg', desc='CoverImage', data=image_file.read()) # Cover Foto
+    audio.add(TXXX(desc="AlbumId", text=[fields[6]], encoding=3)) # Album-ID
+    audio['TPE1'] = TPE1(text=["DRK-OV-Norderstedt"], encoding=3) # Künstler
+    audio['TALB'] = TALB(text=["Hörzeitung DRK-Norderstedt"], encoding=3) # Album
+    audio['TCON'] = TCON(text=["Podcast"], encoding=3) # Genre
     audio.save()
 
 

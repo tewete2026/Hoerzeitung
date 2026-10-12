@@ -1,4 +1,4 @@
-import mariadb, os, subprocess, sys
+import mariadb, os, subprocess, sys, json
 from flask import Blueprint
 from flask import current_app, session
 from flask import request, make_response
@@ -59,6 +59,7 @@ def confupload():
         abort(403)
     
     ts = current_app.config["TS"]
+    teams = current_app.config["teams"]
 
     if "authcode" in session:
         if getLogin(session["authcode"])['status']:
@@ -69,14 +70,15 @@ def confupload():
         post_request = True
         file = request.files['frm-main-file']
         filename = secure_filename(file.filename)
-        print(form_data)
-        # if len(filename) > 0 and "frm-main-set-base" in form_data: 
+        pnr = session['dbdata']['pnr']
+        seclevel = session['dbdata']['seclevel']
         if len(filename) > 0: 
             frm_main_datum = form_data["frm-main-datum"]
             frm_main_title = form_data["frm-main-title"]
             frm_main_summary = form_data["frm-main-summary"]
             frm_main_supporter = form_data["frm-main-supporter"]
             frm_main_team = form_data["frm-main-team"]
+            teamlogo = current_app.instance_path + '/' + teams[frm_main_team][1]
             suff = filename.rsplit('.')[1]
             basename = filename.rstrip(suff) + 'mp3'
             temp_name = current_app.instance_path + "/upload/" + filename
@@ -86,22 +88,22 @@ def confupload():
             if not suff == 'mp3':
                 shell_path = current_app.root_path + '/static/service/shell/convert_audio.sh'
                 subprocess.run([shell_path, temp_name, temp_target])
-            tools.setMp3Info(temp_target, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_supporter, frm_main_team))
-            # (title, description, published, size, duration, chapter, chapter_dict, image_dict) = tools.getMP3Info(temp_target)
-            # print(title, description, published, size, duration, chapter, chapter_dict, image_dict)
             (size, duration) = tools.getMpegInfo(temp_target)
-            # rc_code = submit_album(request.form, filename, target_name, size, duration)
-            rc_code = {'submit_status':'OK'}
+            # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration
+            rc_code = submit_album((seclevel, pnr, frm_main_title, frm_main_supporter, frm_main_summary, basename, frm_main_datum, frm_main_team, duration))
             if rc_code["submit_status"] == "OK":
-                if target_name is not None:
+                tools.setMp3Info(temp_target, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_supporter, frm_main_team, teamlogo, rc_code['last_id']))
+                if target_name is not None and temp_target is not None and os.path.exists(temp_target):
                     os.replace(temp_target, target_name)
+                if temp_name is not None and os.path.exists(temp_name):
+                    os.remove(temp_name)
+                return redirect(url_for("bx_s_start.s_album"))
             else:
                 if temp_name is not None and os.path.exists(temp_name):
                     os.remove(temp_name)
                 if temp_target is not None and os.path.exists(temp_target):
                     os.remove(temp_target)
 
-            return redirect(url_for("bx_s_start.s_album"))
     
     conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
     conf.append('datetimenow', ts.now_local())
@@ -111,6 +113,13 @@ def confupload():
         conf.append("show_navall", True)
         if session['dbdata']['seclevel'] > 1:
             conf.append("show_navtop", True)
+        conf.append("teams", current_app.config["teams"])
+
+        techniker = []
+        with open(current_app.instance_path + "/data/Techniker.txt", mode='r') as text_file:
+            for line in text_file:
+                techniker.append(line.rstrip())
+            conf.append("techniker", techniker)
 
     return render_template("service/confupload.html", conf=conf)
 
@@ -459,39 +468,10 @@ def export_media_access():
     return render_template("internalError.html", conf=conf)
 
 
-def submit_album(form_data, episode_filename, file_path, size, duration):
+def submit_album(form_data):
     rc_code = {"submit_status":"OK", "last_id":"(Neu)", "last_mode":"(none)"}
     try:
-        item_id = item_timestamp = None
-        episode_datum = form_data["frm-main-datum"]
-        episode_title = form_data["frm-main-title"]
-        episode_summary = form_data["frm-main-summary"]
-        episode_chapter = form_data["frm-main-chapter"]
-        episode_image = form_data["frm-main-team"]
-        if "frm-main-aktiv" in form_data:
-            episode_aktiv = form_data["frm-main-aktiv"]
-        else: episode_aktiv = ''
-        if "frm-main-replace" in form_data:
-            episode_replace = form_data["frm-main-replace"]
-        else: episode_replace = ''
-        if len(form_data["frm-main-id"]) > 0:
-            item_id = form_data["frm-main-id"]
-        if len(form_data["frm-item-timestamp"]) > 0:
-            item_timestamp = form_data["frm-item-timestamp"]
-        if episode_aktiv == 'on': episode_aktiv = True
-        else: episode_aktiv = False
-        if episode_replace == 'on':episode_replace = True
-        else: episode_replace = False
-        if item_id and episode_filename:
-            can_replace = episode_replace
-            rc_code["can_replace"] = can_replace
-        else: 
-            can_replace = False
-            
-        if episode_filename and os.path.exists(file_path):
-            rc_code["submit_status"] = "NO_Upload"
-            rc_code["upload_status"] = episode_filename
-        
+        item_id = None
         try:
             db = get_db()
             if not db:
@@ -503,6 +483,8 @@ def submit_album(form_data, episode_filename, file_path, size, duration):
             if item_id is not None:
                 rc_code["last_id"] = item_id
                 last_id = item_id
+                '''
+                cur.execute("insert into tJournal(albumId,seclevel,pnr,title,author,source,reader,summary,media,publicationDate,sourceDate,allowed) \
                 cur.execute("SELECT IFNULL(Sperre,'INVALID') as sperre,kdnr FROM tEpisode WHERE id=? FOR UPDATE", (item_id,))
                 row_data = cur.fetchone()
                 timestamp = str(row_data["sperre"])
@@ -520,49 +502,36 @@ def submit_album(form_data, episode_filename, file_path, size, duration):
                 else:
                     update_allowed = False
                     rc_code["submit_status"] = "NOTALWD"
+                '''
             else:
-                cur.execute("select GET_LOCK('tEpisode',20) as get_lock")
-                is_locked = cur.fetchone()
-                if is_locked["get_lock"] == 0:
-                    current_app.logger.error("Für Datensatz: Titel=%s, konnte kein GET_LOCK ausgeführt werden.", episode_title)
-                    raise mariadb.OperationalError("Kein Lock für tEpisode möglich.")
-                cur.execute("select MAX(kdnr)+1 as kdnr from tEpisode")
-                max_kdnr = cur.fetchone()["kdnr"]
-                cur.execute("select RELEASE_LOCK('tEpisode') as unlocked")
-                is_unlocked = cur.fetchone()
-                if is_unlocked["unlocked"] == 0:
-                    current_app.logger.error("Für Datensatz: ID=%s, Titel=%s, Kd-Nr=%s, konnte kein RELEASE_LOCK ausgeführt werden.", last_id, episode_title, max_kdnr)
-                if not episode_filename or not size or not duration:
-                    rc_code["submit_status"] = "MISS"
-                    current_app.logger.error("Werte für filename=%s, size=%s, oder duration=%s fehlen.", episode_filename, size, duration)
-                    update_allowed = False
-                else:
-                    cur.execute("insert into tEpisode(kdnr,title,audiofile,summary,chapter,image,size,duration,published,active) \
-                                values(?,?,?,?,NULLIF(?,''),NULLIF(?,''),?,?,?,?)", 
-                                (max_kdnr, episode_title, episode_filename, episode_summary, episode_chapter, episode_image, size, duration, episode_datum, episode_aktiv))
-                    last_id = str(cur.lastrowid)
-                    rc_code["last_id"] = last_id
-                    rc_code["last_kdnr"] = max_kdnr
+                #     0     1    2       3        4      5          6         7      8
+                # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration
+                cur.execute("insert into tJournal(seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration) values(?,?,?,?,?,?,?,?,?)", form_data)
+                last_id = str(cur.lastrowid)
+                rc_code["last_id"] = last_id
 
             if update_allowed:
                 if item_id is not None:
-                    current_app.logger.info("Datensatz aktualisiert: ID=%s, Titel=%s", last_id, episode_title)
+                    current_app.logger.info("Datensatz in tJournal aktualisiert: ID=%s, Titel=%s", last_id, form_data[2])
                     rc_code["last_mode"] = "CHG"
                 else:
-                    current_app.logger.info("Datensatz hinzugefügt: ID=%s, Titel=%s, Dateiname=%s", last_id, episode_title, episode_filename)
+                    current_app.logger.info("Datensatz in tJournal hinzugefügt: ID=%s, Titel=%s, Dateiname=%s", last_id, form_data[2], form_data[5])
                     rc_code["last_mode"] = "INS"
             db.commit()
             cur.close()
             db.close()
+        except mariadb.PoolError as err:
+            current_app.logger.error("Pool-Fehler: %s/submit-album/%s", bp.name, err)
+            rc_code["submit_status"] = "ERR"
         except mariadb.IntegrityError as err:
             rc_code["submit_status"] = "DBL"
-            current_app.logger.warning("Datenbank-doppelter Eintrag: %s/ax-submit-episode/%s", bp.name, err)
+            current_app.logger.warning("Datenbank-doppelter Eintrag: %s/submit-album/%s", bp.name, err)
             rc_code["DB_Error"] = err
             db.rollback()
             db.close()
             current_app.logger.warning("Datenbank-Rollback-doppelter Eintrag")
         except mariadb.Error as err:
-            current_app.logger.error("Datenbank-Fehler: %s/ax-submit-episode/%s", bp.name, err)
+            current_app.logger.error("Datenbank-Fehler: %s/submit-album/%s", bp.name, err)
             rc_code["submit_status"] = "ERR"
             db.rollback()
             db.close()

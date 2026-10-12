@@ -7,7 +7,7 @@
       <h2>Hochladen Album</h2>
     </div>
     <div class="row g-4">
-      <form class="needs-validation" id="frm-main" novalidate autocomplete="off" method="post" enctype="multipart/form-data">
+      <form class="needs-validation" id="frm-main-upload novalidate autocomplete="off" method="post" enctype="multipart/form-data">
         <div class="row g-3">
           <fieldset id="frm-main-set-base" name="frm-main-set-base">
             <div class="ms-2 pb-1" style="width: 98%;">
@@ -16,56 +16,44 @@
               <div class="invalid-feedback"></div>
             </div>
             <div style="display:flex;">
-              <div class="col-sm-4 pb-1" style="padding-right: calc(var(--bs-gutter-x) * .5);padding-left: calc(var(--bs-gutter-x) * .5);">
-                <label for="frm-main-datum">Veröffentlichungs Datum</label>
+              <div class="col-sm-4 mt-2 pb-1" style="padding-right: calc(var(--bs-gutter-x) * .5);padding-left: calc(var(--bs-gutter-x) * .5);">
+                <label for="frm-main-datum">Produktions Datum</label>
                 <input type="datetime-local" class="form-control" name="frm-main-datum" id="frm-main-datum" value="{{ conf.get('datetimenow') }}" required>
                 <div class="invalid-feedback"></div>
               </div>
             </div>
-            <div class="ms-2 pb-1" style="width: 98%;">
+            <div class="ms-2 mt-2 pb-1" style="width: 98%;">
               <label for="frm-main-title">Titel</label>
               <input type="text" class="form-control" name="frm-main-title" id="frm-main-title" placeholder="In der Regel die nächste laufende Nummer der Produktion" required>
               <div class="invalid-feedback"></div>
             </div>
-            <div class="ms-2 pb-1" style="width: 98%;">
+            <div class="ms-2 mt-2 pb-1" style="width: 98%;">
               <label for="frm-main-summary">Beschreibung</label>
               <textarea class="form-control" name="frm-main-summary" id="frm-main-summary" rows="3" placeholder="Kurze Beschreibung des Inhalts des Albums" required></textarea>
               <div class="invalid-feedback"></div>
             </div>
-            <div class="ms-2 pb-1" style="width: 98%;">
+            <div class="ms-2 mt-2 pb-1" style="width: 98%;">
               <label for="frm-main-supporter" class="form-label">Ausführender Techniker</label>
               <select class="form-select" id="frm-main-supporter" name="frm-main-supporter" required>
-                <option value="-1">Bitte wählen...</option>
-                <option value="0">Thomas Klüß</option>
+                <option value="-1">Bitte wählen...</option>{% for text in conf.get('techniker') %}
+                <option value="{{ text }}">{{ text }}</option>{% endfor %}
               </select>
               <div class="invalid-feedback"></div>
             </div>
           </fieldset>
-          <div id="cover-images-select" class="list-group ms-2 pb-1" style="width: 98%;"> 
+          <div id="cover-images-select" class="list-group ms-3 pb-1" style="width: 98%;"> 
             <label for="frm-main-set-team">Zuordnen zum jeweiligen Team</label>
-            <fieldset id="frm-main-set-team" name="frm-main-set-team">
-              <label class="list-group-item" style="width: 17%;"><small>Team 1</small>
-                <input class="form-check-input" type="radio" name="frm-main-team" value="1"> 
-                <img src="{{ url_for('bx_s_start.media', file='LogoGruppe-1k.jpg') }}">
-              </label> 
-              <label class="list-group-item" style="width: 17%;"><small>Team 2</small>
-                <input class="form-check-input" type="radio" name="frm-main-team" value="2"> 
-                <img src="{{ url_for('bx_s_start.media', file='LogoGruppe-2k.jpg') }}">
-              </label> 
-              <label class="list-group-item" style="width: 17%;"><small>Team 3</small>
-                <input class="form-check-input" type="radio" name="frm-main-team" value="3"> 
-                <img src="{{ url_for('bx_s_start.media', file='LogoGruppe-3k.jpg') }}">
-              </label> 
-              <label class="list-group-item" style="width: 17%;"><small>Team 4</small>
-                <input class="form-check-input" type="radio" name="frm-main-team" value="4"> 
-                <img src="{{ url_for('bx_s_start.media', file='LogoGruppe-5k.jpg') }}">
-              </label> 
+            <fieldset id="frm-main-set-team" name="frm-main-set-team">{% for (nbr, image) in conf.get('teams').items() %}
+              <label class="list-group-item" style="width: 17%;"><small>Team {{ nbr }}</small>
+                <input class="form-check-input" type="radio" name="frm-main-team" value="{{ nbr }}"> 
+                <img src="{{ url_for('bx_s_start.media', file=image[0]) }}">
+              </label>{% endfor %}
             </fieldset>
             <div class="invalid-feedback"></div>
           </div>
         </div>
         <div class="py-1 text-center">
-          <button class="w-50 btn btn-primary btn-lg mb-2" id="btn-submit" type="submit">Hochladen Ausführen</button>
+          <button class="w-50 btn btn-primary btn-lg mt-3 mb-2" id="btn-submit" type="submit">Hochladen Ausführen</button>
         </div>
       </form>
     </div>

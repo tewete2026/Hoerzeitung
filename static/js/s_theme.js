@@ -18,7 +18,7 @@ window.addEventListener('load', () => {
     const morepage_form = this.document.getElementById('morepage-form');
     const setpage_form = this.document.getElementById('setpage-form');
     const login_form = this.document.getElementById('login-form');
-    const frm_main = this.document.getElementById('frm-main');
+    const frm_main_upload = this.document.getElementById('frm-main-upload');
     const frm_main_set_image = this.document.getElementById('frm-main-set-team');
 
     const trash_hist_list = [];
@@ -201,19 +201,18 @@ window.addEventListener('load', () => {
         })
     }
 
-    if (frm_main) {
-        frm_main.addEventListener('submit', event => {
+    if (frm_main_upload) {
+        frm_main_upload.addEventListener('submit', event => {
             let is_error = false;
             let checked = false;
-            for(const elem of frm_main.elements) {
+            for(const elem of frm_main_upload.elements) {
                 if (!["INPUT", "TEXTAREA", "SELECT"].includes(elem.tagName)) continue;
                 elem.classList.remove("is-invalid","is-valid");
-                frm_main_set_image.classList.remove("is-invalid","is-valid");
                 if (elem.name == "frm-main-team") {
                     checked = checked || elem.checked;
                 }
-                else if ((["frm-main-datum", "frm-main-title", "frm-main-file"].includes(elem.name) && !elem.value)
-                     || elem.name == "frm-main-supporter" && elem.value == "-1") {
+                else if ((["frm-main-datum", "frm-main-title", "frm-main-file", "frm-main-summary"].includes(elem.name) && !elem.value)
+                    || elem.name == "frm-main-supporter" && elem.value == "-1") {
                     elem.nextElementSibling.innerText = "Die Eingabe ist erforderlich.";
                     elem.classList.add("is-invalid");
                     is_error = true;
@@ -223,6 +222,8 @@ window.addEventListener('load', () => {
                 frm_main_set_image.nextElementSibling.innerText = "Die Eingabe ist erforderlich.";
                 frm_main_set_image.classList.add("is-invalid");
                 is_error = true;
+            } else {
+                frm_main_set_image.classList.remove("is-invalid","is-valid");
             }
             if (is_error) event.preventDefault();
         })
