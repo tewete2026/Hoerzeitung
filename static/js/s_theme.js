@@ -19,6 +19,7 @@ window.addEventListener('load', () => {
     const setpage_form = this.document.getElementById('setpage-form');
     const login_form = this.document.getElementById('login-form');
     const frm_main_upload = this.document.getElementById('frm-main-upload');
+    const frm_main_upload_chapter = this.document.getElementById('frm-main-upload-chapter');
     const frm_main_set_image = this.document.getElementById('frm-main-set-team');
 
     const trash_hist_list = [];

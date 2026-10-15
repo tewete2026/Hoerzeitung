@@ -4,7 +4,7 @@
   <main>
     <div class="py-3 text-center">
       <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='Logo_Title_black_200.png') }}" alt="Logo_Title_black_200">
-      <h2>Hochladen Album</h2>
+      <h2>Hochladen neues Album</h2>
     </div>
     <div class="row g-4">
       <form class="needs-validation" id="frm-main-upload novalidate autocomplete="off" method="post" enctype="multipart/form-data">
@@ -15,12 +15,10 @@
               <input class="form-control" type="file" accept="audio/*" name="frm-main-file" id="frm-main-file" aria-label="Datei wählen" required>
               <div class="invalid-feedback"></div>
             </div>
-            <div style="display:flex;">
-              <div class="col-sm-4 mt-2 pb-1" style="padding-right: calc(var(--bs-gutter-x) * .5);padding-left: calc(var(--bs-gutter-x) * .5);">
-                <label for="frm-main-datum">Produktions Datum</label>
-                <input type="datetime-local" class="form-control" name="frm-main-datum" id="frm-main-datum" value="{{ conf.get('datetimenow') }}" required>
-                <div class="invalid-feedback"></div>
-              </div>
+            <div class="col-sm-4 mt-2 pb-1" style="padding-right: calc(var(--bs-gutter-x) * .5);padding-left: calc(var(--bs-gutter-x) * .5);">
+              <label for="frm-main-datum">Produktions Datum</label>
+              <input type="datetime-local" class="form-control" name="frm-main-datum" id="frm-main-datum" value="{{ conf.get('datetimenow') }}" required>
+              <div class="invalid-feedback"></div>
             </div>
             <div class="ms-2 mt-2 pb-1" style="width: 98%;">
               <label for="frm-main-title">Titel</label>

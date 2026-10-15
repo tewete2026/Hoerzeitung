@@ -3,7 +3,7 @@ from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 from flask import Flask, url_for, send_from_directory
 from flask import render_template, redirect
-from flask import request
+from flask import request, session, g
 from logging.config import dictConfig
 from .db import get_db, Configure
 from . import version, credentials
@@ -125,6 +125,11 @@ def create_app(test_config="DEV"):
     with open(app.instance_path + "/config/options.json") as config_file:
         app.config.update(json.load(config_file))
 
+    @app.before_request
+    def before_check():
+        if 'errors' not in g:
+            g.errors = []
+
     @app.after_request
     def add_several_headers(response):
         response.headers['Cache-Control']='no-cache'
@@ -147,33 +152,37 @@ def create_app(test_config="DEV"):
     @app.errorhandler(403)
     def access_not_allowed(e):
         conf = Configure(title="Norderstedter Hörzeitung - Keine Berechtigung", app='notFound', link='link-main', request=request, current_app=app)
-        return render_template('notAllowed.html', conf=conf, javascript=conf.javascript.getOut()), 403
+        return render_template('notAllowed.html', conf=conf), 403
 
     @app.errorhandler(404)
     def page_not_found(e):
         # note that we set the 404 status explicitly
         conf = Configure(title="Norderstedter Hörzeitung - Seite nicht gefunden", app='notFound', link='link-main', request=request, current_app=app)
-        return render_template('pageNotFound.html', conf=conf, javascript=conf.javascript.getOut()), 404
+        return render_template('pageNotFound.html', conf=conf), 404
 
     @app.errorhandler(405)
     def method_not_valid(e):
         conf = Configure(title="Norderstedter Hörzeitung - Methode nicht erlaubt", app='notFound', link='link-main', request=request, current_app=app)
-        return render_template('methodNotAllowed.html', conf=conf, javascript=conf.javascript.getOut()), 405
+        return render_template('methodNotAllowed.html', conf=conf), 405
 
     @app.errorhandler(413)
     def requestEntityTooLarge(e):
         conf = Configure(title="Norderstedter Hörzeitung - Datei zum Hochladen zu groß", app='entityTooLarge', link='link-main', request=request, current_app=app)
-        return render_template('requestEntityTooLarge.html', conf=conf, javascript=conf.javascript.getOut()), 413
+        return render_template('requestEntityTooLarge.html', conf=conf), 413
 
     @app.errorhandler(422)
     def requestUnprocessable(e):
         conf = Configure(title="Norderstedter Hörzeitung - Wichtige Prozesse können nicht ausgeführt werden", app='Unprocessable', link='link-main', request=request, current_app=app)
-        return render_template('requestUnprocessable.html', conf=conf, javascript=conf.javascript.getOut()), 422
+        return render_template('requestUnprocessable.html', conf=conf), 422
 
     @app.errorhandler(500)
     def internal_server_error(e):
         conf = Configure(title="Norderstedter Hörzeitung - Interner Fehler", app='notFound', link='link-main', request=request, current_app=app)
-        return render_template('internalError.html', conf=conf, javascript=conf.javascript.getOut()), 500
+        if 'errors' in g:
+            errors = g.errors
+        else:
+            errors = []
+        return render_template('internalError.html', conf=conf, errors=errors), 500
 
     app.logger.info("Name=%s; Version detected=%s; Created=%s", app.name, app.config["VERSION"], app.config["CREATED"])
 

@@ -93,7 +93,7 @@
             <th style="width: 5%;">Länge</th>
             <th style="width: 23%;">Veröffentlicht</th>
             <th style="width: 52%;">Audio-Player</th>
-            <th style="width: 5%;">Details</th>
+            <th style="width: 5%;">Auswahl</th>
           </tr>
         </thead>
         <tbody>{% for row in conf.get('episodes') %}
@@ -109,8 +109,11 @@
             <td><audio preload="none" loading="lazy" controls src="{{ url_for('bx_s_start.media', file=row['audio']) }}"></audio></td>
             <td>{% if 'subdir' in row %}
               {% if conf.has("archive_dir") %}<a href="{{ url_for('bx_s_start.s_arc_episodes', year=conf.get('archive_dir'), subdir=row['subdir']) }}">
-              {% else %}<a href="{{ url_for('bx_s_start.s_episodes', subdir=row['subdir']) }}">{% endif %}
+              {% else %}<a href="{{ url_for('bx_s_start.s_episodes', subdir=row['subdir']) }}" title="Zu den Kapiteln gehen">{% endif %}
                 <svg class="bi me-2 opacity-100" width="1.6em" height="1.6em"><use href="#chevron-double-down"></use></svg>
+              </a>{% else %}
+              <a href="{{ url_for('s_service.confuploadChapter', albumid=row['albumid']) }}" title="Neue Kapitel erstellen">
+                <svg class="bi me-2 opacity-100" width="1.6em" height="1.6em"><use href="#plus-lg"></use></svg>
               </a>{% endif %}
             </td>
           </tr>

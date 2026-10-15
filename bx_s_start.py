@@ -149,7 +149,7 @@ def media(file:str):
         rawname = path + "/" + fname
         if not os.path.exists(rawname):
             abort(404)
-        (title, description, published, size, dur, chapter, chapter_dict, image_dict) = tools.getMP3Info(rawname)
+        (title, description, published, size, dur, chapter, chapter_dict, image_dict, albumid) = tools.getMP3Info(rawname)
         if not 'data' in image_dict:
             abort(404)
         resp = make_response(image_dict['data'])
