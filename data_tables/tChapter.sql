@@ -38,7 +38,8 @@ CREATE TABLE `tChapter` (
   `publicationDate` datetime NOT NULL DEFAULT current_timestamp() COMMENT 'Veröffentlichungs Datum',
   `sourceDate` date NOT NULL DEFAULT current_date() COMMENT 'Veröffentlichungs Datum der Quelle',
   `allowed` bit(1) NOT NULL DEFAULT 0 COMMENT 'Urheberrechtliche Erlaubnis vorhanden (J/N)',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `media` (`media`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

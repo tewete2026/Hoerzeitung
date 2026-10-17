@@ -34,7 +34,8 @@ CREATE TABLE `tJournal` (
   `duration` varchar(10) NOT NULL DEFAULT '' COMMENT 'Spiellänge der Medien Datei',
   `publicationDate` datetime NOT NULL DEFAULT current_timestamp() COMMENT 'Veröffentlichungs Datum',
   `team` int(3) unsigned NOT NULL DEFAULT 0 COMMENT 'Nummer des durchführenden Teams',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `media` (`media`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

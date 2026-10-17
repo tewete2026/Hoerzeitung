@@ -87,7 +87,6 @@ def doUpload(albumid=None):
             cur = db.cursor(dictionary=True)
             cur.execute("SELECT id,title,supporter,summary,media,publicationDate,team,duration FROM tJournal WHERE id=?", (albumid,))
             dbdata = cur.fetchone()
-            print(dbdata)
             if cur.rowcount <= 0:
                 current_app.logger.error("Datenbank SELECT FROM tJournal: %s/doUpload, Rowcount=%s", bp.name, cur.rowcount)
                 raise mariadb.DataError(f"Kein Datensatz für {albumid} gefunden.")
@@ -120,7 +119,7 @@ def doUpload(albumid=None):
             frm_main_license = form_data.get("frm-main-license")
             frm_main_allowed = form_data.get("frm-main-allowed")
             frm_main_reader = form_data.get("frm-main-reader")
-            print(form_data)
+            frm_main_source_date = form_data.get("frm-main-source-date")
             if frm_main_allowed is not None:
                 allowed = True
             else:
@@ -146,13 +145,17 @@ def doUpload(albumid=None):
             (size, duration) = tools.getMpegInfo(temp_target)
             if isChapter:
                 # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed
-                rc_code = submit_chapter((albumid, seclevel, pnr, frm_main_title, frm_main_author, frm_main_license, frm_main_reader, frm_main_summary, audioname, duration, dbdata['publicationDate'], frm_main_datum, allowed))
+                rc_code = submit_chapter((albumid, seclevel, pnr, frm_main_title, frm_main_author, frm_main_license, frm_main_reader, frm_main_summary, audioname, duration, frm_main_datum, frm_main_source_date, allowed))
             else:
                 # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration
                 rc_code = submit_album((seclevel, pnr, frm_main_title, frm_main_supporter, frm_main_summary, audioname, frm_main_datum, frm_main_team, duration))
             if rc_code["submit_status"] == "OK":
                 if isChapter:
-                    pass
+                    basemedia = current_app.instance_path + "/long/" + dbdata['media']
+                    teamlogo = current_app.instance_path + '/' + teams[str(dbdata['team'])][1]
+                    if allowed: lic_allowed = "Ja"
+                    else: lic_allowed = "Nein"
+                    tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, lic_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date))
                 else:
                     teamlogo = current_app.instance_path + '/' + teams[frm_main_team][1]
                     tools.setMp3Info(temp_target, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_supporter, frm_main_team, teamlogo, rc_code['last_id']))
@@ -361,7 +364,7 @@ def confcreate():
                     db.close()
                 except mariadb.IntegrityError as err:
                     conf.error['result_err'] = f"Datenbankfehler: {err}. Erstellung der Charge wurde NICHT erfolgreich durchgeführt."
-                    current_app.logger.warning("Datenbank-doppelter Eintrag: %s/confcreate/%s", bp.name, err)
+                    current_app.logger.warning("Datenbank-Integrität Eintrag: %s/confcreate/%s", bp.name, err)
                     db.rollback()
                     db.close()
                 except mariadb.Error as err:
@@ -668,12 +671,12 @@ def submit_chapter(form_data):
             rc_code["err_msg"] = f"Datenbank ist nicht initialisiert: {err}"
         except mariadb.IntegrityError as err:
             rc_code["submit_status"] = "DBL"
-            current_app.logger.warning("Datenbank-doppelter Eintrag: %s/submit-chapter/%s", bp.name, err)
+            current_app.logger.warning("Datenbank-Integrität Eintrag: %s/submit-chapter/%s", bp.name, err)
             rc_code["DB_Error"] = err
-            rc_code["err_msg"] = f"Datenbank hat doppelten Eintrag: {err}"
+            rc_code["err_msg"] = f"Datenbank hat Integrität verletzt Eintrag: {err}"
             db.rollback()
             db.close()
-            current_app.logger.warning("Datenbank-Rollback-doppelter Eintrag")
+            current_app.logger.warning("Datenbank-Rollback-Integrität Eintrag")
         except mariadb.Error as err:
             current_app.logger.error("Datenbank-Fehler: %s/submit-chapter/%s", bp.name, err)
             rc_code["submit_status"] = "ERR"
