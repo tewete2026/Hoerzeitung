@@ -196,18 +196,11 @@ def get_episodes(episodes, auth_code_valid, limit:bool=True):
     return rc_code
 
 
-def get_s_episodes(full_dir, subdir=None, conf=None, max_pageview=-1, archive=False, archive_dir=None, bonus=False):
+def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archive_dir=None, bonus=False):
     rc_code = {"status":"OK"}
     ts = current_app.config["TS"]
     episodes = {}
     reverse = True
-    if archive_dir is not None: 
-        full_dir += "/" + archive_dir
-        conf.append('archive_dir', archive_dir)
-    if subdir is not None: 
-        full_dir += "/" + subdir
-        reverse = False
-        conf.append('subdir', subdir)
     content = sorted(os.listdir(full_dir), reverse=reverse)
     page = 1
     is_more = False
@@ -434,6 +427,39 @@ def getLogin(freeCode:str, fav_cookie:str=None):
             db.close()
     except mariadb.Error as err:
         current_app.logger.error("Datenbank-Fehler getLogin: %s - %s", freeCode, err)
+        rc_code['status'] = False
+        rc_code['type'] = 'DBERR'
+        if db: 
+            db.rollback()
+            db.close()
+    return rc_code
+
+
+def getAlbumDB(key, field:str):
+    rc_code = {'status':True}
+    try:
+        db = get_db()
+        if not db:
+            raise mariadb.PoolError("Kein Pool gesetzt, keine Verbindung zur DB.")
+        cur = db.cursor(dictionary=True)
+        cur.execute(f"SELECT * from tJournal WHERE {field}=?", (key,))
+        dbdata = cur.fetchone()
+        if cur.rowcount > 0:
+            rc_code['dbdata'] = dbdata
+        else:
+            rc_code["status"] = False
+            rc_code['type'] = 'NOTFOUND'
+        cur.close()
+        db.close()
+    except mariadb.NotSupportedError as err:
+        current_app.logger.warning("Format-Fehler getAlbumDB: %s=%s - %s", field, key, err)
+        rc_code['status'] = False
+        rc_code['type'] = 'FORMERR'
+        if db: 
+            db.rollback()
+            db.close()
+    except mariadb.Error as err:
+        current_app.logger.error("Datenbank-Fehler getAlbumDB: %s=%s - %s", field, key, err)
         rc_code['status'] = False
         rc_code['type'] = 'DBERR'
         if db: 

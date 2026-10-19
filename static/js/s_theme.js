@@ -229,6 +229,23 @@ window.addEventListener('load', () => {
             if (is_error) event.preventDefault();
         })
     }
+
+    if (frm_main_upload_chapter) {
+        frm_main_upload_chapter.addEventListener('submit', event => {
+            let is_error = false;
+            for(const elem of frm_main_upload_chapter.elements) {
+                if (!["INPUT", "TEXTAREA", "SELECT"].includes(elem.tagName)) continue;
+                elem.classList.remove("is-invalid","is-valid");
+                if ((["frm-main-datum", "frm-main-title", "frm-main-file", "frm-main-summary", "frm-main-author", "frm-main-source-date"].includes(elem.name) && !elem.value)
+                    || ["frm-main-license", "frm-main-reader"].includes(elem.name) && elem.value == "-1") {
+                    elem.nextElementSibling.innerText = "Die Eingabe ist erforderlich.";
+                    elem.classList.add("is-invalid");
+                    is_error = true;
+                }
+            }
+            if (is_error) event.preventDefault();
+        })
+    }
     
     if (quantity) quantity.value = SERVER_OPTIONS.quantity;
     if (level) level.value = SERVER_OPTIONS.level;

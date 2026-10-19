@@ -163,7 +163,11 @@ def doUpload(albumid=None):
                     os.replace(temp_target, target_name)
                 if temp_name is not None and os.path.exists(temp_name):
                     os.remove(temp_name)
-                return redirect(url_for("bx_s_start.s_album"))
+                if isChapter:
+                    goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+                else:
+                    goto = url_for("bx_s_start.s_album")
+                return redirect(goto)
             else:
                 if temp_name is not None and os.path.exists(temp_name):
                     os.remove(temp_name)

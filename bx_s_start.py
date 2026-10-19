@@ -9,7 +9,7 @@ from flask import redirect, url_for, make_response, send_from_directory
 from werkzeug.exceptions import abort
 from podgen import Podcast, Episode, Person, Category, Media
 from markdown import markdown
-from .db import get_db, Configure, getLogin, get_s_episodes, get_s_favorites
+from .db import get_db, Configure, getLogin, get_s_episodes, get_s_favorites, getAlbumDB
 from . import version, credentials, tools
 
 bp = Blueprint("bx_s_start", __name__)
@@ -418,7 +418,19 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
             rc_code = get_s_favorites(current_app.instance_path, fav_cookie, conf, max_pageview)
         else:
             full_dir = current_app.instance_path + path
-            rc_code = get_s_episodes(full_dir, subdir, conf, max_pageview, archive=archive, archive_dir=archive_dir, bonus=bonus)
+            if archive_dir is not None: 
+                full_dir += "/" + archive_dir
+                conf.append('archive_dir', archive_dir)
+            if subdir is not None: 
+                full_dir += "/" + subdir
+                reverse = False
+                rc = getAlbumDB(subdir + ".mp3", 'media')
+                if rc['status']:
+                    conf.append('album', rc['dbdata']['title'])
+                    conf.append('albumId', rc['dbdata']['id'])
+                else:
+                    conf.append('album', subdir)
+            rc_code = get_s_episodes(full_dir, subdir, max_pageview, archive=archive, archive_dir=archive_dir, bonus=bonus)
         conf.append('episodes', rc_code['episodes'])
         if rc_code['is_more']:
             conf.append('is_more', True)

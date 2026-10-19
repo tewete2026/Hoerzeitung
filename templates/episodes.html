@@ -47,6 +47,9 @@
               <li class="nav-item">
                 <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
               </li>
+              {% if conf.has("show_navtop") %}<li class="nav-item">
+                <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Neuer Beitrag" href="{{ url_for('s_service.confuploadChapter', albumid=conf.map['albumId']) }}"><svg class="bi opacity-100" width="1.6em" height="1.6em"><use href="#plus-lg"></use></svg></a>
+              </li>{% endif %}
               {% if not conf.has("is_guest") %}<li class="nav-item">
                 <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Anzeigen Favoriten" href="{{ url_for('bx_s_start.s_favorites') }}"><svg class="mt-1 bi opacity-100" width="1.35em" height="1.35em"><use href="#heart"></use></svg></a>
               </li>{% endif %}
@@ -77,7 +80,7 @@
           </li>
           <li class="breadcrumb-item active" aria-current="page">
             {% if conf.has("show_bonus") %}Bonus-Beiträge
-            {% else %}Einzel Beiträge zum Album {{ conf.map['subdir'] }}{% if conf.has("archive_dir") %} (Jahrgang {{ conf.get('archive_dir') }}){% endif %}
+            {% else %}Einzel Beiträge zum Album {{ conf.map['album'] }}{% if conf.has("archive_dir") %} (Jahrgang {{ conf.get('archive_dir') }}){% endif %}
             {% endif %}
           </li>
         </ol>
@@ -88,7 +91,7 @@
       {% if conf.has("show_bonus") %}<h1 class="display-4 fw-normal text-body-emphasis">Bonus Beiträge</h1>
       <p class="fs-5 text-body-secondary">Einzelne Beiträge, die nicht in den regulären Alben enthalten sind.</p>
       {% else %}<h1 class="display-4 fw-normal text-body-emphasis">Einzel Beiträge</h1>
-      <p class="fs-5 text-body-secondary">Alle einzelnen Beiträge zum Album {{ conf.map['subdir'] }}{% if conf.has("archive_dir") %} (Jahrgang {{ conf.get('archive_dir') }}){% endif %}.</p>
+      <p class="fs-5 text-body-secondary">Alle einzelnen Beiträge zum Album <em>{{ conf.map['album'] }}</em>{% if conf.has("archive_dir") %} (Jahrgang {{ conf.get('archive_dir') }}){% endif %}.</p>
       {% endif %}
     </div>
   </header>
