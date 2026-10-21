@@ -2,7 +2,7 @@ import os, random
 from math import floor
 from flask import current_app
 from mutagen.mp3 import MP3
-from mutagen.id3 import CHAP, TIT2, TLEN, COMM, TXXX, ID3, TPE1, TDRC, TALB, TCON, APIC, TYER, CTOC, CTOCFlags
+from mutagen.id3 import CHAP, TIT2, TLEN, COMM, TXXX, ID3, TPE1, TDRC, TALB, TCON, APIC, TRCK, CTOC, CTOCFlags
 from sox import file_info as audio_info
 
 ''' mutagen.id3.Encoding.UTF8 has the value 3 so I presume that encoding=3 forces utf-8 encoding.
@@ -20,6 +20,7 @@ def getMP3Info(rawname:str):
     title = "---"
     albumid = "---"
     tlen = None
+    track = None
     current_app.logger.debug(rawname)
     for key in audio.keys():
         cont = audio.get(key)
@@ -47,6 +48,9 @@ def getMP3Info(rawname:str):
                 albumid = cont.text[0]
             current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
         elif key == 'TPE1':
+            current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
+        elif key == 'TRCK':
+            track = cont.text[0]
             current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
         elif key == 'TDRC':
             current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
@@ -85,10 +89,11 @@ def getMP3Info(rawname:str):
     min = dur / 60
     sec = dur % 60
     duration = "{0:02.0f}:{1:02.0f}".format(min, sec)
-    return (title, description, published, size, duration, chapter, chapter_dict, image_dict, albumid)
+    return (title, description, published, size, duration, chapter, chapter_dict, image_dict, albumid, track)
 
 
 def setMp3Info(rawname:str, fields:tuple):
+    ts = current_app.config["TS"]
     audio = ID3(rawname)
     audio.add(TIT2(text=[fields[0]], encoding=3)) # Titel / Encoding 3 = UTF-8
     audio.add(COMM(desc="summary", lang='ger', text=[fields[1]], encoding=3)) # Beschreibung
@@ -104,17 +109,22 @@ def setMp3Info(rawname:str, fields:tuple):
     audio.add(TALB(text=["Hörzeitung DRK-Norderstedt"], encoding=3)) # Album
     audio.add(TCON(text=["Podcast"], encoding=3)) # Genre
     audio.save()
+    # Datum in Audio-Datei schreiben (atime + mtime)
+    t = ts.totimestamp(fields[2]) # Konvertieren von ISO-Format zu float
+    os.utime(rawname, (t, t))
 
 
 def setMp3Chapter(rawname:str, basemedia:str, fields:tuple):
+    ts = current_app.config["TS"]
     baseaudio = ID3(basemedia)
     ctoc_key = 'CTOC:toc'
     base_ctoc = baseaudio.get(ctoc_key)
     if base_ctoc is None:
         next_toc = 'chp0'
-        base_ctoc = CTOC(element_id='toc', flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED, child_element_ids=[next_toc])
+        size = 0
         starttime = 0
-        baseaudio['CTOC'] = base_ctoc
+        base_ctoc = CTOC(element_id='toc', flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED, child_element_ids=[next_toc])
+        baseaudio.add(base_ctoc)
     else:
         element_ids = base_ctoc.child_element_ids
         last_chap = baseaudio.get('CHAP:' + element_ids[-1])
@@ -137,6 +147,7 @@ def setMp3Chapter(rawname:str, basemedia:str, fields:tuple):
     audio.add(TXXX(desc="ChapterId", text=[fields[8]], encoding=3)) # Chapter-ID
     audio.add(TXXX(desc="AlbumId", text=[fields[9]], encoding=3)) # Album-ID
     audio.add(TXXX(desc="SourceDate", text=[fields[10]], encoding=3)) # Veröffentlichungsdatum der Quelle
+    audio.add(TRCK(text=["{0:02.0f}".format(size + 1)], encoding=3)) # Track-Nummer
     audio.add(TPE1(text=["DRK-OV-Norderstedt"], encoding=3)) # Künstler
     audio.add(TALB(text=["Hörzeitung DRK-Norderstedt"], encoding=3)) # Album
     audio.add(TCON(text=["Podcast"], encoding=3)) # Genre
@@ -145,6 +156,15 @@ def setMp3Chapter(rawname:str, basemedia:str, fields:tuple):
     baseaudio.add(next_chap)
     audio.save()
     baseaudio.save()
+    # Datum in Audio-Datei schreiben (atime + mtime)
+    t = ts.totimestamp(fields[2]) # Konvertieren von ISO-Format zu float
+    os.utime(rawname, (t, t))
+    rc_code = {}
+    rc_code['track'] = audio.get('TRCK').text[0]
+    rc_code['chapterid'] = audio.get('TXXX:ChapterId').text[0]
+    rc_code['albumid'] = audio.get('TXXX:AlbumId').text[0]
+    rc_code['duration'] = audio.get('TLEN').text[0]
+    return rc_code
 
 
 def getMpegInfo(rawname:str):
@@ -182,3 +202,17 @@ def generateCode(prefix:str):
         code += "".join(random.sample(chars_list, 4))
         if z < 4: code += '-'
     return str(prefix) + code
+
+"""
+ Source - https://stackoverflow.com/a/168580
+ Posted by efotinis
+ Retrieved 2026-10-20, License - CC BY-SA 2.5
+ First, we build a list of the file names. isfile() is used to skip directories; it can be omitted if directories should be included. 
+ Then, we sort the list in-place, using the modify date as the key.
+"""
+def listDirSorted(dirpath, reverse=True):
+    # a = [s for s in os.listdir(dirpath)
+        #  if os.path.isfile(os.path.join(dirpath, s))]
+    a:list = os.listdir(dirpath)
+    a.sort(key=lambda s: os.path.getmtime(os.path.join(dirpath, s)), reverse=reverse)
+    return a

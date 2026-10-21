@@ -29,6 +29,7 @@ CREATE TABLE `tChapter` (
   `seclevel` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Berechtigungs Ebene',
   `pnr` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Persönliche Konto Nummer',
   `title` varchar(255) NOT NULL DEFAULT '' COMMENT 'Titel des Beitrags',
+  `track` varchar(3) NOT NULL DEFAULT '' COMMENT 'Track-Nummer des Titels',
   `author` varchar(50) NOT NULL DEFAULT '' COMMENT 'Urheberrechtlicher Autor',
   `source` varchar(50) NOT NULL DEFAULT '' COMMENT 'Quelle der Vorlage',
   `reader` varchar(50) NOT NULL DEFAULT '' COMMENT 'Vorleser des Artikels',

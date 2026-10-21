@@ -48,7 +48,7 @@
                 <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
               </li>
               {% if conf.has("show_navtop") %}<li class="nav-item">
-                <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Neuer Beitrag" href="{{ url_for('s_service.confuploadChapter', albumid=conf.map['albumId']) }}"><svg class="bi opacity-100" width="1.6em" height="1.6em"><use href="#plus-lg"></use></svg></a>
+                <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Neuer Kapitel-Beitrag" href="{{ url_for('s_service.confuploadChapter', albumid=conf.map['albumId']) }}"><svg class="bi opacity-100" width="1.6em" height="1.6em"><use href="#plus-lg"></use></svg></a>
               </li>{% endif %}
               {% if not conf.has("is_guest") %}<li class="nav-item">
                 <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Anzeigen Favoriten" href="{{ url_for('bx_s_start.s_favorites') }}"><svg class="mt-1 bi opacity-100" width="1.35em" height="1.35em"><use href="#heart"></use></svg></a>
@@ -80,7 +80,7 @@
           </li>
           <li class="breadcrumb-item active" aria-current="page">
             {% if conf.has("show_bonus") %}Bonus-Beiträge
-            {% else %}Einzel Beiträge zum Album {{ conf.map['album'] }}{% if conf.has("archive_dir") %} (Jahrgang {{ conf.get('archive_dir') }}){% endif %}
+            {% else %}Einzel Beiträge zum Album <em>{{ conf.map['album'] }}</em>{% if conf.has("archive_dir") %} (Jahrgang {{ conf.get('archive_dir') }}){% endif %}
             {% endif %}
           </li>
         </ol>
@@ -90,8 +90,8 @@
     <div class="pricing-header p-3 pb-md-4 mx-auto text-center">
       {% if conf.has("show_bonus") %}<h1 class="display-4 fw-normal text-body-emphasis">Bonus Beiträge</h1>
       <p class="fs-5 text-body-secondary">Einzelne Beiträge, die nicht in den regulären Alben enthalten sind.</p>
-      {% else %}<h1 class="display-4 fw-normal text-body-emphasis">Einzel Beiträge</h1>
-      <p class="fs-5 text-body-secondary">Alle einzelnen Beiträge zum Album <em>{{ conf.map['album'] }}</em>{% if conf.has("archive_dir") %} (Jahrgang {{ conf.get('archive_dir') }}){% endif %}.</p>
+      {% else %}<h1 class="display-4 fw-normal text-body-emphasis">Kapitel Beiträge</h1>
+      <p class="fs-5 text-body-secondary">Alle einzelnen Kapitel zum Album <em>{{ conf.map['album'] }}</em>{% if conf.has("archive_dir") %} (Jahrgang {{ conf.get('archive_dir') }}){% endif %}.</p>
       {% endif %}
     </div>
   </header>
@@ -101,22 +101,26 @@
       <table class="table text-center">
         <thead>
           <tr>
-            <th style="width: 53%;">Titel</th>
+            <th style="width: 5%;">Kap#</th>
+            <th style="width: 40%;">Titel</th>
+            <th style="width: 13%;">Veröffentlicht</th>
             <th style="width: 5%;">Länge</th>
             <th style="width: 37%;">Audio-Player</th>
           </tr>
         </thead>
         <tbody>{% for row in conf.get('episodes') %}
           <tr>
+            <td>{{ row['track'] }}</td>
             <th scope="row" class="text-start">
               {{ row['title'] }} 
               {% if not conf.has("is_guest") %}<a class="set-favorites" title="{{ row['title'] }} als Favorit merken" href="#" data-audio="{{ row['audio'] }}"><svg class="bi me-1 opacity-100" width="1em" height="1em"><use href="#heart"></use></svg></a>{% endif %}
               <a class="list-table-rows" title="Anzeigen Beschreibung für {{ row['title'] }}" href="#"><svg class="bi opacity-100" width="1em" height="1em"><use href="#question-circle"></use></svg></a>
             </th>
+            <td>{{ row['date'] }}</td>
             <td>{{ row['duration'] }}</td>
             <td><audio preload="none" loading="lazy" controls src="{{ url_for('bx_s_start.media', file=row['audio']) }}"></audio></td>
           </tr>
-          <tr class="d-none"><td colspan="4" aria-details="{{ row['title'] }}">{{ row['description'] }}</td>
+          <tr class="d-none"><td colspan="5" aria-details="{{ row['title'] }}">{{ row['description'] }}</td>
           </tr>{% endfor %}
         </tbody>
       </table>

@@ -104,7 +104,6 @@ def doUpload(albumid=None):
     
     if request.method == "POST":
         form_data = request.form
-        post_request = True
         file = request.files['frm-main-file']
         filename = secure_filename(file.filename)
         pnr = session['dbdata']['pnr']
@@ -130,22 +129,25 @@ def doUpload(albumid=None):
             audioname = namebase + '.mp3'
             temp_name = current_app.instance_path + "/upload/" + filename
             temp_target = current_app.instance_path + "/upload/" + audioname
-            target_name = current_app.instance_path + "/long/" + audioname
+            target_path = current_app.instance_path + "/long/"
             if isChapter:
+                album_path = current_app.instance_path + "/long/" + dbdata['media']
                 filearr = dbdata['media'].rsplit('.')
                 mediabase = filearr[0]
                 dirname = current_app.instance_path + "/long/" + mediabase
                 if not os.path.isdir(dirname):
                     os.mkdir(dirname)
-                target_name = dirname + "/" + audioname
+                target_path = dirname + "/"
             file.save(temp_name)
             if not suff == 'mp3':
                 shell_path = current_app.root_path + '/static/service/shell/convert_audio.sh'
                 subprocess.run([shell_path, temp_name, temp_target])
             (size, duration) = tools.getMpegInfo(temp_target)
             if isChapter:
-                # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed
-                rc_code = submit_chapter((albumid, seclevel, pnr, frm_main_title, frm_main_author, frm_main_license, frm_main_reader, frm_main_summary, audioname, duration, frm_main_datum, frm_main_source_date, allowed))
+                (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(album_path)
+                next_track = "{0:02.0f}".format(len(chapter_dict.values()) + 1)
+                # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track
+                rc_code = submit_chapter((albumid, seclevel, pnr, frm_main_title, frm_main_author, frm_main_license, frm_main_reader, frm_main_summary, audioname, duration, frm_main_datum, frm_main_source_date, allowed, next_track))
             else:
                 # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration
                 rc_code = submit_album((seclevel, pnr, frm_main_title, frm_main_supporter, frm_main_summary, audioname, frm_main_datum, frm_main_team, duration))
@@ -155,18 +157,19 @@ def doUpload(albumid=None):
                     teamlogo = current_app.instance_path + '/' + teams[str(dbdata['team'])][1]
                     if allowed: lic_allowed = "Ja"
                     else: lic_allowed = "Nein"
-                    tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, lic_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date))
+                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, lic_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date))
                 else:
                     teamlogo = current_app.instance_path + '/' + teams[frm_main_team][1]
                     tools.setMp3Info(temp_target, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_supporter, frm_main_team, teamlogo, rc_code['last_id']))
-                if target_name is not None and temp_target is not None and os.path.exists(temp_target):
-                    os.replace(temp_target, target_name)
-                if temp_name is not None and os.path.exists(temp_name):
-                    os.remove(temp_name)
                 if isChapter:
                     goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+                    audioname = rc_chp['track'] + "_" + audioname
                 else:
                     goto = url_for("bx_s_start.s_album")
+                if os.path.exists(temp_target):
+                    os.replace(temp_target, target_path + audioname)
+                if temp_name is not None and os.path.exists(temp_name):
+                    os.remove(temp_name)
                 return redirect(goto)
             else:
                 if temp_name is not None and os.path.exists(temp_name):
@@ -654,8 +657,8 @@ def submit_chapter(form_data):
             else:
                 #     0     1       2    3     4      5       6      7      8      9           10            11        12
                 # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed
-                cur.execute("insert into tChapter(albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed) \
-                            values               (?,      ?,       ?,  ?,    ?,     ?,     ?,     ?,      ?,    ?,       ?,              ?,         ?)", form_data)
+                cur.execute("insert into tChapter(albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track) \
+                            values               (?,      ?,       ?,  ?,    ?,     ?,     ?,     ?,      ?,    ?,       ?,              ?,         ?,      ?)", form_data)
                 last_id = str(cur.lastrowid)
                 rc_code["last_id"] = last_id
 

@@ -149,7 +149,7 @@ def media(file:str):
         rawname = path + "/" + fname
         if not os.path.exists(rawname):
             abort(404)
-        (title, description, published, size, dur, chapter, chapter_dict, image_dict, albumid) = tools.getMP3Info(rawname)
+        (title, description, published, size, dur, chapter, chapter_dict, image_dict, albumid, track) = tools.getMP3Info(rawname)
         if not 'data' in image_dict:
             abort(404)
         resp = make_response(image_dict['data'])
@@ -355,7 +355,7 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
                     session['dbdata'] = rc_code['dbdata']
                     session['authcode'] = rc_code['dbdata']['freecode']
                     session['guest'] = rc_code['dbdata']['guest']
-                    if rc_code['dbdata']['lastVersion'] < version.Configs.APP_IMPORTANT:
+                    if rc_code['dbdata']['lastActive'] is not None and rc_code['dbdata']['lastVersion'] < version.Configs.APP_IMPORTANT:
                         news_request = True
                     if 'favorites' in rc_code['dbdata']:
                         raw_fav_cookie = rc_code['dbdata']['favorites']['favorites']

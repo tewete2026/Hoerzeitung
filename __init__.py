@@ -33,6 +33,8 @@ class TimeSet:
         return self.__dt.isocalendar(ts)
     def fromtimestamp(self, ts:float):
         return self.__dt.fromtimestamp(timestamp=ts, tz=self.__tz)
+    def totimestamp(self, iso:str) -> float:
+        return self.__dt.fromisoformat(iso).timestamp()
     def addtimezone(self, datetime:datetime.datetime):
         timestamp_float = datetime.timestamp()
         return self.fromtimestamp(timestamp_float)
