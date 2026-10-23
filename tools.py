@@ -36,7 +36,7 @@ def getMP3Info(rawname:str):
             for elem in cont.child_element_ids:
                 chap_key = 'CHAP:' + elem
                 chap = audio.get(chap_key)
-                chapter_dict.update({chap.element_id:(chap.sub_frames['TIT2'].text[0], chap.start_time, chap.end_time)})
+                chapter_dict.update({chap.element_id:(chap.sub_frames['TIT2'].text[0], chap.start_time, chap.end_time, getTimeFormat(chap.start_time/1000))})
         elif key[:5] == 'CHAP:':
             current_app.logger.debug("element_id=%s, start=%s, end=%s", cont.element_id, cont.start_time, cont.end_time)
             for sub in cont.sub_frames:
@@ -78,8 +78,8 @@ def getMP3Info(rawname:str):
     size = os.stat(rawname).st_size
     chapter = ""
     counter = 1
-    for key, (text, start, end) in chapter_dict.items():
-        chapter += "{0:02}. {1}<br>".format(counter, text)
+    for key, (text, start, end, timefmt) in chapter_dict.items():
+        chapter += "{0:02}. {1} [{2}]<br>".format(counter, text, timefmt)
         counter += 1
     published = ts.fromtimestamp(os.stat(rawname).st_mtime)
     if tlen is None:
@@ -92,15 +92,21 @@ def getMP3Info(rawname:str):
     return (title, description, published, size, duration, chapter, chapter_dict, image_dict, albumid, track)
 
 
-def setMp3Info(rawname:str, fields:tuple):
+def setMp3Info(rawname:str, fields:tuple, clear_chaps:bool=False):
     ts = current_app.config["TS"]
     audio = ID3(rawname)
+    if clear_chaps:
+        audio.delall('CHAP')
+        audio.delall('CTOC')
+        audio.delall('COMM')
+        audio.delall('APIC')
+        audio.delall('TXXX')
     audio.add(TIT2(text=[fields[0]], encoding=3)) # Titel / Encoding 3 = UTF-8
     audio.add(COMM(desc="summary", lang='ger', text=[fields[1]], encoding=3)) # Beschreibung
     audio.add(TDRC(text=[fields[2]], encoding=3)) # Produktionsdatum
     audio.add(TXXX(desc="Supporter", text=[fields[3]], encoding=3)) # Techniker
     audio.add(TXXX(desc="Team", text=[fields[4]], encoding=3)) # Team
-    playtime = int(audio_info.duration(rawname) * 1000)
+    playtime = round(audio_info.duration(rawname) * 1000)
     audio.add(TLEN(text=[str(playtime)], encoding=3)) # Spiellänge in Millisekunden
     with open(fields[5], mode='rb') as image_file:
        audio.add(APIC(mime='image/jpeg', desc='CoverImage', data=image_file.read())) # Cover Foto
@@ -114,7 +120,7 @@ def setMp3Info(rawname:str, fields:tuple):
     os.utime(rawname, (t, t))
 
 
-def setMp3Chapter(rawname:str, basemedia:str, fields:tuple):
+def setMp3Chapter(rawname:str, basemedia:str, fields:tuple, clear_chaps:bool=False):
     ts = current_app.config["TS"]
     baseaudio = ID3(basemedia)
     ctoc_key = 'CTOC:toc'
@@ -133,6 +139,12 @@ def setMp3Chapter(rawname:str, basemedia:str, fields:tuple):
         next_toc = 'chp' + str(size)
         element_ids.append(next_toc)
     audio = ID3(rawname)
+    if clear_chaps:
+        audio.delall('CHAP')
+        audio.delall('CTOC')
+        audio.delall('COMM')
+        audio.delall('APIC')
+        audio.delall('TXXX')
     audio.add(TIT2(text=[fields[0]], encoding=3)) # Titel / Encoding 3 = UTF-8
     audio.add(COMM(desc="summary", lang='ger', text=[fields[1]], encoding=3)) # Beschreibung
     audio.add(TDRC(text=[fields[2]], encoding=3)) # Produktionsdatum
@@ -140,7 +152,7 @@ def setMp3Chapter(rawname:str, basemedia:str, fields:tuple):
     audio.add(TXXX(desc="License", text=[fields[4]], encoding=3)) # Urheber
     audio.add(TXXX(desc="Reader", text=[fields[5]], encoding=3)) # Vorleser
     audio.add(TXXX(desc="LicenseAllowed", text=[fields[6]], encoding=3)) # Vorleser
-    playtime = int(audio_info.duration(rawname) * 1000)
+    playtime = round(audio_info.duration(rawname) * 1000)
     audio.add(TLEN(text=[str(playtime)], encoding=3)) # Spiellänge in Millisekunden
     with open(fields[7], mode='rb') as image_file:
        audio.add(APIC(mime='image/jpeg', desc='CoverImage', data=image_file.read())) # Cover Foto
@@ -168,12 +180,19 @@ def setMp3Chapter(rawname:str, basemedia:str, fields:tuple):
 
 
 def getMpegInfo(rawname:str):
-    sec = audio_info.duration(rawname)
-    if sec is None: dur = 0.00
-    else: dur = sec
-    duration = "{0:02.0f}:{1:02.0f}".format(floor(dur / 60), floor(dur % 60))
-    size = os.stat(rawname).st_size
-    return (size, duration)
+    sekunden = audio_info.duration(rawname)
+    return (os.stat(rawname).st_size, getTimeFormat(sekunden))
+
+
+def getTimeFormat(sekunden:float):
+    if sekunden is None: sekunden = 0.00
+    minuten = floor(sekunden / 60) # Abrunden
+    rest_minuten = round(sekunden % 60) # Aufrunden
+    if rest_minuten > 59:
+        minuten += 1
+        rest_minuten = 0
+    result = "{0:02.0f}:{1:02.0f}".format(minuten, rest_minuten)
+    return result
 
 
 def calcFileName(fname:str, path:str=None, guest:bool=False):

@@ -32,7 +32,7 @@
             </div>
             <div class="ms-2 mt-2 pb-1" style="width: 98%;">
               <label for="frm-main-summary">Beschreibung</label>
-              <textarea class="form-control" name="frm-main-summary" id="frm-main-summary" rows="3" placeholder="Kurze Beschreibung des Inhalts des Beitrags" required></textarea>
+              <textarea class="form-control" name="frm-main-summary" id="frm-main-summary" rows="3" placeholder="(Optional) Kurze Beschreibung des Inhalts des Beitrags"></textarea>
               <div class="invalid-feedback"></div>
             </div>
             <div class="ms-2 mt-2 pb-1" style="width: 98%;">
@@ -46,7 +46,7 @@
             <div style="display:flex;">
               <div class="col-sm-4 mt-2 pb-1" style="padding-right: calc(var(--bs-gutter-x) * .5);padding-left: calc(var(--bs-gutter-x) * .5);">
                 <label for="frm-main-source-date">Veröffentlichungs Datum der Quelle</label>
-                <input type="date" class="form-control" name="frm-main-source-date" id="frm-main-source-date" required>
+                <input type="date" class="form-control" name="frm-main-source-date" id="frm-main-source-date" value="{{ conf.get('datenow') }}" required>
                 <div class="invalid-feedback"></div>
               </div>
               <div class="form-check mt-5 ms-4 pb-2">

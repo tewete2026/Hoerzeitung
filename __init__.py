@@ -19,25 +19,37 @@ class TimeSet:
     def __init__(self, tz:str):
         self.__tz = pytz.timezone(tz)
         self.__dt = datetime.datetime
+    
     def today(self):
         # return self.__dt.fromtimestamp(timestamp=datetime.datetime.today().timestamp(), tz=self.__tz)
         return self.todaytime().today()
+    
     def year(self):
         return self.todaytime().year
+    
     def todaytime(self):
         return self.__dt.now(tz=self.__tz)
+    
     def now_local(self):
         return self.todaytime().strftime('%Y-%m-%dT%H:%M:%S')
+    
+    def now_datelocal(self):
+        return self.today().strftime('%Y-%m-%d')
+    
     def isocalendar(self, ts=None):
         if not ts: ts = self.todaytime()
         return self.__dt.isocalendar(ts)
+    
     def fromtimestamp(self, ts:float):
         return self.__dt.fromtimestamp(timestamp=ts, tz=self.__tz)
+    
     def totimestamp(self, iso:str) -> float:
         return self.__dt.fromisoformat(iso).timestamp()
+    
     def addtimezone(self, datetime:datetime.datetime):
         timestamp_float = datetime.timestamp()
         return self.fromtimestamp(timestamp_float)
+    
     def delta(self, days=None, years=None, months=None):
         if days is not None:
             delta = relativedelta(days=days)

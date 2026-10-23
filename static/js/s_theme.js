@@ -21,6 +21,8 @@ window.addEventListener('load', () => {
     const frm_main_upload = this.document.getElementById('frm-main-upload');
     const frm_main_upload_chapter = this.document.getElementById('frm-main-upload-chapter');
     const frm_main_set_image = this.document.getElementById('frm-main-set-team');
+    const frm_main_file = this.document.getElementById('frm-main-file');
+    const frm_main_title = this.document.getElementById('frm-main-title');
 
     const trash_hist_list = [];
 
@@ -202,6 +204,15 @@ window.addEventListener('load', () => {
         })
     }
 
+    if (frm_main_file) {
+        frm_main_file.addEventListener('change', event => {
+            let is_error = false;
+            const field = event.target;
+            frm_main_title.value = field.files[0].name.replace(/^([0-9]{2,3}-)?/, "").replace(/\.mp3$/, "");
+            if (is_error) event.preventDefault();
+        })
+    }
+
     if (frm_main_upload) {
         frm_main_upload.addEventListener('submit', event => {
             let is_error = false;
@@ -236,7 +247,7 @@ window.addEventListener('load', () => {
             for(const elem of frm_main_upload_chapter.elements) {
                 if (!["INPUT", "TEXTAREA", "SELECT"].includes(elem.tagName)) continue;
                 elem.classList.remove("is-invalid","is-valid");
-                if ((["frm-main-datum", "frm-main-title", "frm-main-file", "frm-main-summary", "frm-main-author", "frm-main-source-date"].includes(elem.name) && !elem.value)
+                if ((["frm-main-datum", "frm-main-title", "frm-main-file", "frm-main-author", "frm-main-source-date"].includes(elem.name) && !elem.value)
                     || ["frm-main-license", "frm-main-reader"].includes(elem.name) && elem.value == "-1") {
                     elem.nextElementSibling.innerText = "Die Eingabe ist erforderlich.";
                     elem.classList.add("is-invalid");

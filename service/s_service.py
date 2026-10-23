@@ -101,6 +101,7 @@ def doUpload(albumid=None):
     
     conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
     conf.append('datetimenow', ts.now_local())
+    conf.append('datenow', ts.now_datelocal())
     
     if request.method == "POST":
         form_data = request.form
@@ -119,10 +120,15 @@ def doUpload(albumid=None):
             frm_main_allowed = form_data.get("frm-main-allowed")
             frm_main_reader = form_data.get("frm-main-reader")
             frm_main_source_date = form_data.get("frm-main-source-date")
+            frm_main_skiptags = form_data.get("frm-main-skiptags")
             if frm_main_allowed is not None:
                 allowed = True
             else:
                 allowed = False
+            if frm_main_skiptags is not None:
+                skiptags = True
+            else:
+                skiptags = False
             filearr = filename.rsplit('.')
             namebase = filearr[0]
             suff = filearr[1]
@@ -157,10 +163,11 @@ def doUpload(albumid=None):
                     teamlogo = current_app.instance_path + '/' + teams[str(dbdata['team'])][1]
                     if allowed: lic_allowed = "Ja"
                     else: lic_allowed = "Nein"
-                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, lic_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date))
+                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, lic_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date), clear_chaps=True)
                 else:
                     teamlogo = current_app.instance_path + '/' + teams[frm_main_team][1]
-                    tools.setMp3Info(temp_target, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_supporter, frm_main_team, teamlogo, rc_code['last_id']))
+                    if not skiptags:
+                        tools.setMp3Info(temp_target, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_supporter, frm_main_team, teamlogo, rc_code['last_id']), clear_chaps=True)
                 if isChapter:
                     goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
                     audioname = rc_chp['track'] + "_" + audioname
@@ -183,6 +190,8 @@ def doUpload(albumid=None):
     conf.append("show_navall", True)
     if session['dbdata']['seclevel'] > 1:
         conf.append("show_navtop", True)
+    if session['dbdata']['seclevel'] == 4:
+        conf.append("show_skiptags", True)
     conf.append("teams", current_app.config["teams"])
 
     if isChapter:
@@ -193,6 +202,10 @@ def doUpload(albumid=None):
                 herausgeber.append(line.rstrip())
             conf.append("herausgeber", sorted(herausgeber))
         with open(current_app.instance_path + "/data/Vorleser.txt", mode='r') as text_file:
+            for line in text_file:
+                vorleser.append(line.rstrip())
+            conf.append("vorleser", sorted(vorleser))
+        with open(current_app.instance_path + "/data/Techniker.txt", mode='r') as text_file:
             for line in text_file:
                 vorleser.append(line.rstrip())
             conf.append("vorleser", sorted(vorleser))
