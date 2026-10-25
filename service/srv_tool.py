@@ -199,3 +199,11 @@ def init_freecode():
         abort(500)
 
     return f"<!DOCTYPE html><html lang='en'><head></head><body><p>Anzahl Records verarbeitet: {max_rec}</p></body></html>"
+
+
+@bp.route("/init-tagging")
+def init_tagging():
+    ts = current_app.config["TS"]
+    full_dir = current_app.instance_path + "/long"
+    content = os.listdir(full_dir)
+    content.sort()
