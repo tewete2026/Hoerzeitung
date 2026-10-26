@@ -207,13 +207,22 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
         content = tools.listDirSorted(full_dir, reverse=True)
     page = 1
     is_more = False
+    # Zuerst die directories sammeln
+    for element in content:
+        rawname = f"{full_dir}/{element}"
+        if os.path.isdir(rawname):
+            key = element.strip()
+            episode = {}
+            episode.update({"subdir":element})
+            episodes.update({key:episode})
+    # Dann die Dateien sammeln
     for element in content:
         if max_pageview > 0 and page > max_pageview:
             is_more = True
             break
         episode = {}
         rawname = f"{full_dir}/{element}"
-        if os.path.isdir(rawname) and archive:
+        if archive and os.path.isdir(rawname):
             key = element.strip()
             nextdir = f"{full_dir}/{key}"
             dir_list = os.listdir(nextdir)
@@ -222,11 +231,6 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
                 episode.update({"dirname":key})
                 episode.update({"amount":content_count})
                 page += 1
-        elif os.path.isdir(rawname):
-            key = element.strip()
-            if key in episodes:
-                episode = episodes.get(key)
-            episode.update({"subdir":element})
         else:
             if not element.endswith(".mp3"): continue
             key = element.split('.')[0].strip()
@@ -260,7 +264,11 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
             episode.update({"date":str(published)[:19]})
             page += 1
         if len(episode) > 0: episodes.update({key:episode})
-    rc_code['episodes'] = episodes.values()
+    summary = []
+    for key, episode in episodes.items():
+        if 'rawname' in episode:
+            summary.append(episode)
+    rc_code['episodes'] = summary
     rc_code['is_more'] = is_more
     return rc_code
 

@@ -65,8 +65,9 @@ def getMP3Info(rawname:str):
         elif key == 'TYER':
             current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
         elif key[:5] == 'COMM:':
-            description = cont.text[0]
-            current_app.logger.debug("%s, %s, %s, %s", description, cont.desc, cont.lang, cont.encoding)
+            current_app.logger.debug("%s, %s, %s, %s", cont.text[0], cont.desc, cont.lang, cont.encoding)
+            if not cont.desc and cont.lang == "eng" or cont.desc == "summary" and cont.lang == "ger":
+                description = cont.text[0]
         elif key[:5] == 'APIC:':
             image_dict.update({'mime': cont.mime})
             image_dict.update({'desc': cont.desc})
@@ -101,23 +102,26 @@ def setMp3Info(rawname:str, fields:tuple, clear_chaps:bool=False):
         audio.delall('COMM')
         audio.delall('APIC')
         audio.delall('TXXX')
-    audio.add(TIT2(text=[fields[0]], encoding=3)) # Titel / Encoding 3 = UTF-8
-    audio.add(COMM(desc="summary", lang='ger', text=[fields[1]], encoding=3)) # Beschreibung
-    audio.add(TDRC(text=[fields[2]], encoding=3)) # Produktionsdatum
-    audio.add(TXXX(desc="Supporter", text=[fields[3]], encoding=3)) # Techniker
-    audio.add(TXXX(desc="Team", text=[fields[4]], encoding=3)) # Team
-    playtime = round(audio_info.duration(rawname) * 1000)
-    audio.add(TLEN(text=[str(playtime)], encoding=3)) # Spiellänge in Millisekunden
-    with open(fields[5], mode='rb') as image_file:
-       audio.add(APIC(mime='image/jpeg', desc='CoverImage', data=image_file.read())) # Cover Foto
-    audio.add(TXXX(desc="AlbumId", text=[fields[6]], encoding=3)) # Album-ID
+    if len(fields) == 7:
+        audio.add(TIT2(text=[fields[0]], encoding=3)) # Titel / Encoding 3 = UTF-8
+        audio.add(COMM(desc="summary", lang='ger', text=[fields[1]], encoding=3)) # Beschreibung
+        audio.add(TDRC(text=[fields[2]], encoding=3)) # Produktionsdatum
+        # Datum in Audio-Datei schreiben (atime + mtime)
+        t = ts.totimestamp(fields[2]) # Konvertieren von ISO-Format zu float
+        os.utime(rawname, (t, t))
+        audio.add(TXXX(desc="Supporter", text=[fields[3]], encoding=3)) # Techniker
+        audio.add(TXXX(desc="Team", text=[fields[4]], encoding=3)) # Team
+        playtime = round(audio_info.duration(rawname) * 1000)
+        audio.add(TLEN(text=[str(playtime)], encoding=3)) # Spiellänge in Millisekunden
+        with open(fields[5], mode='rb') as image_file:
+            audio.add(APIC(mime='image/jpeg', desc='CoverImage', data=image_file.read())) # Cover Foto
+        audio.add(TXXX(desc="AlbumId", text=[fields[6]], encoding=3)) # Album-ID
+    elif len(fields) == 1:
+        audio.add(TXXX(desc="AlbumId", text=[fields[0]], encoding=3)) # Album-ID
     audio.add(TPE1(text=["DRK-OV-Norderstedt"], encoding=3)) # Künstler
     audio.add(TALB(text=["Hörzeitung DRK-Norderstedt"], encoding=3)) # Album
     audio.add(TCON(text=["Podcast"], encoding=3)) # Genre
     audio.save()
-    # Datum in Audio-Datei schreiben (atime + mtime)
-    t = ts.totimestamp(fields[2]) # Konvertieren von ISO-Format zu float
-    os.utime(rawname, (t, t))
 
 
 def setMp3Chapter(rawname:str, basemedia:str, fields:tuple, clear_chaps:bool=False):

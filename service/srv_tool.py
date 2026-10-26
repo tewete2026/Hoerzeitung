@@ -1,12 +1,13 @@
 import mariadb, os, random
 from flask import Blueprint
-from flask import current_app
+from flask import current_app, session
 from flask import request
 from flask import render_template
 from flask import redirect, url_for
 from werkzeug.exceptions import abort
 import random
 from ..db import get_db
+from .s_service import submit_album, submit_chapter
 from .. import version, tools
 from ..podcast_texte import podcast_texte
 
@@ -27,7 +28,7 @@ bp = Blueprint("srv_tool", __name__, url_prefix="/service/toolfix")
 def toolfix_default():
     return render_template('service/base_toolfix.html', rules=current_app.url_map.iter_rules())
 
-
+'''
 @bp.route("/reorg-members")
 def reorg_members():
     dbdata={}
@@ -199,11 +200,49 @@ def init_freecode():
         abort(500)
 
     return f"<!DOCTYPE html><html lang='en'><head></head><body><p>Anzahl Records verarbeitet: {max_rec}</p></body></html>"
+'''
 
 
 @bp.route("/init-tagging")
 def init_tagging():
+    if 'dbdata' not in session or session['dbdata']['seclevel'] < 4:
+        abort(403)
+
     ts = current_app.config["TS"]
     full_dir = current_app.instance_path + "/long"
     content = os.listdir(full_dir)
     content.sort()
+    max_rec = 0
+
+    for element in content:
+        rawname = f"{full_dir}/{element}"
+        if os.path.isdir(rawname):
+            pass
+        else:
+            if not element.endswith(".mp3"): continue
+            (title, description, pub, size, dur, chapter, chapter_dict, image_dict, albumid, track) = tools.getMP3Info(rawname)
+            published = ts.fromtimestamp(os.stat(rawname).st_mtime)
+            (si, duration) = tools.getMpegInfo(rawname)
+            # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration
+            rc = submit_album((session['dbdata']['seclevel'], session['dbdata']['pnr'], title, "", description, element, published, 0, duration))
+            if rc["submit_status"] == "OK":
+                tools.setMp3Info(rawname, (rc['last_id'],))
+            key = element.split('.')[0].strip()
+            dirname = f"{full_dir}/{key}"
+            if os.path.isdir(dirname):
+                dircontent = os.listdir(dirname)
+                for entry in dircontent:
+                    entryname = f"{dirname}/{entry}"
+                    if os.path.isdir(entryname) or not entry.endswith(".mp3"): continue
+                    (title, description, pub, size, dur, chapter, chapter_dict, image_dict, albumid, track) = tools.getMP3Info(entryname)
+                    published = ts.fromtimestamp(os.stat(entryname).st_mtime)
+                    (si, duration) = tools.getMpegInfo(entryname)
+                    (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(album_path)
+                    next_track = "{0:02.0f}".format(len(chapter_dict.values()) + 1)
+                    # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed
+                    rc = submit_chapter((albumid, session['dbdata']['seclevel'], session['dbdata']['pnr'], title, "", "", "", description, entry, duration, published, published, False, next_track))
+
+
+        max_rec += 1
+
+    return f"<!DOCTYPE html><html lang='en'><head></head><body><p>Anzahl Records verarbeitet: {max_rec}</p></body></html>"
