@@ -266,7 +266,7 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
         if len(episode) > 0: episodes.update({key:episode})
     summary = []
     for key, episode in episodes.items():
-        if 'rawname' in episode:
+        if 'dirname' in episode or 'rawname' in episode:
             summary.append(episode)
     rc_code['episodes'] = summary
     rc_code['is_more'] = is_more

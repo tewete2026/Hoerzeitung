@@ -86,7 +86,7 @@ def doUpload(albumid=None):
                 raise mariadb.PoolError("Kein Databasepool vorhanden.")
             cur = db.cursor(dictionary=True)
             cur.execute("SELECT id,title,supporter,summary,media,publicationDate,team,duration FROM tJournal WHERE id=?", (albumid,))
-            dbdata = cur.fetchone()
+            albumdata = cur.fetchone()
             if cur.rowcount <= 0:
                 current_app.logger.error("Datenbank SELECT FROM tJournal: %s/doUpload, Rowcount=%s", bp.name, cur.rowcount)
                 raise mariadb.DataError(f"Kein Datensatz für {albumid} gefunden.")
@@ -137,8 +137,8 @@ def doUpload(albumid=None):
             temp_target = current_app.instance_path + "/upload/" + audioname
             target_path = current_app.instance_path + "/long/"
             if isChapter:
-                album_path = current_app.instance_path + "/long/" + dbdata['media']
-                filearr = dbdata['media'].rsplit('.')
+                album_path = current_app.instance_path + "/long/" + albumdata['media']
+                filearr = albumdata['media'].rsplit('.')
                 mediabase = filearr[0]
                 dirname = current_app.instance_path + "/long/" + mediabase
                 if not os.path.isdir(dirname):
@@ -159,11 +159,11 @@ def doUpload(albumid=None):
                 rc_code = submit_album((seclevel, pnr, frm_main_title, frm_main_supporter, frm_main_summary, audioname, frm_main_datum, frm_main_team, duration))
             if rc_code["submit_status"] == "OK":
                 if isChapter:
-                    basemedia = current_app.instance_path + "/long/" + dbdata['media']
-                    teamlogo = current_app.instance_path + '/' + teams[str(dbdata['team'])][1]
+                    basemedia = current_app.instance_path + "/long/" + albumdata['media']
+                    teamlogo = current_app.instance_path + '/' + teams[str(albumdata['team'])][1]
                     if allowed: lic_allowed = "Ja"
                     else: lic_allowed = "Nein"
-                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, lic_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date), clear_chaps=True)
+                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, lic_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date, albumdata['title']), clear_chaps=True)
                 else:
                     teamlogo = current_app.instance_path + '/' + teams[frm_main_team][1]
                     if not skiptags:
@@ -209,7 +209,7 @@ def doUpload(albumid=None):
             for line in text_file:
                 vorleser.append(line.rstrip())
             conf.append("vorleser", sorted(vorleser))
-        conf.append("title", dbdata['title'])
+        conf.append("title", albumdata['title'])
         html = "service/confuploadChapter.html"
     else:
         techniker = []
@@ -668,8 +668,9 @@ def submit_chapter(form_data):
                     rc_code["submit_status"] = "NOTALWD"
                 '''
             else:
+                print(form_data)
                 #     0     1       2    3     4      5       6      7      8      9           10            11        12
-                # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed
+                # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track
                 cur.execute("insert into tChapter(albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track) \
                             values               (?,      ?,       ?,  ?,    ?,     ?,     ?,     ?,      ?,    ?,       ?,              ?,         ?,      ?)", form_data)
                 last_id = str(cur.lastrowid)
@@ -691,7 +692,7 @@ def submit_chapter(form_data):
             rc_code["err_msg"] = f"Datenbank ist nicht initialisiert: {err}"
         except mariadb.IntegrityError as err:
             rc_code["submit_status"] = "DBL"
-            current_app.logger.warning("Datenbank-Integrität Eintrag: %s/submit-chapter/%s", bp.name, err)
+            current_app.logger.error("Datenbank-Integrität Eintrag: %s/submit-chapter/%s", bp.name, err)
             rc_code["DB_Error"] = err
             rc_code["err_msg"] = f"Datenbank hat Integrität verletzt Eintrag: {err}"
             db.rollback()
