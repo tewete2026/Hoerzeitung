@@ -668,7 +668,6 @@ def submit_chapter(form_data):
                     rc_code["submit_status"] = "NOTALWD"
                 '''
             else:
-                print(form_data)
                 #     0     1       2    3     4      5       6      7      8      9           10            11        12
                 # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track
                 cur.execute("insert into tChapter(albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track) \

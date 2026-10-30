@@ -38,7 +38,7 @@ CREATE TABLE `tChapter` (
   `duration` varchar(10) NOT NULL DEFAULT '' COMMENT 'Spiellänge der Medien Datei',
   `publicationDate` datetime NOT NULL DEFAULT current_timestamp() COMMENT 'Veröffentlichungs Datum',
   `sourceDate` date NOT NULL DEFAULT current_date() COMMENT 'Veröffentlichungs Datum der Quelle',
-  `allowed` bit(1) NOT NULL DEFAULT 0 COMMENT 'Urheberrechtliche Erlaubnis vorhanden (J/N)',
+  `allowed` int(1) NOT NULL DEFAULT 0 COMMENT 'Urheberrechtliche Erlaubnis vorhanden',
   PRIMARY KEY (`id`),
   UNIQUE KEY `media` (`media`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;

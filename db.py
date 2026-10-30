@@ -199,23 +199,16 @@ def get_episodes(episodes, auth_code_valid, limit:bool=True):
 def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archive_dir=None, bonus=False):
     rc_code = {"status":"OK"}
     ts = current_app.config["TS"]
-    episodes = {}
+    episodes = []
     if subdir is not None: 
         content = os.listdir(full_dir)
-        content.sort()
+        content.sort() # nach Dateiname aufsteigend sortiert
     else:
-        content = tools.listDirSorted(full_dir, reverse=True)
+        content = tools.listDirSorted(full_dir, reverse=True) # nach Datei-Datum absteigend sortiert
+        # content:list = os.listdir(full_dir)
+        # content.sort(reverse=True)
     page = 1
     is_more = False
-    # Zuerst die directories sammeln
-    for element in content:
-        rawname = f"{full_dir}/{element}"
-        if os.path.isdir(rawname):
-            key = element.strip()
-            episode = {}
-            episode.update({"subdir":element})
-            episodes.update({key:episode})
-    # Dann die Dateien sammeln
     for element in content:
         if max_pageview > 0 and page > max_pageview:
             is_more = True
@@ -232,8 +225,11 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
                 episode.update({"amount":content_count})
                 page += 1
         else:
-            if not element.endswith(".mp3"): continue
+            if os.path.isdir(rawname) or not element.endswith(".mp3"): continue
             key = element.split('.')[0].strip()
+            dirname = f"{full_dir}/{key}"
+            if os.path.isdir(dirname):
+                episode.update({"subdir":key})
             audio_name = element
             if subdir is not None: 
                 audio_name = f"{subdir},{audio_name}"
@@ -241,8 +237,6 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
                 audio_name = f"{archive_dir}!{audio_name}"
             if bonus: 
                 audio_name = f"B!{audio_name}"
-            if key in episodes:
-                episode = episodes.get(key)
             (title, description, published, size, dur, chapter, chapter_dict, image_dict, albumid, track) = tools.getMP3Info(rawname)
             (si, duration) = tools.getMpegInfo(rawname)
             published = ts.addtimezone(published)
@@ -263,12 +257,8 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
             episode.update({"published":str(published)})
             episode.update({"date":str(published)[:19]})
             page += 1
-        if len(episode) > 0: episodes.update({key:episode})
-    summary = []
-    for key, episode in episodes.items():
-        if 'dirname' in episode or 'rawname' in episode:
-            summary.append(episode)
-    rc_code['episodes'] = summary
+        if len(episode) > 0: episodes.append(episode)
+    rc_code['episodes'] = episodes
     rc_code['is_more'] = is_more
     return rc_code
 
@@ -276,7 +266,7 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
 def get_s_favorites(base_dir, content, conf=None, max_pageview=-1):
     rc_code = {"status":"OK"}
     ts = current_app.config["TS"]
-    episodes = {}
+    episodes = []
     page = 1
     is_more = False
     for element in content['audios']:
@@ -306,8 +296,8 @@ def get_s_favorites(base_dir, content, conf=None, max_pageview=-1):
         episode.update({"published":str(published)})
         episode.update({"date":str(published)[:19]})
         page += 1
-        if len(episode) > 0: episodes.update({key:episode})
-    rc_code['episodes'] = episodes.values()
+        if len(episode) > 0: episodes.append(episode)
+    rc_code['episodes'] = episodes
     rc_code['is_more'] = is_more
     return rc_code
 

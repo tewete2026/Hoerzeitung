@@ -50,13 +50,3 @@ CREATE TABLE `tReference` (
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
 -- Dump completed on 2026-05-16 18:40:45
-LOAD DATA LOCAL INFILE '/tmp/Leseliste.csv'
-INTO TABLE tReference
-FIELDS TERMINATED BY '\t' 
-LINES TERMINATED BY '\n'
-IGNORE 2 ROWS
-(cd,track,title,@sourceDate,author,source,reader,@allowed,supporter,@pubDate)
-SET sourceDate = CONCAT(MID(@sourceDate,7,4), '-',MID(@sourceDate,4,2), '-',MID(@sourceDate,1,2)), 
-    pubDate = CONCAT(MID(@pubDate,7,4), '-', MID(@pubDate,4,2), '-', MID(@pubDate,1,2)),
-    allowed = IF(@allowed in ('Frei', 'Vorhanden', 'Eigene Formulierungen', 'Genehmigung vorhanden'), 1, 0),
-    team = IF(supporter='Ditmar Rapp', 2, IF(supporter in ('Angela Fentner', 'Thomas Düßler'), 3, IF(supporter='Thomas Klueß', 1, IF(supporter='Peter Geukes', 4, 0))));

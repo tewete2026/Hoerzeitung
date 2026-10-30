@@ -223,7 +223,7 @@ def generateCode(prefix:str):
  First, we build a list of the file names. isfile() is used to skip directories; it can be omitted if directories should be included. 
  Then, we sort the list in-place, using the modify date as the key.
 """
-def listDirSorted(dirpath, reverse=True):
+def listDirSorted(dirpath, reverse=False):
     # a = [s for s in os.listdir(dirpath)
         #  if os.path.isfile(os.path.join(dirpath, s))]
     a:list = os.listdir(dirpath)
