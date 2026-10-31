@@ -215,10 +215,7 @@ def init_tagging():
     full_dir = current_app.instance_path + "/long"
     content = os.listdir(full_dir)
     content.sort()
-    max_rec = 0
-    album_err = 0
-    ref_err = 0
-    chap_err = 0
+    max_rec = album_err = ref_err = chap_err = chp_empty = 0
     db = get_db()
     cur = db.cursor(dictionary=True)
     output = ["<!DOCTYPE html><html lang='en'><head>\
@@ -233,11 +230,11 @@ def init_tagging():
     for element in content:
         rawname = f"{full_dir}/{element}"
         if os.path.isdir(rawname) or not element.endswith(".mp3"): continue
-        (alb_title, description, pub, size, tlen, chapter, chapter_dict, image_dict, notused, notused) = tools.getMP3Info(rawname)
+        (alb_title, description, alb_published, size, alb_tlen, chapter, chapter_dict, image_dict, notused, notused) = tools.getMP3Info(rawname)
         mtime = os.stat(rawname).st_mtime
         published = ts.fromtimestamp(mtime)
-        duration = tools.getTimeFormat(tlen/1000)
-        if not tlen:
+        duration = tools.getTimeFormat(alb_tlen/1000)
+        if not alb_tlen:
             (size, duration) = tools.getMpegInfo(rawname)
         cur.execute("SELECT team,supporter FROM tReference WHERE cd=?", (alb_title,))
         refalbum = cur.fetchone()
@@ -246,7 +243,7 @@ def init_tagging():
             ref_err += 1
         # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration
         rc_album = submit_album((session['dbdata']['seclevel'], session['dbdata']['pnr'], alb_title, refalbum['supporter'], description, element, published, refalbum['team'], duration))
-        output.append(f"<h4>Album: {alb_title}; Datum: {published}; Dauer: {duration}; Techniker: {refalbum['supporter']}; Team: {refalbum['team']}")
+        output.append(f"<h4>Album: {alb_title}; Datum: {published}; ID3-Datum: {alb_published}; Dauer: {duration}; Techniker: {refalbum['supporter']}; Team: {refalbum['team']}")
         if rc_album["submit_status"] == "OK":
             albumid = rc_album['last_id']
             output.append(f"; Status: {rc_album["submit_status"]}; Album-ID:{albumid} </h4>")
@@ -265,11 +262,11 @@ def init_tagging():
                 for entry in dircontent:
                     entryname = f"{dirname}/{entry}"
                     if os.path.isdir(entryname) or not entry.endswith(".mp3"): continue
-                    (entry_title, description, entry_published, size, tlen, notused, chapter_dict, image_dict, notused, entry_track) = tools.getMP3Info(entryname)
+                    (entry_title, description, entry_published, size, entry_tlen, notused, chapter_dict, image_dict, notused, entry_track) = tools.getMP3Info(entryname)
                     mtime = os.stat(entryname).st_mtime
                     published = ts.fromtimestamp(mtime)
-                    duration = tools.getTimeFormat(tlen/1000)
-                    if not tlen:
+                    duration = tools.getTimeFormat(entry_tlen/1000)
+                    if not entry_tlen:
                         (size, duration) = tools.getMpegInfo(entryname)
                     cur.execute("SELECT cd,team,track,title,DATE_FORMAT(DATE(sourceDate),'%Y-%m-%d') as sourceDate,author,source,reader,allowed,supporter,DATE_FORMAT(DATE(pubDate),'%Y-%m-%d') as pubDate FROM tReference WHERE cd=? && track=?", (alb_title, step))
                     refchapter = cur.fetchone()
@@ -308,8 +305,8 @@ def init_tagging():
                         err_style_pubtag = "style='font-weight:800;'"
                     else:
                         err_style_pubtag = "style='font-weight:100;'"
-                    output.append(f"<p><span {err_style_tit}>Dat.-Titel: {entry_title.strip()}</span>; Datum: {published}; <span {err_style_pubtag}>ID3-Datum: {entry_published}</span>; <span {err_style_trk}>Step: {str(step)}; Track: {entry_track}</span>; Dauer: {duration} <br>\
-                                    <span>Ref.-Titel: {chp_title}; <span {err_style_pub}>Datum: {chp_pubdate}</span>; TitelNr: {chp_track}; Quelle: {chp_source}; Quelle-Datum: {chp_sourcedate}; Autor: {chp_author}; Lizenz: {chp_allowed}; Vorleser: {chp_reader}</span>")
+                    output.append(f"<p><span {err_style_tit}>ID3-Titel: {entry_title.strip()}</span>; Datei-Datum: {published}; <span {err_style_pubtag}>ID3-Datum: {entry_published}</span>; <span {err_style_trk}>Step: {str(step)}; ID3-Track: {entry_track}</span>; Dauer: {duration} <br>\
+                                    <span>Ref.-Titel: {chp_title}; <span {err_style_pub}>Ref.-Datum: {chp_pubdate}</span>; TitelNr: {chp_track}; Quelle: {chp_source}; Quelle-Datum: {chp_sourcedate}; Autor: {chp_author}; Lizenz: {chp_allowed}; Vorleser: {chp_reader}</span>")
                     if rc_chapter["submit_status"] == "OK":
                         output.append(f"; Status: {rc_chapter["submit_status"]}; Chapter-ID: {rc_chapter['last_id']}</p>")
                         tit2_title = title.replace('?', '_').replace('/', '_').replace('\\', '_').replace('"', '_').replace('*', '_')
@@ -324,6 +321,13 @@ def init_tagging():
                         output.append(f"; Status: {rc_chapter["submit_status"]}; Chapter-ID: ---</p>")
                         chap_err += 1
                     step += 1
+            else:
+                output.append(f"<p>Kein Kapiteleintrag <em>{key}</em> im Verzeichnis für dieses Album vorhanden")
+                if chapter:
+                    output.append(f", aber es sind {len(chapter_dict)} Kapiteleinträge im Album getaggt.</p>")
+                else:
+                    output.append(".</p>")
+                chp_empty += 1
         else:
             output.append(f"; Datenbank-Fehler={rc_album["err_msg"]} </h4>")
             album_err += 1
@@ -332,8 +336,9 @@ def init_tagging():
     cur.close()
     db.close()
     
-    output.append(f"<h4>Anzahl Records verarbeitet: {max_rec}, Album-Fehler: {album_err}, Chapter-Fehler: {chap_err}, Referenz-Fehler: {ref_err}</h4></body></html>")
+    output.append(f"<h4>Anzahl Records verarbeitet: {max_rec}; Album-Fehler: {album_err}; Chapter-Fehler: {chap_err}; Keine Kapitel: {chp_empty}; Referenz-Fehler: {ref_err}</h4></body></html>")
     return "\n".join(output)
+
 
 @bp.route("/analyse-tagging")
 def analyse_tagging():
@@ -400,8 +405,7 @@ def analyse_tagging():
                     refchapter = cur.fetchone()
                     if cur.rowcount <= 0:
                         err_style = "style='font-weight:800;'"
-                        chp_author = chp_source = chp_reader = chp_title = "---"
-                        chp_sourcedate = "---"
+                        chp_author = chp_source = chp_reader = chp_title = chp_sourcedate = "---"
                         chp_allowed = 0
                     else:
                         err_style = "style='font-weight:100;'"

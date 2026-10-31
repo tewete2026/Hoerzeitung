@@ -121,10 +121,6 @@ def doUpload(albumid=None):
             frm_main_reader = form_data.get("frm-main-reader")
             frm_main_source_date = form_data.get("frm-main-source-date")
             frm_main_skiptags = form_data.get("frm-main-skiptags")
-            if frm_main_allowed is not None:
-                allowed = True
-            else:
-                allowed = False
             if frm_main_skiptags is not None:
                 skiptags = True
             else:
@@ -153,7 +149,7 @@ def doUpload(albumid=None):
                 (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(album_path)
                 next_track = "{0:02.0f}".format(len(chapter_dict.values()) + 1)
                 # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track
-                rc_code = submit_chapter((albumid, seclevel, pnr, frm_main_title, frm_main_author, frm_main_license, frm_main_reader, frm_main_summary, audioname, duration, frm_main_datum, frm_main_source_date, allowed, next_track))
+                rc_code = submit_chapter((albumid, seclevel, pnr, frm_main_title, frm_main_author, frm_main_license, frm_main_reader, frm_main_summary, audioname, duration, frm_main_datum, frm_main_source_date, frm_main_allowed, next_track))
             else:
                 # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration
                 rc_code = submit_album((seclevel, pnr, frm_main_title, frm_main_supporter, frm_main_summary, audioname, frm_main_datum, frm_main_team, duration))
@@ -161,9 +157,7 @@ def doUpload(albumid=None):
                 if isChapter:
                     basemedia = current_app.instance_path + "/long/" + albumdata['media']
                     teamlogo = current_app.instance_path + '/' + teams[str(albumdata['team'])][1]
-                    if allowed: lic_allowed = "Ja"
-                    else: lic_allowed = "Nein"
-                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, lic_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date, albumdata['title']), clear_chaps=True)
+                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, frm_main_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date, albumdata['title']), clear_chaps=True)
                 else:
                     teamlogo = current_app.instance_path + '/' + teams[frm_main_team][1]
                     if not skiptags:
@@ -197,6 +191,7 @@ def doUpload(albumid=None):
     if isChapter:
         herausgeber = []
         vorleser = []
+        lizenz = []
         with open(current_app.instance_path + "/data/Herausgeber.txt", mode='r') as text_file:
             for line in text_file:
                 herausgeber.append(line.rstrip())
@@ -209,6 +204,12 @@ def doUpload(albumid=None):
             for line in text_file:
                 vorleser.append(line.rstrip())
             conf.append("vorleser", sorted(vorleser))
+        with open(current_app.instance_path + "/data/Lizenz.txt", mode='r') as text_file:
+            ind = 1
+            for line in text_file:
+                lizenz.append((line.rstrip(), ind))
+                ind += 1
+            conf.append("lizenz", sorted(lizenz))
         conf.append("title", albumdata['title'])
         html = "service/confuploadChapter.html"
     else:

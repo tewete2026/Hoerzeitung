@@ -16,11 +16,8 @@ def getMP3Info(rawname:str):
     audio = MP3(rawname)
     chapter_dict = {}
     image_dict = {}
-    description = "- - - -"
-    title = "---"
-    albumid = "---"
+    description = title = albumid = track = "---"
     tlen = 0.0
-    track = ""
     current_app.logger.debug(rawname)
     for key in audio.keys():
         cont = audio.get(key)
@@ -117,6 +114,7 @@ def setMp3Info(rawname:str, fields:tuple, clear_chaps:bool=False):
 def setMp3Chapter(rawname:str, basemedia:str, fields:tuple, clear_chaps:bool=False):
     ts = current_app.config["TS"]
     baseaudio = ID3(basemedia)
+    basemtime = os.stat(basemedia).st_mtime
     ctoc_key = 'CTOC:toc'
     base_ctoc = baseaudio.get(ctoc_key)
     if base_ctoc is None:
@@ -162,6 +160,7 @@ def setMp3Chapter(rawname:str, basemedia:str, fields:tuple, clear_chaps:bool=Fal
     baseaudio.add(next_chap)
     audio.save()
     baseaudio.save()
+    os.utime(basemedia, (basemtime, basemtime)) # Dateidatum wiederherstellen, da audio.save() das Datum ändert.
     # Datum in Audio-Datei schreiben (atime + mtime)
     t = ts.totimestamp(fields[2]) # Konvertieren von ISO-Format zu float
     os.utime(rawname, (t, t))

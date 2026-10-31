@@ -36,7 +36,7 @@
               <div class="invalid-feedback"></div>
             </div>
             <div class="ms-2 mt-2 pb-1" style="width: 98%;">
-              <label for="frm-main-license" class="form-label">Urheber/Herausgeber</label>
+              <label for="frm-main-license">Urheber/Herausgeber/Quelle</label>
               <select class="form-select" id="frm-main-license" name="frm-main-license" required>
                 <option value="-1">Bitte wählen...</option>{% for text in conf.get('herausgeber') %}
                 <option value="{{ text }}">{{ text }}</option>{% endfor %}
@@ -49,13 +49,17 @@
                 <input type="date" class="form-control" name="frm-main-source-date" id="frm-main-source-date" value="{{ conf.get('datenow') }}" required>
                 <div class="invalid-feedback"></div>
               </div>
-              <div class="form-check mt-5 ms-4 pb-2">
-                <label class="form-check-label" for="frm-main-allowed">Weiterverbreitung über Hörzeitung erlaubt?</label>
-                <input class="form-check-input" type="checkbox" id="frm-main-allowed" name="frm-main-allowed">
+              <div class="col-sm-4 ms-2 mt-2 pb-1">
+                <label for="frm-main-allowed">Lizenz</label>
+                <select class="form-select" id="frm-main-allowed" name="frm-main-allowed" required>
+                  <option value="-1">Bitte wählen...</option>{% for text in conf.get('lizenz') %}
+                  <option value="{{ text[1] }}">{{ text[0] }}</option>{% endfor %}
+                </select>
+                <div class="invalid-feedback"></div>
               </div>
             </div>
             <div class="ms-2 mt-2 pb-1" style="width: 98%;">
-              <label for="frm-main-reader" class="form-label">Vorleser/in</label>
+              <label for="frm-main-reader">Vorleser/in</label>
               <select class="form-select" id="frm-main-reader" name="frm-main-reader" required>
                 <option value="-1">Bitte wählen...</option>{% for text in conf.get('vorleser') %}
                 <option value="{{ text }}">{{ text }}</option>{% endfor %}

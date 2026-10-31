@@ -33,7 +33,7 @@ CREATE TABLE `tReference` (
   `author` varchar(50) ,
   `source` varchar(50) ,
   `reader` varchar(50) ,
-  `allowed` int(1) unsigned ,
+  `allowed` smallint unsigned ,
   `supporter` varchar(50) ,
   `pubDate` date ,
   PRIMARY KEY (`id`)
