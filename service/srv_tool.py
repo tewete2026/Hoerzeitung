@@ -317,6 +317,9 @@ def init_tagging():
                         audio.add(TXXX(desc="AlbumId", text=[albumid], encoding=3)) # Album-ID
                         audio.save()
                         os.utime(entryname, (mtime, mtime)) # Dateidatum wiederherstellen, da audio.save() das Datum ändert.
+                        n = "{0:02}".format(step)
+                        newentryname = f"{dirname}/{n}-{entry}"
+                        os.rename(entryname, newentryname)
                     else:
                         output.append(f"; Status: {rc_chapter["submit_status"]}; Chapter-ID: ---</p>")
                         chap_err += 1
@@ -324,7 +327,10 @@ def init_tagging():
             else:
                 output.append(f"<p>Kein Kapiteleintrag <em>{key}</em> im Verzeichnis für dieses Album vorhanden")
                 if chapter:
-                    output.append(f", aber es sind {len(chapter_dict)} Kapiteleinträge im Album getaggt.</p>")
+                    output.append(f", aber es sind {len(chapter_dict)} Kapiteleinträge im Album getaggt:")
+                    for key, (text, start, end, timefmt) in chapter_dict.items():
+                        output.append(f"<br>{key}: {text} [{timefmt}]")
+                    output.append("</p>")
                 else:
                     output.append(".</p>")
                 chp_empty += 1

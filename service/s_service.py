@@ -164,7 +164,7 @@ def doUpload(albumid=None):
                         tools.setMp3Info(temp_target, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_supporter, frm_main_team, teamlogo, rc_code['last_id']), clear_chaps=True)
                 if isChapter:
                     goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
-                    audioname = rc_chp['track'] + "_" + audioname
+                    audioname = rc_chp['track'] + "-" + audioname
                 else:
                     goto = url_for("bx_s_start.s_album")
                 if os.path.exists(temp_target):
@@ -552,6 +552,37 @@ def export_media_access():
         abort(500)
 
 
+@bp.route("/Export-Journal", methods=['GET'])
+def export_journal():
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
+        abort(403)
+
+    if "authcode" not in session or not getLogin(session["authcode"])['status']:
+        abort(403)
+    
+    ts = current_app.config["TS"]
+
+    conf = Configure("Norderstedter Hörzeitung - Export Journal", request, current_app)
+    conf.initlogin(session['dbdata'])
+
+    rc_code = db_collect("qy_journal.sql")
+    if rc_code['status'] == 'ERR':
+        abort(500)
+    output = []
+    result_list = rc_code['result_list']
+    result_keys = result_list[0].keys()
+    output.append("\t".join(result_keys))
+    last_title = ""
+    for row in result_list:
+        if last_title != row['Album_Titel']:
+            output.append("\n")
+            last_title = row['Album_Titel']
+        output.append("\t".join(row.values()))
+    return send_response("\n".join(output), "Liste_Album_und_Kapitel.csv")
+
+
 def submit_album(form_data):
     rc_code = {"submit_status":"OK", "last_id":"(Neu)", "last_mode":"(none)"}
     try:
@@ -712,3 +743,40 @@ def submit_chapter(form_data):
         rc_code["err_msg"] = f"Allgemeiner Programm-Fehler: {type};{value}"
 
     return rc_code
+
+
+def db_collect(sql_file):
+    rc_code = {'status':'OK'}
+    try:
+        db = get_db()
+        if not db:
+            raise mariadb.PoolError()
+        with open(current_app.root_path + '/sql/' + sql_file, 'r') as sql_cmdfile:
+            sql_cmd = sql_cmdfile.read()
+        cur = db.cursor(dictionary=True)
+        cur.execute(sql_cmd)
+        rc_code['result_list'] = cur.fetchall()
+        cur.close()
+        db.close()
+    except mariadb.PoolError as err:
+        current_app.logger.error("Pool-Fehler: %s/db_collect/%s", bp.name, err)
+        rc_code['status'] = 'ERR'
+    except mariadb.Error as err:
+        db.close()
+        current_app.logger.error("Datenbank-Fehler: %s/db_collect/%s", bp.name, err)
+        rc_code['status'] = 'ERR'
+
+    return rc_code
+
+
+def send_response(output, file_name):
+    resp = make_response(output)
+    resp.content_encoding = "UTF-8"
+    resp.automatically_set_content_length = True
+    resp.mimetype = "text/csv"
+    resp.default_mimetype = "text/csv"
+    resp.access_control_max_age = 0
+    resp.headers['Content-Disposition']=f'attachment; filename="{file_name}"'
+    resp.headers['Cache-Control']='no-cache'
+    resp.headers['Pragma']='no-cache'
+    return resp
