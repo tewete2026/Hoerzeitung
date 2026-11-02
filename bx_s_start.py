@@ -270,7 +270,7 @@ def feed_rss(auth_code):
                             size=episode["length"], 
                             type="audio/mpeg")
         pod_ep.media.populate_duration_from(episode["rawname"])
-        for cname, (titel, start) in episode['chapter_dict'].items():
+        for cname, (titel, start, end, start_timefmt, end_timefmt) in episode['chapter_dict'].items():
             pod_ep.add_chapter(titel, start/1000)
         pod_ep.position = position
         position += 1

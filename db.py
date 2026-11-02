@@ -67,9 +67,9 @@ class Configure:
         rolls = ["Hörer", "Vorleser", "Redakteur", "Admin", "Super-Admin"]
         self.credits.update({'pnr': dbdata['pnr']})
         self.credits.update({'guest': dbdata['guest']})
-        seclevel = dbdata['seclevel']
-        self.credits.update({'seclevel': seclevel})
-        roll = rolls[seclevel]
+        self.seclevel = dbdata['seclevel']
+        self.credits.update({'seclevel': self.seclevel})
+        roll = rolls[self.seclevel]
         if dbdata['guest']: roll = "Gast"
         self.credits.update({'seclevel_text': roll})
     def append(self, key:str, value:str):
@@ -78,6 +78,9 @@ class Configure:
         return self.map.get(key)
     def has(self, key:str) -> bool:
         valid = self.map.get(key) is not None
+        return valid
+    def isSuperadmin(self) -> bool:
+        valid:bool = self.seclevel == 4
         return valid
     def haserror(self, key:str) -> bool:
         valid = self.error.get(key) is not None

@@ -185,9 +185,18 @@
             <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="{{ url_for('s_service.export_last_login') }}">Letzter Login</a></li>
               <li><a class="dropdown-item" href="{{ url_for('s_service.export_media_access') }}">Medien-Zugriffe</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('s_service.export_journal') }}">Album/Kapitel-Journal</a></li>
             </ul>
           </li>
         </ul>
+        {% if conf.isSuperadmin() %}<ul class="navbar-nav mb-2 mb-lg-0">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">Super Admin</a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ url_for('srv_tool.init_tagging') }}" target="_blank">Init-Tagging</a></li>
+            </ul>
+          </li>
+        </ul>{% endif %}
         <a class="py-2 ms-auto link-body-emphasis text-decoration-none nav-link" title="Seite neu laden" href="#" id="btn-arrow-repeat"><svg class="bi me-2 opacity-100" width="1.0em" height="1.0em"><use href="#arrow-clockwise"></use></svg></a>
         <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Abmelden" href="{{ url_for('bx_s_start.s_logout') }}"><svg class="bi me-2 opacity-100" width="1.0em" height="1.0em"><use href="#box-arrow-right"></use></svg></a>
       </div>

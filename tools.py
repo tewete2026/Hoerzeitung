@@ -16,7 +16,8 @@ def getMP3Info(rawname:str):
     audio = MP3(rawname)
     chapter_dict = {}
     image_dict = {}
-    description = title = albumid = track = "---"
+    description = title = ""
+    albumid = track = "0"
     tlen = 0.0
     current_app.logger.debug(rawname)
     for key in audio.keys():
@@ -33,7 +34,7 @@ def getMP3Info(rawname:str):
             for elem in cont.child_element_ids:
                 chap_key = 'CHAP:' + elem
                 chap = audio.get(chap_key)
-                chapter_dict.update({chap.element_id:(chap.sub_frames['TIT2'].text[0], chap.start_time, chap.end_time, getTimeFormat(chap.start_time/1000))})
+                chapter_dict.update({chap.element_id:(chap.sub_frames['TIT2'].text[0], chap.start_time, chap.end_time, getTimeFormat(chap.start_time/1000), getTimeFormat(chap.end_time/1000))})
         elif key[:5] == 'CHAP:':
             current_app.logger.debug("element_id=%s, start=%s, end=%s", cont.element_id, cont.start_time, cont.end_time)
             for sub in cont.sub_frames:
@@ -76,8 +77,8 @@ def getMP3Info(rawname:str):
     size = os.stat(rawname).st_size
     chapter = ""
     counter = 1
-    for key, (text, start, end, timefmt) in chapter_dict.items():
-        chapter += "{0:02}. {1} [{2}]<br>".format(counter, text, timefmt)
+    for key, (text, start, end, start_timefmt, end_timefmt) in chapter_dict.items():
+        chapter += "{0:02}. {1} [{2}-{3}]<br>".format(counter, text, start_timefmt, end_timefmt)
         counter += 1
     published = ts.fromtimestamp(os.stat(rawname).st_mtime)
     return (title, description, published, size, tlen, chapter, chapter_dict, image_dict, albumid, track)

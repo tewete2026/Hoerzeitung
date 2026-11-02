@@ -53,7 +53,7 @@
                 <label for="frm-main-allowed">Lizenz</label>
                 <select class="form-select" id="frm-main-allowed" name="frm-main-allowed" required>
                   <option value="-1">Bitte wählen...</option>{% for text in conf.get('lizenz') %}
-                  <option value="{{ text[1] }}">{{ text[0] }}</option>{% endfor %}
+                  <option value="{{ text[0] }}">{{ text[1] }}</option>{% endfor %}
                 </select>
                 <div class="invalid-feedback"></div>
               </div>

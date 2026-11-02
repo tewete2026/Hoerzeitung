@@ -205,10 +205,9 @@ def doUpload(albumid=None):
                 vorleser.append(line.rstrip())
             conf.append("vorleser", sorted(vorleser))
         with open(current_app.instance_path + "/data/Lizenz.txt", mode='r') as text_file:
-            ind = 1
             for line in text_file:
-                lizenz.append((line.rstrip(), ind))
-                ind += 1
+                vl = line.rstrip().split(';')
+                lizenz.append((vl[0], vl[1]))
             conf.append("lizenz", sorted(lizenz))
         conf.append("title", albumdata['title'])
         html = "service/confuploadChapter.html"
@@ -567,8 +566,14 @@ def export_journal():
     conf = Configure("Norderstedter Hörzeitung - Export Journal", request, current_app)
     conf.initlogin(session['dbdata'])
 
+    lizenz = {}
+    with open(current_app.instance_path + "/data/Lizenz.txt", mode='r') as text_file:
+        for line in text_file:
+            vl = line.rstrip().split(';')
+            lizenz.update({vl[0]:vl[1]})
     rc_code = db_collect("qy_journal.sql")
     if rc_code['status'] == 'ERR':
+        g.errors.append(rc_code['errmsg'])
         abort(500)
     output = []
     result_list = rc_code['result_list']
@@ -576,10 +581,17 @@ def export_journal():
     output.append("\t".join(result_keys))
     last_title = ""
     for row in result_list:
+        if row['Lizenz'] is not None:
+            if row['Lizenz'] in lizenz: row['Lizenz'] = lizenz[row['Lizenz']]
+            else: row['Lizenz'] = ""
         if last_title != row['Album_Titel']:
             output.append("\n")
             last_title = row['Album_Titel']
-        output.append("\t".join(row.values()))
+        row_val = []
+        for v in row.values():
+            if v is None: row_val.append("")
+            else: row_val.append(v)
+        output.append("\t".join(row_val))
     return send_response("\n".join(output), "Liste_Album_und_Kapitel.csv")
 
 
@@ -761,10 +773,12 @@ def db_collect(sql_file):
     except mariadb.PoolError as err:
         current_app.logger.error("Pool-Fehler: %s/db_collect/%s", bp.name, err)
         rc_code['status'] = 'ERR'
+        rc_code['errmsg'] = err.args[0]
     except mariadb.Error as err:
         db.close()
         current_app.logger.error("Datenbank-Fehler: %s/db_collect/%s", bp.name, err)
         rc_code['status'] = 'ERR'
+        rc_code['errmsg'] = err.args[0]
 
     return rc_code
 

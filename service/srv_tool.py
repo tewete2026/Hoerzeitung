@@ -230,7 +230,7 @@ def init_tagging():
     for element in content:
         rawname = f"{full_dir}/{element}"
         if os.path.isdir(rawname) or not element.endswith(".mp3"): continue
-        (alb_title, description, alb_published, size, alb_tlen, chapter, chapter_dict, image_dict, notused, notused) = tools.getMP3Info(rawname)
+        (alb_title, description, alb_published, notused, alb_tlen, chapter, chapter_dict, notused, notused, notused) = tools.getMP3Info(rawname)
         mtime = os.stat(rawname).st_mtime
         published = ts.fromtimestamp(mtime)
         duration = tools.getTimeFormat(alb_tlen/1000)
@@ -239,7 +239,7 @@ def init_tagging():
         cur.execute("SELECT team,supporter FROM tReference WHERE cd=?", (alb_title,))
         refalbum = cur.fetchone()
         if cur.rowcount <= 0:
-            refalbum = {'team':0,'supporter':'---'}
+            refalbum = {'team':0,'supporter':''}
             ref_err += 1
         # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration
         rc_album = submit_album((session['dbdata']['seclevel'], session['dbdata']['pnr'], alb_title, refalbum['supporter'], description, element, published, refalbum['team'], duration))
@@ -262,7 +262,7 @@ def init_tagging():
                 for entry in dircontent:
                     entryname = f"{dirname}/{entry}"
                     if os.path.isdir(entryname) or not entry.endswith(".mp3"): continue
-                    (entry_title, description, entry_published, size, entry_tlen, notused, chapter_dict, image_dict, notused, entry_track) = tools.getMP3Info(entryname)
+                    (entry_title, description, entry_published, notused, entry_tlen, notused, notused, notused, notused, entry_track) = tools.getMP3Info(entryname)
                     mtime = os.stat(entryname).st_mtime
                     published = ts.fromtimestamp(mtime)
                     duration = tools.getTimeFormat(entry_tlen/1000)
@@ -271,7 +271,7 @@ def init_tagging():
                     cur.execute("SELECT cd,team,track,title,DATE_FORMAT(DATE(sourceDate),'%Y-%m-%d') as sourceDate,author,source,reader,allowed,supporter,DATE_FORMAT(DATE(pubDate),'%Y-%m-%d') as pubDate FROM tReference WHERE cd=? && track=?", (alb_title, step))
                     refchapter = cur.fetchone()
                     if cur.rowcount <= 0:
-                        chp_author = chp_source = chp_reader = chp_title = chp_track = "---"
+                        chp_author = chp_source = chp_reader = chp_title = chp_track = ""
                         chp_sourcedate = "0000-00-00"
                         chp_pubdate = "0000-00-00"
                         chp_allowed = 0
@@ -285,7 +285,7 @@ def init_tagging():
                         chp_source = refchapter['source']
                         chp_reader = refchapter['reader']
                         chp_allowed = refchapter['allowed']
-                    if chp_title != '---': title = chp_title
+                    if chp_title: title = chp_title
                     else: title = entry_title
                     # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track
                     rc_chapter = submit_chapter((albumid, session['dbdata']['seclevel'], session['dbdata']['pnr'], title, chp_author, chp_source, chp_reader, description, entry, duration, published, chp_sourcedate, chp_allowed, step))
@@ -313,6 +313,11 @@ def init_tagging():
                         audio = ID3(entryname)
                         audio.add(TIT2(text=[tit2_title], encoding=3)) # Titel
                         audio.add(TRCK(text=[str(step)], encoding=3)) # Track
+                        audio.add(TXXX(desc="Author", text=[chp_author], encoding=3)) # Autor
+                        audio.add(TXXX(desc="License", text=[chp_source], encoding=3)) # Urheber
+                        audio.add(TXXX(desc="Reader", text=[chp_reader], encoding=3)) # Vorleser
+                        audio.add(TXXX(desc="LicenseAllowed", text=[chp_allowed], encoding=3)) # Vorleser
+                        audio.add(TXXX(desc="SourceDate", text=[chp_sourcedate], encoding=3)) # Veröffentlichungsdatum der Quelle
                         audio.add(TXXX(desc="ChapterId", text=[rc_chapter['last_id']], encoding=3)) # Chapter-ID
                         audio.add(TXXX(desc="AlbumId", text=[albumid], encoding=3)) # Album-ID
                         audio.save()
@@ -328,8 +333,8 @@ def init_tagging():
                 output.append(f"<p>Kein Kapiteleintrag <em>{key}</em> im Verzeichnis für dieses Album vorhanden")
                 if chapter:
                     output.append(f", aber es sind {len(chapter_dict)} Kapiteleinträge im Album getaggt:")
-                    for key, (text, start, end, timefmt) in chapter_dict.items():
-                        output.append(f"<br>{key}: {text} [{timefmt}]")
+                    for key, (text, start, end, start_timefmt, end_timefmt) in chapter_dict.items():
+                        output.append(f"<br>{key}: {text} [{start_timefmt}-{end_timefmt}]")
                     output.append("</p>")
                 else:
                     output.append(".</p>")
