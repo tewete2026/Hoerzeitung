@@ -33,3 +33,7 @@ a svg {
 #cover-images-select.list-group {
     padding-left: inherit;
 }
+
+.chapter-link.dropdown-toggle::after {
+    margin-left: -0.4em;
+}

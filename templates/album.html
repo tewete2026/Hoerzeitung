@@ -112,9 +112,18 @@
               {% else %}<a href="{{ url_for('bx_s_start.s_episodes', subdir=row['subdir']) }}" title="Zu den Kapiteln gehen">{% endif %}
                 <svg class="bi me-2 opacity-100" width="1.6em" height="1.6em"><use href="#chevron-double-down"></use></svg>
               </a>{% else %}{% if row['albumid'] != '0' %}
-              <a href="{{ url_for('s_service.confuploadChapter', albumid=row['albumid']) }}" title="Neue Kapitel erstellen">
-                <svg class="bi me-2 opacity-100" width="1.6em" height="1.6em"><use href="#plus-lg"></use></svg>
-              </a>{% endif %}{% endif %}
+              <ul class="navbar-nav mb-2 mb-lg-0">
+                <li class="nav-item dropdown">
+                  <a class="nav-link chapter-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                    <svg class="bi opacity-100" width="1.6em" height="1.6em"><use href="#plus-lg"></use></svg>
+                  </a>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('s_service.confuploadAudacity', albumid=row['albumid']) }}">Kapitel mit Audacity-Textmarken erstellen</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('s_service.confuploadChapter', albumid=row['albumid']) }}">Kapitel mit Album-Kapiteln erstellen</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('s_service.confuploadChapter', albumid=row['albumid']) }}">Kapitel manuell erstellen</a></li>
+                  </ul>
+                </li>
+              </ul>{% endif %}{% endif %}
             </td>
           </tr>
           <tr class="d-none"><td colspan="5" aria-details="{{ row['title'] }}">{{ row['description'] }}</td></tr>

@@ -1,0 +1,28 @@
+{% extends "base_s_form.html" %}
+{% block content %}
+<div class="container">
+  <main>
+    <div class="py-3 text-center">
+      <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='Logo_Title_black_200.png') }}" alt="Logo_Title_black_200">
+      <h2>Hochladen Audacity-Textmarkendatei zum Album <em class="small">{{ conf.get('title') }}</em></h2>
+    </div>
+    <div class="row g-4">
+      <form class="needs-validation" id="frm-main-upload-audacity" novalidate autocomplete="off" method="post" enctype="multipart/form-data">
+        <div class="row g-3">
+          <fieldset id="frm-main-set-base" name="frm-main-set-base">
+            <div class="ms-2 pb-1" style="width: 98%;">
+              <label for="frm-main-file">Audacity-Textmarken-Datei zum Hochladen auswählen</label>
+              <input class="form-control" type="file" accept=".txt" name="frm-main-file" id="frm-main-file" aria-label="Datei wählen" required>
+              <div class="invalid-feedback"></div>
+              {% if conf.haserror('audacity-len') %}<div class="alert alert-danger" role="alert">{{ conf.error['audacity-len'] }}</div>{% endif %}
+            </div>
+          </fieldset>
+        </div>
+        <div class="py-1 text-center">
+          <button class="w-50 btn btn-primary btn-lg mt-3 mb-2" id="btn-submit" type="submit">Hochladen Ausführen</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+{% endblock %}

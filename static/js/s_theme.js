@@ -20,6 +20,7 @@ window.addEventListener('load', () => {
     const login_form = this.document.getElementById('login-form');
     const frm_main_upload = this.document.getElementById('frm-main-upload');
     const frm_main_upload_chapter = this.document.getElementById('frm-main-upload-chapter');
+    const frm_main_upload_audacity = this.document.getElementById('frm-main-upload-audacity');
     const frm_main_set_image = this.document.getElementById('frm-main-set-team');
     const frm_main_file = this.document.getElementById('frm-main-file');
     const frm_main_title = this.document.getElementById('frm-main-title');
@@ -249,6 +250,22 @@ window.addEventListener('load', () => {
                 elem.classList.remove("is-invalid","is-valid");
                 if ((["frm-main-datum", "frm-main-title", "frm-main-file", "frm-main-author", "frm-main-source-date"].includes(elem.name) && !elem.value)
                     || ["frm-main-license", "frm-main-reader", "frm-main-allowed"].includes(elem.name) && elem.value == "-1") {
+                    elem.nextElementSibling.innerText = "Die Eingabe ist erforderlich.";
+                    elem.classList.add("is-invalid");
+                    is_error = true;
+                }
+            }
+            if (is_error) event.preventDefault();
+        })
+    }
+
+    if (frm_main_upload_audacity) {
+        frm_main_upload_audacity.addEventListener('submit', event => {
+            let is_error = false;
+            for(const elem of frm_main_upload_audacity.elements) {
+                if (!["INPUT", "TEXTAREA", "SELECT"].includes(elem.tagName)) continue;
+                elem.classList.remove("is-invalid","is-valid");
+                if ((["frm-main-file"].includes(elem.name) && !elem.value)) {
                     elem.nextElementSibling.innerText = "Die Eingabe ist erforderlich.";
                     elem.classList.add("is-invalid");
                     is_error = true;

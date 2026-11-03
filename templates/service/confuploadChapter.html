@@ -22,7 +22,7 @@
             </div>
             <div class="ms-2 mt-2 pb-1" style="width: 98%;">
               <label for="frm-main-title">Titel</label>
-              <input type="text" class="form-control" name="frm-main-title" id="frm-main-title" placeholder="...oder Titel der Quelle" required>
+              <input type="text" class="form-control" name="frm-main-title" id="frm-main-title" placeholder="...oder Titel der Quelle" {% if conf.has('audacity') %} value="{{ conf.get('audacity') }}" {% endif %} required>
               <div class="invalid-feedback"></div>
             </div>
             <div class="ms-2 mt-2 pb-1" style="width: 98%;">

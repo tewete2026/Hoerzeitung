@@ -1,4 +1,4 @@
-import mariadb, os, subprocess, sys, json
+import mariadb, os, subprocess, sys, json, re
 from flask import Blueprint
 from flask import current_app, session
 from flask import request, make_response
@@ -179,6 +179,14 @@ def doUpload(albumid=None):
                     os.remove(temp_target)
                 g.errors.append(rc_code['err_msg'])
                 abort(500)
+    else:
+        if 'audacity' in session:
+            try:
+                au_elem = session['audacity'].pop(0)
+                pre_title = au_elem['desc']
+                conf.append('audacity', pre_title)
+            except IndexError as err:
+                pass
 
     conf.initlogin(session['dbdata'])
     conf.append("show_navall", True)
@@ -413,6 +421,80 @@ def confcreate():
     conf.javascript.add({'level':level})
     
     return render_template("service/confcreate.html", conf=conf)
+
+
+@bp.route("/Upload-Audacity-Textmarken/<albumid>", methods=['GET', 'POST'])
+def confuploadAudacity(albumid):
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
+        abort(403)
+
+    if "authcode" not in session or not getLogin(session["authcode"])['status']:
+        abort(403)
+    
+    ts = current_app.config["TS"]
+    error = False
+    try:
+        db = get_db()
+        if not db:
+            raise mariadb.PoolError("Kein Databasepool vorhanden.")
+        cur = db.cursor(dictionary=True)
+        cur.execute("SELECT id,title,supporter,summary,media,publicationDate,team,duration FROM tJournal WHERE id=?", (albumid,))
+        albumdata = cur.fetchone()
+        if cur.rowcount <= 0:
+            current_app.logger.error("Datenbank SELECT FROM tJournal: %s/doUpload, Rowcount=%s", bp.name, cur.rowcount)
+            raise mariadb.DataError(f"Kein Datensatz für {albumid} gefunden.")
+        cur.close()
+        db.close()
+    except mariadb.Error as err:
+        if cur: cur.close()
+        if db: db.close()
+        current_app.logger.error("Datenbank-Fehler: %s/doUpload/%s", bp.name, err)
+        g.errors.append(err.args[0])
+        abort(500)
+    
+    if request.method == "POST":
+        form_data = request.form
+        post_request = True
+    
+    conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
+    conf.initlogin(session['dbdata'])
+    conf.append("title", albumdata['title'])
+    conf.append("show_navall", True)
+
+    if session['dbdata']['seclevel'] > 1:
+        conf.append("show_navtop", True)
+    
+    if request.method == "POST":
+        form_data = request.form
+        file = request.files['frm-main-file']
+        filename = secure_filename(file.filename)
+        pnr = session['dbdata']['pnr']
+        seclevel = session['dbdata']['seclevel']
+        audacity = []
+        if len(filename) > 0: 
+            temp_name = current_app.instance_path + "/upload/" + filename
+            file.save(temp_name)
+            with open(temp_name, mode='r') as marker_file:
+                for line in marker_file:
+                    line_arr = line.strip().split('\t')
+                    if len(line_arr) != 3 or re.fullmatch(r'^\d+\.\d+', line_arr[0]) is None or re.fullmatch(r'^\d+\.\d+', line_arr[1]) is None:
+                        conf.error['audacity-len'] = "Die hochgeladene Datei hat kein korrektes Format."
+                        break
+                    else:
+                        au_line = {}
+                        au_line['start'] = line_arr[0]
+                        au_line['ende'] = line_arr[1]
+                        au_line['desc'] = line_arr[2]
+                        audacity.append(au_line)
+            if temp_name is not None and os.path.exists(temp_name):
+                os.remove(temp_name)
+            if len(audacity) > 0:
+                session['audacity'] = audacity
+                return redirect(url_for('s_service.confuploadChapter', albumid=albumid))
+
+    return render_template("service/confuploadAudacity.html", conf=conf)
 
 
 @bp.route("/Export-Liste-<level>", methods=['GET'])
