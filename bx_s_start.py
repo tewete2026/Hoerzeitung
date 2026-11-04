@@ -331,6 +331,11 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
 
     if 'drk-nhz-favorites' in request.cookies:
         raw_fav_cookie = request.cookies['drk-nhz-favorites']
+
+    if 'audacity' in session:
+        session.pop('audacity')
+    if 'taggedchap' in session:
+        session.pop('taggedchap')
     
     if "authcode" in session:
         rc_code = getLogin(session["authcode"], raw_fav_cookie)

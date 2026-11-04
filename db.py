@@ -232,7 +232,9 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
             key = element.split('.')[0].strip()
             dirname = f"{full_dir}/{key}"
             if os.path.isdir(dirname):
-                episode.update({"subdir":key})
+                dir_list = os.listdir(dirname)
+                if len(dir_list) > 0:
+                    episode.update({"subdir":key})
             audio_name = element
             if subdir is not None: 
                 audio_name = f"{subdir},{audio_name}"

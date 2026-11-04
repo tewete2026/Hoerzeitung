@@ -21,6 +21,7 @@ window.addEventListener('load', () => {
     const frm_main_upload = this.document.getElementById('frm-main-upload');
     const frm_main_upload_chapter = this.document.getElementById('frm-main-upload-chapter');
     const frm_main_upload_audacity = this.document.getElementById('frm-main-upload-audacity');
+    const frm_main_upload_taggedchap = this.document.getElementById('frm-main-upload-taggedchap');
     const frm_main_set_image = this.document.getElementById('frm-main-set-team');
     const frm_main_file = this.document.getElementById('frm-main-file');
     const frm_main_title = this.document.getElementById('frm-main-title');
@@ -216,6 +217,13 @@ window.addEventListener('load', () => {
 
     if (frm_main_upload) {
         frm_main_upload.addEventListener('submit', event => {
+            const submitter = event.submitter;
+            const iscancel = submitter.id == "btn-cancel";
+            if (iscancel) {
+                const cfield = frm_main_upload.elements.namedItem("frm-main-upload-cancel");
+                cfield.value = "on";
+                return;
+            }
             let is_error = false;
             let checked = false;
             for(const elem of frm_main_upload.elements) {
@@ -244,6 +252,13 @@ window.addEventListener('load', () => {
 
     if (frm_main_upload_chapter) {
         frm_main_upload_chapter.addEventListener('submit', event => {
+            const submitter = event.submitter;
+            const iscancel = submitter.id == "btn-cancel";
+            if (iscancel) {
+                const cfield = frm_main_upload_chapter.elements.namedItem("frm-main-upload-cancel");
+                cfield.value = "on";
+                return;
+            }
             let is_error = false;
             for(const elem of frm_main_upload_chapter.elements) {
                 if (!["INPUT", "TEXTAREA", "SELECT"].includes(elem.tagName)) continue;
@@ -261,6 +276,13 @@ window.addEventListener('load', () => {
 
     if (frm_main_upload_audacity) {
         frm_main_upload_audacity.addEventListener('submit', event => {
+            const submitter = event.submitter;
+            const iscancel = submitter.id == "btn-cancel";
+            if (iscancel) {
+                const cfield = frm_main_upload_audacity.elements.namedItem("frm-main-upload-cancel");
+                cfield.value = "on";
+                return;
+            }
             let is_error = false;
             for(const elem of frm_main_upload_audacity.elements) {
                 if (!["INPUT", "TEXTAREA", "SELECT"].includes(elem.tagName)) continue;
@@ -272,6 +294,18 @@ window.addEventListener('load', () => {
                 }
             }
             if (is_error) event.preventDefault();
+        })
+    }
+
+    if (frm_main_upload_taggedchap) {
+        frm_main_upload_taggedchap.addEventListener('submit', event => {
+            const submitter = event.submitter;
+            const iscancel = submitter.id == "btn-cancel";
+            if (iscancel) {
+                const cfield = frm_main_upload_taggedchap.elements.namedItem("frm-main-upload-cancel");
+                cfield.value = "on";
+                return;
+            }
         })
     }
     

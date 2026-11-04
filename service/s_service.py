@@ -13,7 +13,8 @@ from .. import version, tools
 bp = Blueprint("s_service", __name__, url_prefix="/S-Service")
 
 
-'''@bp.route("/Verwalten-Codes", methods=['GET', 'POST'])
+'''
+@bp.route("/Verwalten-Codes", methods=['GET', 'POST'])
 def confmanage():
     if current_app.config["NO_POOL_AVAILABLE"]:
         abort(500)
@@ -104,6 +105,18 @@ def doUpload(albumid=None):
     conf.append('datenow', ts.now_datelocal())
     
     if request.method == "POST":
+        if  request.form['frm-main-upload-cancel'] == 'on':
+            if isChapter:
+                filearr = albumdata['media'].rsplit('.')
+                mediabase = filearr[0]
+                dirname = current_app.instance_path + "/long/" + mediabase
+                if not os.path.isdir(dirname):
+                    os.mkdir(dirname)
+                return redirect(url_for("bx_s_start.s_episodes", subdir=mediabase))
+            else:
+                return redirect(url_for('bx_s_start.s_album'))
+
+    if request.method == "POST":
         form_data = request.form
         file = request.files['frm-main-file']
         filename = secure_filename(file.filename)
@@ -163,8 +176,21 @@ def doUpload(albumid=None):
                     if not skiptags:
                         tools.setMp3Info(temp_target, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_supporter, frm_main_team, teamlogo, rc_code['last_id']), clear_chaps=True)
                 if isChapter:
-                    goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
                     audioname = rc_chp['track'] + "-" + audioname
+                    if 'audacity' in session:
+                        try:
+                            session['audacity'].pop(0)
+                            goto = url_for("s_service.confuploadChapter", albumid=albumid)
+                        except IndexError as err:
+                            goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+                    elif 'taggedchap' in session:
+                        try:
+                            session['taggedchap'].pop(0)
+                            goto = url_for("s_service.confuploadChapter", albumid=albumid)
+                        except IndexError as err:
+                            goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+                    else:
+                        goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
                 else:
                     goto = url_for("bx_s_start.s_album")
                 if os.path.exists(temp_target):
@@ -181,12 +207,15 @@ def doUpload(albumid=None):
                 abort(500)
     else:
         if 'audacity' in session:
-            try:
-                au_elem = session['audacity'].pop(0)
-                pre_title = au_elem['desc']
-                conf.append('audacity', pre_title)
-            except IndexError as err:
-                pass
+            au_list = session['audacity']
+            if len(au_list) > 0:
+                pre_title = au_list[0]['desc']
+                conf.append('presettitle', pre_title)
+        elif 'taggedchap' in session:
+            chp_list = session['taggedchap']
+            if len(chp_list) > 0:
+                pre_title = chp_list[0]['desc']
+                conf.append('presettitle', pre_title)
 
     conf.initlogin(session['dbdata'])
     conf.append("show_navall", True)
@@ -423,6 +452,19 @@ def confcreate():
     return render_template("service/confcreate.html", conf=conf)
 
 
+@bp.route("/Upload-Album-Chapter/<albumid>", methods=['GET', 'POST'])
+def confuploadTaggedChap(albumid):
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
+        abort(403)
+
+    if "authcode" not in session or not getLogin(session["authcode"])['status']:
+        abort(403)
+    
+    return doUploadGuided('taggedchap', albumid)
+
+
 @bp.route("/Upload-Audacity-Textmarken/<albumid>", methods=['GET', 'POST'])
 def confuploadAudacity(albumid):
     if current_app.config["NO_POOL_AVAILABLE"]:
@@ -433,6 +475,10 @@ def confuploadAudacity(albumid):
     if "authcode" not in session or not getLogin(session["authcode"])['status']:
         abort(403)
     
+    return doUploadGuided('audacity', albumid)
+    
+
+def doUploadGuided(category, albumid):
     ts = current_app.config["TS"]
     error = False
     try:
@@ -454,10 +500,6 @@ def confuploadAudacity(albumid):
         g.errors.append(err.args[0])
         abort(500)
     
-    if request.method == "POST":
-        form_data = request.form
-        post_request = True
-    
     conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
     conf.initlogin(session['dbdata'])
     conf.append("title", albumdata['title'])
@@ -466,35 +508,64 @@ def confuploadAudacity(albumid):
     if session['dbdata']['seclevel'] > 1:
         conf.append("show_navtop", True)
     
-    if request.method == "POST":
-        form_data = request.form
-        file = request.files['frm-main-file']
-        filename = secure_filename(file.filename)
-        pnr = session['dbdata']['pnr']
-        seclevel = session['dbdata']['seclevel']
-        audacity = []
-        if len(filename) > 0: 
-            temp_name = current_app.instance_path + "/upload/" + filename
-            file.save(temp_name)
-            with open(temp_name, mode='r') as marker_file:
-                for line in marker_file:
-                    line_arr = line.strip().split('\t')
-                    if len(line_arr) != 3 or re.fullmatch(r'^\d+\.\d+', line_arr[0]) is None or re.fullmatch(r'^\d+\.\d+', line_arr[1]) is None:
-                        conf.error['audacity-len'] = "Die hochgeladene Datei hat kein korrektes Format."
-                        break
-                    else:
-                        au_line = {}
-                        au_line['start'] = line_arr[0]
-                        au_line['ende'] = line_arr[1]
-                        au_line['desc'] = line_arr[2]
-                        audacity.append(au_line)
-            if temp_name is not None and os.path.exists(temp_name):
-                os.remove(temp_name)
-            if len(audacity) > 0:
-                session['audacity'] = audacity
+    if category == 'audacity': 
+        html = 'confuploadAudacity'
+        if request.method == "POST":
+            if  request.form['frm-main-upload-cancel'] == 'on':
+                filearr = albumdata['media'].rsplit('.')
+                mediabase = filearr[0]
+                dirname = current_app.instance_path + "/long/" + mediabase
+                if not os.path.isdir(dirname):
+                    os.mkdir(dirname)
+                return redirect(url_for('bx_s_start.s_album'))
+            else:
+                file = request.files['frm-main-file']
+                filename = secure_filename(file.filename)
+                audacity = []
+                if len(filename) > 0: 
+                    temp_name = current_app.instance_path + "/upload/" + filename
+                    file.save(temp_name)
+                    with open(temp_name, mode='r') as marker_file:
+                        for line in marker_file:
+                            line_arr = line.strip().split('\t')
+                            if len(line_arr) != 3 or re.fullmatch(r'^\d+\.\d+', line_arr[0]) is None or re.fullmatch(r'^\d+\.\d+', line_arr[1]) is None:
+                                conf.error['audacity-len'] = "Die hochgeladene Datei hat kein korrektes Format."
+                                break
+                            else:
+                                au_line = {}
+                                au_line['start'] = line_arr[0]
+                                au_line['ende'] = line_arr[1]
+                                au_line['desc'] = line_arr[2]
+                                audacity.append(au_line)
+                    if temp_name is not None and os.path.exists(temp_name):
+                        os.remove(temp_name)
+                    if len(audacity) > 0:
+                        session['audacity'] = audacity
+                        return redirect(url_for('s_service.confuploadChapter', albumid=albumid))
+        
+    elif category == 'taggedchap': 
+        html = 'confuploadTaggedChap'
+        if request.method == "POST":
+            if  request.form['frm-main-upload-cancel'] == 'on':
+                filearr = albumdata['media'].rsplit('.')
+                mediabase = filearr[0]
+                dirname = current_app.instance_path + "/long/" + mediabase
+                if not os.path.isdir(dirname):
+                    os.mkdir(dirname)
+                return redirect(url_for('bx_s_start.s_episodes', subdir=mediabase))
+            else:
                 return redirect(url_for('s_service.confuploadChapter', albumid=albumid))
+        else:
+            rawname = current_app.instance_path + "/long/" + albumdata['media']
+            (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(rawname)
+            taggedchap = []
+            for key, (text, start, end, start_timefmt, end_timefmt) in chapter_dict.items():
+                taggedchap.append({'key':key, 'desc':text, 'start':start, 'end':end, 'start_timefmt':start_timefmt, 'end_timefmt':end_timefmt})
+            if len(taggedchap) > 0:
+                conf.append('taggedchap', taggedchap)
+                session['taggedchap'] = taggedchap
 
-    return render_template("service/confuploadAudacity.html", conf=conf)
+    return render_template(f"service/{html}.html", conf=conf)
 
 
 @bp.route("/Export-Liste-<level>", methods=['GET'])
