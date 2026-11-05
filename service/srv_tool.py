@@ -1,4 +1,4 @@
-import mariadb, os, random
+import mariadb, os, random, subprocess
 from flask import Blueprint
 from flask import current_app, session
 from flask import request
@@ -211,6 +211,10 @@ def init_tagging():
     if 'dbdata' not in session or session['dbdata']['seclevel'] < 4:
         abort(403)
 
+    target_path = current_app.instance_path + "/long/"
+    shell_path = current_app.root_path + '/static/service/shell/reorg_OrderChapter.sh'
+    subprocess.run([shell_path, target_path])
+
     ts = current_app.config["TS"]
     full_dir = current_app.instance_path + "/long"
     content = os.listdir(full_dir)
@@ -243,7 +247,7 @@ def init_tagging():
             ref_err += 1
         # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration
         rc_album = submit_album((session['dbdata']['seclevel'], session['dbdata']['pnr'], alb_title, refalbum['supporter'], description, element, published, refalbum['team'], duration))
-        output.append(f"<h4>Album: {alb_title}; Datum: {published}; ID3-Datum: {alb_published}; Dauer: {duration}; Techniker: {refalbum['supporter']}; Team: {refalbum['team']}")
+        output.append(f"<h4>Album: {alb_title}; Dateiname: {element}; Datum: {published}; ID3-Datum: {alb_published}; Dauer: {duration}; Techniker: {refalbum['supporter']}; Team: {refalbum['team']}")
         if rc_album["submit_status"] == "OK":
             albumid = rc_album['last_id']
             output.append(f"; Status: {rc_album["submit_status"]}; Album-ID:{albumid} </h4>")
@@ -305,7 +309,7 @@ def init_tagging():
                         err_style_pubtag = "style='font-weight:800;'"
                     else:
                         err_style_pubtag = "style='font-weight:100;'"
-                    output.append(f"<p><span {err_style_tit}>ID3-Titel: {entry_title.strip()}</span>; Datei-Datum: {published}; <span {err_style_pubtag}>ID3-Datum: {entry_published}</span>; <span {err_style_trk}>Step: {str(step)}; ID3-Track: {entry_track}</span>; Dauer: {duration} <br>\
+                    output.append(f"<p><span {err_style_tit}>ID3-Titel: {entry_title.strip()}</span>; Dateiname: {entry}; Datei-Datum: {published}; <span {err_style_pubtag}>ID3-Datum: {entry_published}</span>; <span {err_style_trk}>Step: {str(step)}; ID3-Track: {entry_track}</span>; Dauer: {duration} <br>\
                                     <span>Ref.-Titel: {chp_title}; <span {err_style_pub}>Ref.-Datum: {chp_pubdate}</span>; TitelNr: {chp_track}; Quelle: {chp_source}; Quelle-Datum: {chp_sourcedate}; Autor: {chp_author}; Lizenz: {chp_allowed}; Vorleser: {chp_reader}</span>")
                     if rc_chapter["submit_status"] == "OK":
                         output.append(f"; Status: {rc_chapter["submit_status"]}; Chapter-ID: {rc_chapter['last_id']}</p>")

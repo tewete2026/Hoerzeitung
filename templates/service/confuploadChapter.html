@@ -14,6 +14,7 @@
               <label for="frm-main-file">Audio-Datei zum Hochladen auswählen</label>
               <input class="form-control" type="file" accept="audio/*" name="frm-main-file" id="frm-main-file" aria-label="Datei wählen" required>
               <div class="invalid-feedback"></div>
+              {% if conf.haserror('db-error') %}<div class="alert alert-danger" role="alert">{{ conf.error['db-error'] }}</div>{% endif %}
             </div>
             <div class="col-sm-4 mt-2 pb-1" style="padding-right: calc(var(--bs-gutter-x) * .5);padding-left: calc(var(--bs-gutter-x) * .5);">
               <label for="frm-main-datum">Produktions Datum</label>
@@ -57,6 +58,10 @@
                 </select>
                 <div class="invalid-feedback"></div>
               </div>
+              {% if conf.has('chpid') %}<div class="col-sm-2 ms-3 mt-2 pb-1">
+                <label for="frm-main-chp-id">Kapitel-ID</label>
+                <input type="text" class="form-control" name="frm-main-chp-id" id="frm-main-chp-id" value="{{ conf.get('chpid') }}" readonly>
+              </div>{% endif %}
             </div>
             <div class="ms-2 mt-2 pb-1" style="width: 98%;">
               <label for="frm-main-reader">Vorleser/in</label>

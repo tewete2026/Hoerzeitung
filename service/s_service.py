@@ -103,9 +103,10 @@ def doUpload(albumid=None):
     conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
     conf.append('datetimenow', ts.now_local())
     conf.append('datenow', ts.now_datelocal())
-    
+
     if request.method == "POST":
-        if  request.form['frm-main-upload-cancel'] == 'on':
+        form_data = request.form
+        if  form_data['frm-main-upload-cancel'] == 'on':
             if isChapter:
                 filearr = albumdata['media'].rsplit('.')
                 mediabase = filearr[0]
@@ -115,14 +116,12 @@ def doUpload(albumid=None):
                 return redirect(url_for("bx_s_start.s_episodes", subdir=mediabase))
             else:
                 return redirect(url_for('bx_s_start.s_album'))
-
-    if request.method == "POST":
-        form_data = request.form
         file = request.files['frm-main-file']
         filename = secure_filename(file.filename)
         pnr = session['dbdata']['pnr']
         seclevel = session['dbdata']['seclevel']
         if len(filename) > 0: 
+            frm_main_chpid = form_data.get("frm-main-chp-id")
             frm_main_datum = form_data.get("frm-main-datum")
             frm_main_title = form_data.get("frm-main-title")
             frm_main_summary = form_data.get("frm-main-summary")
@@ -160,7 +159,10 @@ def doUpload(albumid=None):
             (size, duration) = tools.getMpegInfo(temp_target)
             if isChapter:
                 (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(album_path)
-                next_track = "{0:02.0f}".format(len(chapter_dict.values()) + 1)
+                if frm_main_chpid is None:
+                    next_track = "{0:02.0f}".format(len(chapter_dict.values()) + 1)
+                else:
+                    next_track = frm_main_chpid.lstrip('chp')
                 # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track
                 rc_code = submit_chapter((albumid, seclevel, pnr, frm_main_title, frm_main_author, frm_main_license, frm_main_reader, frm_main_summary, audioname, duration, frm_main_datum, frm_main_source_date, frm_main_allowed, next_track))
             else:
@@ -170,7 +172,7 @@ def doUpload(albumid=None):
                 if isChapter:
                     basemedia = current_app.instance_path + "/long/" + albumdata['media']
                     teamlogo = current_app.instance_path + '/' + teams[str(albumdata['team'])][1]
-                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, frm_main_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date, albumdata['title']), clear_chaps=True)
+                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, frm_main_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date, albumdata['title']), clear_chaps=True, ctoc_id=frm_main_chpid)
                 else:
                     teamlogo = current_app.instance_path + '/' + teams[frm_main_team][1]
                     if not skiptags:
@@ -198,6 +200,12 @@ def doUpload(albumid=None):
                 if temp_name is not None and os.path.exists(temp_name):
                     os.remove(temp_name)
                 return redirect(goto)
+            elif rc_code["submit_status"] == "DBL":
+                conf.error['db-error'] = rc_code["err_msg"]
+                if temp_name is not None and os.path.exists(temp_name):
+                    os.remove(temp_name)
+                if temp_target is not None and os.path.exists(temp_target):
+                    os.remove(temp_target)
             else:
                 if temp_name is not None and os.path.exists(temp_name):
                     os.remove(temp_name)
@@ -206,16 +214,17 @@ def doUpload(albumid=None):
                 g.errors.append(rc_code['err_msg'])
                 abort(500)
     else:
-        if 'audacity' in session:
-            au_list = session['audacity']
-            if len(au_list) > 0:
-                pre_title = au_list[0]['desc']
-                conf.append('presettitle', pre_title)
-        elif 'taggedchap' in session:
-            chp_list = session['taggedchap']
-            if len(chp_list) > 0:
-                pre_title = chp_list[0]['desc']
-                conf.append('presettitle', pre_title)
+        if isChapter:
+            if 'audacity' in session:
+                au_list = session['audacity']
+                if len(au_list) > 0:
+                    pre_title = au_list[0]['desc']
+                    conf.append('presettitle', pre_title)
+            elif 'taggedchap' in session:
+                chp_list = session['taggedchap']
+                if len(chp_list) > 0:
+                    conf.append('presettitle', chp_list[0]['desc'])
+                    conf.append("chpid", chp_list[0]['key'])
 
     conf.initlogin(session['dbdata'])
     conf.append("show_navall", True)
@@ -890,7 +899,7 @@ def submit_chapter(form_data):
             rc_code["submit_status"] = "DBL"
             current_app.logger.error("Datenbank-Integrität Eintrag: %s/submit-chapter/%s", bp.name, err)
             rc_code["DB_Error"] = err
-            rc_code["err_msg"] = f"Datenbank hat Integrität verletzt Eintrag: {err}"
+            rc_code["err_msg"] = f"Datenbank-Integrität verletzt Eintrag: {err}"
             db.rollback()
             db.close()
             current_app.logger.warning("Datenbank-Rollback-Integrität Eintrag")
