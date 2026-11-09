@@ -8,6 +8,7 @@
     </div>
     <div class="row g-4">
       <form class="needs-validation" id="frm-main-upload" novalidate autocomplete="off" method="post" enctype="multipart/form-data">
+        <input type="hidden" value="off" name="frm-main-upload-cancel">
         <div class="row g-3">
           <fieldset id="frm-main-set-base" name="frm-main-set-base">
             <div class="ms-2 pb-1" style="width: 98%;">
@@ -55,11 +56,8 @@
           </div>{% endif %}
         </div>
         <div class="py-1 text-center">
-          <button class="w-50 btn btn-primary btn-lg mt-3 mb-2" id="btn-submit" type="submit">Hochladen Ausführen</button>
-        </div>
-        <div class="py-1 text-center">
-          <input type="hidden" value="off" name="frm-main-upload-cancel">
-          <button class="w-25 btn btn-secondary btn-lg mt-3 mb-2" id="btn-cancel" type="submit">Abbrechen</button>
+          <button class="w-auto btn btn-primary btn-lg mt-3 mb-2" id="btn-submit" type="submit">Hochladen Ausführen</button>
+          <button class="w-25 ms-3 btn btn-secondary btn-lg mt-3 mb-2" id="btn-cancel" type="submit">Abbrechen</button>
         </div>
       </form>
     </div>

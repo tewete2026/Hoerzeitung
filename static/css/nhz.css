@@ -1,6 +1,16 @@
+body {
+    font-family: Open Sans,Arial,Helvetica,sans-serif;
+}
+
 .btn-primary {
-  --bs-btn-bg:#b90000;
-  --bs-btn-border-color:#b90000;
+  --bs-btn-bg:rgb(230,0,5);
+  --bs-btn-border-color:(230,0,5);
+  --bs-btn-hover-bg: rgb(165,30,15);
+  --bs-btn-hover-border-color: rgb(165,30,15);
+}
+
+.btn-secondary {
+  --bs-btn-bg: rgb(0,45,85);
 }
 
 .get-touch h2 {
@@ -23,7 +33,7 @@ audio {
 }
 
 a svg {
-    color: red;
+    color: rgb(228,100,80);
 }
 
 #cover-images-select .list-group-item {

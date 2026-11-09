@@ -8,6 +8,8 @@
     </div>
     <div class="row g-4">
       <form class="needs-validation" id="frm-main-upload-chapter" novalidate autocomplete="off" method="post" enctype="multipart/form-data">
+        <input type="hidden" value="off" name="frm-main-upload-cancel">
+        {% if conf.has('step') %}<input type="hidden" value="{{ conf.get('step') }}" name="frm-main-step">{% endif %}
         <div class="row g-3">
           <fieldset id="frm-main-set-base" name="frm-main-set-base">
             <div class="ms-2 pb-1" style="width: 98%;">
@@ -22,7 +24,7 @@
               <div class="invalid-feedback"></div>
             </div>
             <div class="ms-2 mt-2 pb-1" style="width: 98%;">
-              <label for="frm-main-title">Titel</label>
+              <label for="frm-main-title">Titel{% if conf.has('presettitle') %} <span class="ms-2 text-secondary small">({{ conf.get('presettitle') }})</span>{% endif %}</label>
               <input type="text" class="form-control" name="frm-main-title" id="frm-main-title" placeholder="...oder Titel der Quelle" {% if conf.has('presettitle') %} value="{{ conf.get('presettitle') }}" {% endif %} required>
               <div class="invalid-feedback"></div>
             </div>
@@ -58,7 +60,11 @@
                 </select>
                 <div class="invalid-feedback"></div>
               </div>
-              {% if conf.has('chpid') %}<div class="col-sm-2 ms-3 mt-2 pb-1">
+              {% if conf.has('page') %}<div class="col-sm-1 ms-3 mt-2 pb-1">
+                <label for="frm-main-page">Folge-Nr.</label>
+                <input type="text" class="form-control" name="frm-main-page" id="frm-main-page" value="{{ conf.get('page') }}" readonly>
+              </div>{% endif %}
+              {% if conf.has('chpid') %}<div class="col-sm-1 ms-3 mt-2 pb-1">
                 <label for="frm-main-chp-id">Kapitel-ID</label>
                 <input type="text" class="form-control" name="frm-main-chp-id" id="frm-main-chp-id" value="{{ conf.get('chpid') }}" readonly>
               </div>{% endif %}
@@ -74,11 +80,8 @@
           </fieldset>
         </div>
         <div class="py-1 text-center">
-          <button class="w-50 btn btn-primary btn-lg mt-3 mb-2" id="btn-submit" type="submit">Hochladen Ausführen</button>
-        </div>
-        <div class="py-1 text-center">
-          <input type="hidden" value="off" name="frm-main-upload-cancel">
-          <button class="w-25 btn btn-secondary btn-lg mt-3 mb-2" id="btn-cancel" type="submit">Abbrechen</button>
+          <button class="w-auto btn btn-primary btn-lg mt-3 mb-2" id="btn-submit" type="submit">Hochladen Ausführen</button>
+          <button class="w-25 ms-3 btn btn-secondary btn-lg mt-3 mb-2" id="btn-cancel" type="submit">Abbrechen</button>
         </div>
       </form>
     </div>

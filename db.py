@@ -233,7 +233,8 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
             dirname = f"{full_dir}/{key}"
             if os.path.isdir(dirname):
                 dir_list = os.listdir(dirname)
-                if len(dir_list) > 0:
+                file_names = [fn for fn in os.listdir(dirname) if fn.endswith('.mp3')]
+                if len(file_names) > 0:
                     episode.update({"subdir":key})
             audio_name = element
             if subdir is not None: 

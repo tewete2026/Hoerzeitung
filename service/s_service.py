@@ -122,6 +122,7 @@ def doUpload(albumid=None):
         seclevel = session['dbdata']['seclevel']
         if len(filename) > 0: 
             frm_main_chpid = form_data.get("frm-main-chp-id")
+            frm_main_step = form_data.get("frm-main-step")
             frm_main_datum = form_data.get("frm-main-datum")
             frm_main_title = form_data.get("frm-main-title")
             frm_main_summary = form_data.get("frm-main-summary")
@@ -159,10 +160,12 @@ def doUpload(albumid=None):
             (size, duration) = tools.getMpegInfo(temp_target)
             if isChapter:
                 (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(album_path)
-                if frm_main_chpid is None:
+                if frm_main_step is None:
                     next_track = "{0:02.0f}".format(len(chapter_dict.values()) + 1)
                 else:
-                    next_track = frm_main_chpid.lstrip('chp')
+                    next_track = "{0:02.0f}".format(int(frm_main_step))
+                    if frm_main_chpid is None:
+                        frm_main_chpid = "chp" + str(int(frm_main_step) - 1)
                 # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track
                 rc_code = submit_chapter((albumid, seclevel, pnr, frm_main_title, frm_main_author, frm_main_license, frm_main_reader, frm_main_summary, audioname, duration, frm_main_datum, frm_main_source_date, frm_main_allowed, next_track))
             else:
@@ -183,6 +186,8 @@ def doUpload(albumid=None):
                         try:
                             session['audacity'].pop(0)
                             goto = url_for("s_service.confuploadChapter", albumid=albumid)
+                            with open(dirname + "/" + mediabase + ".audatoc", mode='w') as auda_file:
+                                auda_file.write(json.dumps(session['audacity'], ensure_ascii=False))
                         except IndexError as err:
                             goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
                     elif 'taggedchap' in session:
@@ -218,13 +223,16 @@ def doUpload(albumid=None):
             if 'audacity' in session:
                 au_list = session['audacity']
                 if len(au_list) > 0:
-                    pre_title = au_list[0]['desc']
-                    conf.append('presettitle', pre_title)
+                    conf.append('presettitle', au_list[0]['desc'])
+                    conf.append("step", au_list[0]['step'])
+                    conf.append("page", f"{au_list[0]['step']} / {len(au_list)}")
             elif 'taggedchap' in session:
                 chp_list = session['taggedchap']
                 if len(chp_list) > 0:
                     conf.append('presettitle', chp_list[0]['desc'])
                     conf.append("chpid", chp_list[0]['key'])
+                    conf.append("step", chp_list[0]['step'])
+                    conf.append("page", f"{chp_list[0]['step']} / {len(chp_list)}")
 
     conf.initlogin(session['dbdata'])
     conf.append("show_navall", True)
@@ -519,14 +527,17 @@ def doUploadGuided(category, albumid):
     
     if category == 'audacity': 
         html = 'confuploadAudacity'
+        filearr = albumdata['media'].rsplit('.')
+        mediabase = filearr[0]
+        dirname = current_app.instance_path + "/long/" + mediabase
+        toc_file = dirname + "/" + mediabase + ".audatoc"
         if request.method == "POST":
             if  request.form['frm-main-upload-cancel'] == 'on':
-                filearr = albumdata['media'].rsplit('.')
-                mediabase = filearr[0]
-                dirname = current_app.instance_path + "/long/" + mediabase
                 if not os.path.isdir(dirname):
                     os.mkdir(dirname)
                 return redirect(url_for('bx_s_start.s_album'))
+            elif  request.form['frm-main-audacity-load'] == 'on':
+                return redirect(url_for('s_service.confuploadChapter', albumid=albumid))
             else:
                 file = request.files['frm-main-file']
                 filename = secure_filename(file.filename)
@@ -534,6 +545,7 @@ def doUploadGuided(category, albumid):
                 if len(filename) > 0: 
                     temp_name = current_app.instance_path + "/upload/" + filename
                     file.save(temp_name)
+                    step = 1
                     with open(temp_name, mode='r') as marker_file:
                         for line in marker_file:
                             line_arr = line.strip().split('\t')
@@ -542,34 +554,58 @@ def doUploadGuided(category, albumid):
                                 break
                             else:
                                 au_line = {}
+                                au_line['step'] = str(step)
                                 au_line['start'] = line_arr[0]
                                 au_line['ende'] = line_arr[1]
+                                au_line['start_timefmt'] = tools.getTimeFormat(float(line_arr[0]))
+                                au_line['end_timefmt'] = tools.getTimeFormat(float(line_arr[1]))
                                 au_line['desc'] = line_arr[2]
                                 audacity.append(au_line)
+                            step += 1
                     if temp_name is not None and os.path.exists(temp_name):
                         os.remove(temp_name)
                     if len(audacity) > 0:
                         session['audacity'] = audacity
-                        return redirect(url_for('s_service.confuploadChapter', albumid=albumid))
+                        conf.append('audacityload', audacity)
+                        if not os.path.isdir(dirname):
+                            os.mkdir(dirname)
+                        with open(toc_file, mode='w') as auda_file:
+                            auda_file.write(json.dumps(audacity, ensure_ascii=False))
+                        html = 'confuploadAudacityLoad'
+        else:
+            if os.path.exists(toc_file):
+                audacity = json.loads(toc_file)
+                session['audacity'] = audacity
+                html = 'confuploadAudacityLoad'
         
     elif category == 'taggedchap': 
         html = 'confuploadTaggedChap'
+        filearr = albumdata['media'].rsplit('.')
+        mediabase = filearr[0]
+        dirname = current_app.instance_path + "/long/" + mediabase
         if request.method == "POST":
             if  request.form['frm-main-upload-cancel'] == 'on':
-                filearr = albumdata['media'].rsplit('.')
-                mediabase = filearr[0]
-                dirname = current_app.instance_path + "/long/" + mediabase
                 if not os.path.isdir(dirname):
                     os.mkdir(dirname)
-                return redirect(url_for('bx_s_start.s_episodes', subdir=mediabase))
+                return redirect(url_for('bx_s_start.s_album'))
             else:
                 return redirect(url_for('s_service.confuploadChapter', albumid=albumid))
         else:
             rawname = current_app.instance_path + "/long/" + albumdata['media']
             (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(rawname)
             taggedchap = []
+            step = 1
             for key, (text, start, end, start_timefmt, end_timefmt) in chapter_dict.items():
-                taggedchap.append({'key':key, 'desc':text, 'start':start, 'end':end, 'start_timefmt':start_timefmt, 'end_timefmt':end_timefmt})
+                taggedchap.append({
+                    'key':str(key), 
+                    'step':str(step), 
+                    'desc':text, 
+                    'start':start, 
+                    'end':end, 
+                    'start_timefmt':start_timefmt, 
+                    'end_timefmt':end_timefmt
+                })
+                step += 1
             if len(taggedchap) > 0:
                 conf.append('taggedchap', taggedchap)
                 session['taggedchap'] = taggedchap

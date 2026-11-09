@@ -266,11 +266,11 @@ def init_tagging():
                 for entry in dircontent:
                     entryname = f"{dirname}/{entry}"
                     if os.path.isdir(entryname) or not entry.endswith(".mp3"): continue
-                    (entry_title, description, entry_published, notused, entry_tlen, notused, notused, notused, notused, entry_track) = tools.getMP3Info(entryname)
+                    (ID3_title, description, ID3_published, notused, ID3_tlen, notused, notused, notused, notused, ID3_track) = tools.getMP3Info(entryname)
                     mtime = os.stat(entryname).st_mtime
                     published = ts.fromtimestamp(mtime)
-                    duration = tools.getTimeFormat(entry_tlen/1000)
-                    if not entry_tlen:
+                    duration = tools.getTimeFormat(ID3_tlen/1000)
+                    if not ID3_tlen:
                         (size, duration) = tools.getMpegInfo(entryname)
                     cur.execute("SELECT cd,team,track,title,DATE_FORMAT(DATE(sourceDate),'%Y-%m-%d') as sourceDate,author,source,reader,allowed,supporter,DATE_FORMAT(DATE(pubDate),'%Y-%m-%d') as pubDate FROM tReference WHERE cd=? && track=?", (alb_title, step))
                     refchapter = cur.fetchone()
@@ -290,26 +290,27 @@ def init_tagging():
                         chp_reader = refchapter['reader']
                         chp_allowed = refchapter['allowed']
                     if chp_title: title = chp_title
-                    else: title = entry_title
+                    else: title = ID3_title
                     # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track
                     rc_chapter = submit_chapter((albumid, session['dbdata']['seclevel'], session['dbdata']['pnr'], title, chp_author, chp_source, chp_reader, description, entry, duration, published, chp_sourcedate, chp_allowed, step))
-                    if entry_track != str(step):
+                    if ID3_track != str(step):
                         err_style_trk = "style='font-weight:800;'"
                     else:
-                        err_style_trk = "style='font-weight:100;'"
-                    if entry_title.strip() != chp_title.strip():
+                        err_style_trk = "style='font-weight:400;'"
+                    if ID3_title.strip() != chp_title.strip():
                         err_style_tit = "style='font-weight:800;'"
                     else:
-                        err_style_tit = "style='font-weight:100;'"
-                    if entry_published != chp_pubdate:
+                        err_style_tit = "style='font-weight:400;'"
+                    print(ID3_published, chp_pubdate)
+                    if ID3_published.strftime('%Y-%m-%d') != chp_pubdate and chp_pubdate != "0000-00-00":
                         err_style_pub = "style='font-weight:800;'"
                     else:
-                        err_style_pub = "style='font-weight:100;'"
-                    if entry_published != published:
+                        err_style_pub = "style='font-weight:400;'"
+                    if ID3_published != published:
                         err_style_pubtag = "style='font-weight:800;'"
                     else:
-                        err_style_pubtag = "style='font-weight:100;'"
-                    output.append(f"<p><span {err_style_tit}>ID3-Titel: {entry_title.strip()}</span>; Dateiname: {entry}; Datei-Datum: {published}; <span {err_style_pubtag}>ID3-Datum: {entry_published}</span>; <span {err_style_trk}>Step: {str(step)}; ID3-Track: {entry_track}</span>; Dauer: {duration} <br>\
+                        err_style_pubtag = "style='font-weight:400;'"
+                    output.append(f"<p><span {err_style_tit}>ID3-Titel: {ID3_title.strip()}</span>; Dateiname: {entry}; Datei-Datum: {published}; <span {err_style_pubtag}>ID3-Datum: {ID3_published}</span>; <span {err_style_trk}>Step: {str(step)}; ID3-Track: {ID3_track}</span>; Dauer: {duration} <br>\
                                     <span>Ref.-Titel: {chp_title}; <span {err_style_pub}>Ref.-Datum: {chp_pubdate}</span>; TitelNr: {chp_track}; Quelle: {chp_source}; Quelle-Datum: {chp_sourcedate}; Autor: {chp_author}; Lizenz: {chp_allowed}; Vorleser: {chp_reader}</span>")
                     if rc_chapter["submit_status"] == "OK":
                         output.append(f"; Status: {rc_chapter["submit_status"]}; Chapter-ID: {rc_chapter['last_id']}</p>")
@@ -386,13 +387,13 @@ def analyse_tagging():
         rawname = f"{full_dir}/{element}"
         if not os.path.isdir(rawname):
             if not element.endswith(".mp3"): continue
-            (alb_title, description, pub, size, tlen, chapter, chapter_dict, image_dict, notused, notused) = tools.getMP3Info(rawname)
+            (alb_title, description, pub, size, ID3_tlen, chapter, chapter_dict, image_dict, notused, notused) = tools.getMP3Info(rawname)
             mtime = os.stat(rawname).st_mtime
             published = ts.fromtimestamp(mtime)
-            if not tlen:
+            if not ID3_tlen:
                 (size, duration) = tools.getMpegInfo(rawname)
             else:
-                duration = tools.getTimeFormat(tlen/1000)
+                duration = tools.getTimeFormat(ID3_tlen/1000)
             cur.execute("SELECT id,cd,supporter,team FROM tReference WHERE cd=?", (alb_title,))
             refalbum = cur.fetchone()
             if cur.rowcount <= 0:
@@ -410,11 +411,11 @@ def analyse_tagging():
                 for entry in dircontent:
                     entryname = f"{dirname}/{entry}"
                     if os.path.isdir(entryname) or not entry.endswith(".mp3"): continue
-                    (entry_title, description, pub, size, tlen, notused, chapter_dict, image_dict, notused, entry_track) = tools.getMP3Info(entryname)
+                    (ID3_title, description, pub, size, ID3_tlen, notused, chapter_dict, image_dict, notused, ID3_track) = tools.getMP3Info(entryname)
                     mtime = os.stat(entryname).st_mtime
                     published = ts.fromtimestamp(mtime)
-                    duration = tools.getTimeFormat(tlen/1000)
-                    if not tlen:
+                    duration = tools.getTimeFormat(ID3_tlen/1000)
+                    if not ID3_tlen:
                         (size, duration) = tools.getMpegInfo(entryname)
                     cur.execute("SELECT cd,team,track,title,DATE_FORMAT(DATE(sourceDate),'%Y-%m-%d') as sourceDate,author,source,reader,allowed,supporter,DATE_FORMAT(DATE(pubDate),'%Y-%m-%d') as pubDate FROM tReference WHERE cd=? && track=?", (alb_title, step))
                     refchapter = cur.fetchone()
@@ -423,22 +424,22 @@ def analyse_tagging():
                         chp_author = chp_source = chp_reader = chp_title = chp_sourcedate = "---"
                         chp_allowed = 0
                     else:
-                        err_style = "style='font-weight:100;'"
+                        err_style = "style='font-weight:400;'"
                         chp_title = refchapter['title'].strip()
                         chp_sourcedate = refchapter['sourceDate']
                         chp_author = refchapter['author']
                         chp_source = refchapter['source']
                         chp_reader = refchapter['reader']
                         chp_allowed = refchapter['allowed']
-                    if entry_track != str(step):
+                    if ID3_track != str(step):
                         err_style_trk = "style='font-weight:800;'"
                     else:
-                        err_style_trk = "style='font-weight:100;'"
-                    if entry_title.strip() != chp_title.strip():
+                        err_style_trk = "style='font-weight:400;'"
+                    if ID3_title.strip() != chp_title.strip():
                         err_style_tit = "style='font-weight:800;'"
                     else:
-                        err_style_tit = "style='font-weight:100;'"
-                    output.append(f"<p><span {err_style_tit}>Dat.-Titel: {entry_title.strip()}</span>; <span {err_style_trk}>Step: {str(step)}; Track: {entry_track}</span>; Dauer: {duration} <br>\
+                        err_style_tit = "style='font-weight:400;'"
+                    output.append(f"<p><span {err_style_tit}>Dat.-Titel: {ID3_title.strip()}</span>; <span {err_style_trk}>Step: {str(step)}; Track: {ID3_track}</span>; Dauer: {duration} <br>\
                                     <span {err_style}>Ref.-Titel: {chp_title}; Quelle: {chp_source}; Quelle-Datum: {chp_sourcedate}; Autor: {chp_author}; Lizenz: {chp_allowed}; Vorleser: {chp_reader}</span></p>")
                     step += 1
             else:
