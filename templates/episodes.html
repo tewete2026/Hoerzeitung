@@ -47,9 +47,18 @@
               <li class="nav-item">
                 <a class="me-3 py-2 link-body-emphasis text-decoration-none nav-link" title="Zum Impressum" href="{{ url_for('bx_s_start.s_impress') }}">Impressum</a>
               </li>
-              {% if conf.has("show_navtop") %}<li class="nav-item">
-                <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Neuer Kapitel-Beitrag" href="{{ url_for('s_service.confuploadChapter', albumid=conf.map['albumId']) }}"><svg class="bi opacity-100" width="1.6em" height="1.6em"><use href="#plus-lg"></use></svg></a>
-              </li>{% endif %}
+              {% if not conf.has("archive_dir") %}{% if not conf.has("show_bonus") %}{% if conf.has("show_navtop") %}<ul class="navbar-nav mb-2 mb-lg-0">
+                <li class="nav-item dropdown">
+                  <a class="nav-link chapter-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                    <svg class="bi opacity-100" width="1.6em" height="1.6em"><use href="#plus-lg"></use></svg>
+                  </a>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('s_service.confuploadAudacity', origin='episode', albumid=conf.map['albumId']) }}">Kapitel mit Audacity-Textmarken erstellen</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('s_service.confuploadTaggedChap', origin='episode', albumid=conf.map['albumId']) }}">Kapitel mit Album-Kapiteln erstellen</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('s_service.confuploadChapter', origin='episode', albumid=conf.map['albumId']) }}">Kapitel manuell erstellen</a></li>
+                  </ul>
+                </li>
+              </ul>{% endif %}{% endif %}{% endif %}
               {% if not conf.has("is_guest") %}<li class="nav-item">
                 <a class="py-2 link-body-emphasis text-decoration-none nav-link" title="Anzeigen Favoriten" href="{{ url_for('bx_s_start.s_favorites') }}"><svg class="mt-1 bi opacity-100" width="1.35em" height="1.35em"><use href="#heart"></use></svg></a>
               </li>{% endif %}

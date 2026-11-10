@@ -260,8 +260,8 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
             episode.update({"duration":duration})
             if 'data' in image_dict: episode.update({"image":f'{audio_name}_ximg.jpg'})
             episode.update({"size":size})
-            episode.update({"published":str(published)})
-            episode.update({"date":str(published)[:19]})
+            episode.update({"published":published})
+            episode.update({"date":ts.toStr(published)})
             page += 1
         if len(episode) > 0: episodes.append(episode)
     rc_code['episodes'] = episodes

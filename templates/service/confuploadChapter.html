@@ -18,10 +18,21 @@
               <div class="invalid-feedback"></div>
               {% if conf.haserror('db-error') %}<div class="alert alert-danger" role="alert">{{ conf.error['db-error'] }}</div>{% endif %}
             </div>
-            <div class="col-sm-4 mt-2 pb-1" style="padding-right: calc(var(--bs-gutter-x) * .5);padding-left: calc(var(--bs-gutter-x) * .5);">
-              <label for="frm-main-datum">Produktions Datum</label>
-              <input type="datetime-local" class="form-control" name="frm-main-datum" id="frm-main-datum" value="{{ conf.get('datetimenow') }}" required>
-              <div class="invalid-feedback"></div>
+            <div style="display:flex;">
+              <div class="col-sm-4 mt-2 pb-1" style="padding-right: calc(var(--bs-gutter-x) * .5);padding-left: calc(var(--bs-gutter-x) * .5);">
+                <label for="frm-main-datum">Produktions Zeitpunkt</label>
+                <input type="datetime-local" class="form-control" name="frm-main-datum" id="frm-main-datum" value="{{ conf.get('datetimenow') }}" required>
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="col-sm-4 ms-2 mt-2 pb-1">
+                <label for="frm-main-base-chap">Soll Album-Kapitel angepasst werden?</label>
+                <select class="form-select" id="frm-main-base-chap" name="frm-main-base-chap" required>
+                  <option value="-1">Bitte wählen...</option>
+                  <option value="1">Ja</option>
+                  <option value="0">Nein</option>
+                </select>
+                <div class="invalid-feedback"></div>
+              </div>
             </div>
             <div class="ms-2 mt-2 pb-1" style="width: 98%;">
               <label for="frm-main-title">Titel{% if conf.has('presettitle') %} <span class="ms-2 text-secondary small">({{ conf.get('presettitle') }})</span>{% endif %}</label>

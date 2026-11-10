@@ -264,7 +264,7 @@ window.addEventListener('load', () => {
                 if (!["INPUT", "TEXTAREA", "SELECT"].includes(elem.tagName)) continue;
                 elem.classList.remove("is-invalid","is-valid");
                 if ((["frm-main-datum", "frm-main-title", "frm-main-file", "frm-main-author", "frm-main-source-date"].includes(elem.name) && !elem.value)
-                    || ["frm-main-license", "frm-main-reader", "frm-main-allowed"].includes(elem.name) && elem.value == "-1") {
+                    || ["frm-main-license", "frm-main-reader", "frm-main-allowed", "frm-main-base-chap"].includes(elem.name) && elem.value == "-1") {
                     elem.nextElementSibling.innerText = "Die Eingabe ist erforderlich.";
                     elem.classList.add("is-invalid");
                     is_error = true;

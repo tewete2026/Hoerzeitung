@@ -33,6 +33,9 @@ class TimeSet:
     def now_local(self):
         return self.todaytime().strftime('%Y-%m-%dT%H:%M:%S')
     
+    def toStr(self, datetime:datetime.datetime) -> str:
+        return datetime.strftime('%Y-%m-%d %H:%M')
+    
     def now_datelocal(self):
         return self.today().strftime('%Y-%m-%d')
     

@@ -61,16 +61,16 @@ def confupload():
     return doUpload()
 
 
-@bp.route("/Upload-Episode/<albumid>", methods=['GET', 'POST'])
-def confuploadChapter(albumid):
+@bp.route("/Upload-Episode/<origin>/<albumid>", methods=['GET', 'POST'])
+def confuploadChapter(origin, albumid):
     if current_app.config["NO_POOL_AVAILABLE"]:
         abort(500)
     if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
         abort(403)
-    return doUpload(albumid)
+    return doUpload(albumid, origin)
 
 
-def doUpload(albumid=None):
+def doUpload(albumid=None, origin='album'):
     if "authcode" not in session or not getLogin(session["authcode"])['status']:
         abort(403)
 
@@ -113,7 +113,10 @@ def doUpload(albumid=None):
                 dirname = current_app.instance_path + "/long/" + mediabase
                 if not os.path.isdir(dirname):
                     os.mkdir(dirname)
-                return redirect(url_for("bx_s_start.s_episodes", subdir=mediabase))
+                if origin == 'album':
+                    return redirect(url_for('bx_s_start.s_album'))
+                else:
+                    return redirect(url_for("bx_s_start.s_episodes", subdir=mediabase))
             else:
                 return redirect(url_for('bx_s_start.s_album'))
         file = request.files['frm-main-file']
@@ -185,7 +188,7 @@ def doUpload(albumid=None):
                     if 'audacity' in session:
                         try:
                             session['audacity'].pop(0)
-                            goto = url_for("s_service.confuploadChapter", albumid=albumid)
+                            goto = url_for("s_service.confuploadChapter", origin='episode', albumid=albumid)
                             with open(dirname + "/" + mediabase + ".audatoc", mode='w') as auda_file:
                                 auda_file.write(json.dumps(session['audacity'], ensure_ascii=False))
                         except IndexError as err:
@@ -193,7 +196,7 @@ def doUpload(albumid=None):
                     elif 'taggedchap' in session:
                         try:
                             session['taggedchap'].pop(0)
-                            goto = url_for("s_service.confuploadChapter", albumid=albumid)
+                            goto = url_for("s_service.confuploadChapter", origin='episode', albumid=albumid)
                         except IndexError as err:
                             goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
                     else:
@@ -469,8 +472,8 @@ def confcreate():
     return render_template("service/confcreate.html", conf=conf)
 
 
-@bp.route("/Upload-Album-Chapter/<albumid>", methods=['GET', 'POST'])
-def confuploadTaggedChap(albumid):
+@bp.route("/Upload-Album-Chapter/<origin>/<albumid>", methods=['GET', 'POST'])
+def confuploadTaggedChap(origin, albumid):
     if current_app.config["NO_POOL_AVAILABLE"]:
         abort(500)
     if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
@@ -479,11 +482,11 @@ def confuploadTaggedChap(albumid):
     if "authcode" not in session or not getLogin(session["authcode"])['status']:
         abort(403)
     
-    return doUploadGuided('taggedchap', albumid)
+    return doUploadGuided('taggedchap', albumid, origin)
 
 
-@bp.route("/Upload-Audacity-Textmarken/<albumid>", methods=['GET', 'POST'])
-def confuploadAudacity(albumid):
+@bp.route("/Upload-Audacity-Textmarken/<origin>/<albumid>", methods=['GET', 'POST'])
+def confuploadAudacity(origin, albumid):
     if current_app.config["NO_POOL_AVAILABLE"]:
         abort(500)
     if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
@@ -492,10 +495,10 @@ def confuploadAudacity(albumid):
     if "authcode" not in session or not getLogin(session["authcode"])['status']:
         abort(403)
     
-    return doUploadGuided('audacity', albumid)
+    return doUploadGuided('audacity', albumid, origin)
     
 
-def doUploadGuided(category, albumid):
+def doUploadGuided(category, albumid, origin):
     ts = current_app.config["TS"]
     error = False
     try:
@@ -535,9 +538,12 @@ def doUploadGuided(category, albumid):
             if  request.form['frm-main-upload-cancel'] == 'on':
                 if not os.path.isdir(dirname):
                     os.mkdir(dirname)
-                return redirect(url_for('bx_s_start.s_album'))
+                if origin == 'album':
+                    return redirect(url_for('bx_s_start.s_album'))
+                else:
+                    return redirect(url_for("bx_s_start.s_episodes", subdir=mediabase))
             elif  request.form['frm-main-audacity-load'] == 'on':
-                return redirect(url_for('s_service.confuploadChapter', albumid=albumid))
+                return redirect(url_for('s_service.confuploadChapter', origin='episode', albumid=albumid))
             else:
                 file = request.files['frm-main-file']
                 filename = secure_filename(file.filename)
@@ -587,9 +593,12 @@ def doUploadGuided(category, albumid):
             if  request.form['frm-main-upload-cancel'] == 'on':
                 if not os.path.isdir(dirname):
                     os.mkdir(dirname)
-                return redirect(url_for('bx_s_start.s_album'))
+                if origin == 'album':
+                    return redirect(url_for('bx_s_start.s_album'))
+                else:
+                    return redirect(url_for("bx_s_start.s_episodes", subdir=mediabase))
             else:
-                return redirect(url_for('s_service.confuploadChapter', albumid=albumid))
+                return redirect(url_for('s_service.confuploadChapter', origin='episode', albumid=albumid))
         else:
             rawname = current_app.instance_path + "/long/" + albumdata['media']
             (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(rawname)
