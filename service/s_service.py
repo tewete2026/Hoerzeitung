@@ -76,6 +76,7 @@ def doUpload(albumid=None, origin='album'):
 
     ts = current_app.config["TS"]
     teams = current_app.config["teams"]
+    media_path = current_app.instance_path + "/long/"
 
     if albumid is None:
         isChapter = False
@@ -110,7 +111,7 @@ def doUpload(albumid=None, origin='album'):
             if isChapter:
                 filearr = albumdata['media'].rsplit('.')
                 mediabase = filearr[0]
-                dirname = current_app.instance_path + "/long/" + mediabase
+                dirname = media_path + mediabase
                 if not os.path.isdir(dirname):
                     os.mkdir(dirname)
                 if origin == 'album':
@@ -125,6 +126,7 @@ def doUpload(albumid=None, origin='album'):
         seclevel = session['dbdata']['seclevel']
         if len(filename) > 0: 
             frm_main_chpid = form_data.get("frm-main-chp-id")
+            frm_main_basechap = form_data.get("frm-main-base-chap")
             frm_main_step = form_data.get("frm-main-step")
             frm_main_datum = form_data.get("frm-main-datum")
             frm_main_title = form_data.get("frm-main-title")
@@ -137,22 +139,22 @@ def doUpload(albumid=None, origin='album'):
             frm_main_reader = form_data.get("frm-main-reader")
             frm_main_source_date = form_data.get("frm-main-source-date")
             frm_main_skiptags = form_data.get("frm-main-skiptags")
-            if frm_main_skiptags is not None:
-                skiptags = True
-            else:
-                skiptags = False
+            if frm_main_skiptags is not None: skiptags = True
+            else: skiptags = False
+            if frm_main_basechap is not None and frm_main_basechap == '1': chgbasechap = True
+            else: chgbasechap = False
             filearr = filename.rsplit('.')
             namebase = filearr[0]
             suff = filearr[1]
             audioname = namebase + '.mp3'
             temp_name = current_app.instance_path + "/upload/" + filename
             temp_target = current_app.instance_path + "/upload/" + audioname
-            target_path = current_app.instance_path + "/long/"
+            target_path = media_path
             if isChapter:
-                album_path = current_app.instance_path + "/long/" + albumdata['media']
+                album_path = media_path + albumdata['media']
                 filearr = albumdata['media'].rsplit('.')
                 mediabase = filearr[0]
-                dirname = current_app.instance_path + "/long/" + mediabase
+                dirname = media_path + mediabase
                 if not os.path.isdir(dirname):
                     os.mkdir(dirname)
                 target_path = dirname + "/"
@@ -176,9 +178,9 @@ def doUpload(albumid=None, origin='album'):
                 rc_code = submit_album((seclevel, pnr, frm_main_title, frm_main_supporter, frm_main_summary, audioname, frm_main_datum, frm_main_team, duration))
             if rc_code["submit_status"] == "OK":
                 if isChapter:
-                    basemedia = current_app.instance_path + "/long/" + albumdata['media']
+                    basemedia = media_path + albumdata['media']
                     teamlogo = current_app.instance_path + '/' + teams[str(albumdata['team'])][1]
-                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, frm_main_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date, albumdata['title']), clear_chaps=True, ctoc_id=frm_main_chpid)
+                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, frm_main_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date, albumdata['title'], next_track), clear_chaps=True, chg_basechap=chgbasechap, ctoc_id=frm_main_chpid)
                 else:
                     teamlogo = current_app.instance_path + '/' + teams[frm_main_team][1]
                     if not skiptags:
@@ -228,6 +230,7 @@ def doUpload(albumid=None, origin='album'):
                 if len(au_list) > 0:
                     conf.append('presettitle', au_list[0]['desc'])
                     conf.append("step", au_list[0]['step'])
+                    conf.append("chpid", au_list[0]['key'])
                     conf.append("page", f"{au_list[0]['step']} / {len(au_list)}")
             elif 'taggedchap' in session:
                 chp_list = session['taggedchap']
@@ -500,6 +503,7 @@ def confuploadAudacity(origin, albumid):
 
 def doUploadGuided(category, albumid, origin):
     ts = current_app.config["TS"]
+    media_path = current_app.instance_path + "/long/"
     error = False
     try:
         db = get_db()
@@ -532,7 +536,7 @@ def doUploadGuided(category, albumid, origin):
         html = 'confuploadAudacity'
         filearr = albumdata['media'].rsplit('.')
         mediabase = filearr[0]
-        dirname = current_app.instance_path + "/long/" + mediabase
+        dirname = media_path + mediabase
         toc_file = dirname + "/" + mediabase + ".audatoc"
         if request.method == "POST":
             if  request.form['frm-main-upload-cancel'] == 'on':
@@ -561,6 +565,7 @@ def doUploadGuided(category, albumid, origin):
                             else:
                                 au_line = {}
                                 au_line['step'] = str(step)
+                                au_line['key'] = 'chp' + str(step - 1)
                                 au_line['start'] = line_arr[0]
                                 au_line['ende'] = line_arr[1]
                                 au_line['start_timefmt'] = tools.getTimeFormat(float(line_arr[0]))
@@ -580,15 +585,18 @@ def doUploadGuided(category, albumid, origin):
                         html = 'confuploadAudacityLoad'
         else:
             if os.path.exists(toc_file):
-                audacity = json.loads(toc_file)
-                session['audacity'] = audacity
-                html = 'confuploadAudacityLoad'
+                with open(toc_file, mode='r') as auda_file:
+                    audacity = json.loads(auda_file.read())
+                if len(audacity) > 0:
+                    session['audacity'] = audacity
+                    conf.append('audacityload', audacity)
+                    html = 'confuploadAudacityLoad'
         
     elif category == 'taggedchap': 
         html = 'confuploadTaggedChap'
         filearr = albumdata['media'].rsplit('.')
         mediabase = filearr[0]
-        dirname = current_app.instance_path + "/long/" + mediabase
+        dirname = media_path + mediabase
         if request.method == "POST":
             if  request.form['frm-main-upload-cancel'] == 'on':
                 if not os.path.isdir(dirname):
@@ -600,7 +608,7 @@ def doUploadGuided(category, albumid, origin):
             else:
                 return redirect(url_for('s_service.confuploadChapter', origin='episode', albumid=albumid))
         else:
-            rawname = current_app.instance_path + "/long/" + albumdata['media']
+            rawname = media_path + albumdata['media']
             (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(rawname)
             taggedchap = []
             step = 1

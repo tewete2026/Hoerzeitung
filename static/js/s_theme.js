@@ -210,7 +210,7 @@ window.addEventListener('load', () => {
         frm_main_file.addEventListener('change', event => {
             let is_error = false;
             const field = event.target;
-            frm_main_title.value = field.files[0].name.replace(/^([0-9]{2,3}-)?/, "").replace(/\.mp3$/, "");
+            if (!frm_main_title.value) frm_main_title.value = field.files[0].name.replace(/^([0-9]{2,3}-)?/, "").replace(/\.mp3$/, "");
             if (is_error) event.preventDefault();
         })
     }
