@@ -10,6 +10,7 @@ window.addEventListener('load', () => {
     const setpage = this.document.getElementById('setpage');
     const btn_submit = this.document.getElementById('btn-submit');
     const btn_download = this.document.getElementById('btn-download');
+    const btn_cancel = this.document.getElementById('btn-cancel');
     const btn_trash_hist = this.document.getElementById('btn-submit-trash-hist');
     const btn_trash_run = this.document.getElementById('btn-submit-trash-run');
     const btn_arrow_repeat = this.document.getElementById('btn-arrow-repeat');
@@ -272,6 +273,26 @@ window.addEventListener('load', () => {
             }
             if (is_error) event.preventDefault();
         })
+    }
+
+    if (btn_cancel) {
+        const elemList = btn_cancel.getElementsByTagName('a');
+        for (const elem of elemList) {
+            if (elem.role == 'cancel') {
+                elem.addEventListener('click', event => {
+                    const cfield = frm_main_upload_audacity.elements.namedItem("frm-main-upload-cancel");
+                    cfield.value = "on";
+                    frm_main_upload_audacity.submit();
+                })
+            }
+            else if (elem.role == 'reload') {
+                elem.addEventListener('click', event => {
+                    const cfield = frm_main_upload_audacity.elements.namedItem("frm-main-upload-cancel");
+                    cfield.value = "reload";
+                    frm_main_upload_audacity.submit();
+                })
+            }
+        }
     }
 
     if (frm_main_upload_audacity) {

@@ -190,11 +190,17 @@ def doUpload(albumid=None, origin='album'):
                     if 'audacity' in session:
                         try:
                             session['audacity'].pop(0)
-                            goto = url_for("s_service.confuploadChapter", origin='episode', albumid=albumid)
-                            with open(dirname + "/" + mediabase + ".audatoc", mode='w') as auda_file:
-                                auda_file.write(json.dumps(session['audacity'], ensure_ascii=False))
+                            toc_name = dirname + "/" + mediabase + ".audatoc"
+                            if len(session['audacity']) == 0:
+                                if os.path.exists(toc_name): os.remove(toc_name)
+                                goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+                            else: 
+                                goto = url_for("s_service.confuploadChapter", origin='episode', albumid=albumid)
+                                with open(toc_name, mode='w') as auda_file:
+                                    auda_file.write(json.dumps(session['audacity'], ensure_ascii=False))
                         except IndexError as err:
                             goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+                            if os.path.exists(toc_name): os.remove(toc_name)
                     elif 'taggedchap' in session:
                         try:
                             session['taggedchap'].pop(0)
@@ -539,12 +545,16 @@ def doUploadGuided(category, albumid, origin):
         dirname = media_path + mediabase
         toc_file = dirname + "/" + mediabase + ".audatoc"
         if request.method == "POST":
-            if  request.form['frm-main-upload-cancel'] == 'on':
+            cfield = request.form['frm-main-upload-cancel']
+            if cfield == 'on' or cfield == 'reload':
                 if not os.path.isdir(dirname):
                     os.mkdir(dirname)
                 if origin == 'album':
                     return redirect(url_for('bx_s_start.s_album'))
                 else:
+                    if cfield == 'reload':
+                        if os.path.exists(toc_file): os.remove(toc_file)
+                        return redirect(url_for('s_service.confuploadAudacity', origin='episode', albumid=albumid))
                     return redirect(url_for("bx_s_start.s_episodes", subdir=mediabase))
             elif  request.form['frm-main-audacity-load'] == 'on':
                 return redirect(url_for('s_service.confuploadChapter', origin='episode', albumid=albumid))
