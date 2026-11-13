@@ -171,20 +171,20 @@ def doUpload(albumid=None, origin='album'):
                     next_track = "{0:02.0f}".format(int(frm_main_step))
                     if frm_main_chpid is None:
                         frm_main_chpid = "chp" + str(int(frm_main_step) - 1)
-                # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track
-                rc_code = submit_chapter((albumid, seclevel, pnr, frm_main_title, frm_main_author, frm_main_license, frm_main_reader, frm_main_summary, audioname, duration, frm_main_datum, frm_main_source_date, frm_main_allowed, next_track))
+                # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track,mediaPath
+                rc_code = submit_chapter((albumid, seclevel, pnr, frm_main_title, frm_main_author, frm_main_license, frm_main_reader, frm_main_summary, audioname, duration, frm_main_datum, frm_main_source_date, frm_main_allowed, next_track, target_path))
             else:
-                # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration
-                rc_code = submit_album((seclevel, pnr, frm_main_title, frm_main_supporter, frm_main_summary, audioname, frm_main_datum, frm_main_team, duration))
+                # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration,mediaPath
+                rc_code = submit_album((seclevel, pnr, frm_main_title, frm_main_supporter, frm_main_summary, audioname, frm_main_datum, frm_main_team, duration, target_path))
             if rc_code["submit_status"] == "OK":
                 if isChapter:
                     basemedia = media_path + albumdata['media']
                     teamlogo = current_app.instance_path + '/' + teams[str(albumdata['team'])][1]
-                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, frm_main_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date, albumdata['title'], next_track), clear_chaps=True, chg_basechap=chgbasechap, ctoc_id=frm_main_chpid)
+                    rc_chp = tools.setMp3Chapter(temp_target, basemedia, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_author, frm_main_license, frm_main_reader, frm_main_allowed, teamlogo, rc_code['last_id'], albumid, frm_main_source_date, albumdata['title'], next_track), chg_basechap=chgbasechap, ctoc_id=frm_main_chpid)
                 else:
                     teamlogo = current_app.instance_path + '/' + teams[frm_main_team][1]
                     if not skiptags:
-                        tools.setMp3Info(temp_target, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_supporter, frm_main_team, teamlogo, rc_code['last_id']), clear_chaps=True)
+                        tools.setMp3Info(temp_target, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_supporter, frm_main_team, teamlogo, rc_code['last_id']), keep_chaps=chgbasechap)
                 if isChapter:
                     audioname = rc_chp['track'] + "-" + audioname
                     if 'audacity' in session:
@@ -857,9 +857,10 @@ def submit_album(form_data):
                 '''
             else:
                 #     0     1    2       3        4      5          6         7      8
-                # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration
-                cur.execute("insert into tJournal(seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration) \
-                            values               (?,       ?,  ?,    ?,        ?,      ?,    ?,              ?,   ?)", form_data)
+                # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration,mediaPath
+                cur.execute("insert into tJournal(seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration,mediaPath) \
+                            values               (?,       ?,  ?,    ?,        ?,      ?,    ?,              ?,   ?,       ?)\
+                            ON DUPLICATE KEY UPDATE seclevel=?,pnr=?,title=?,supporter=?,summary=?,media=?,publicationDate=?,team=?,duration=?,mediaPath=?", form_data + form_data)
                 last_id = str(cur.lastrowid)
                 rc_code["last_id"] = last_id
 
@@ -938,9 +939,10 @@ def submit_chapter(form_data):
                 '''
             else:
                 #     0     1       2    3     4      5       6      7      8      9           10            11        12
-                # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track
-                cur.execute("insert into tChapter(albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track) \
-                            values               (?,      ?,       ?,  ?,    ?,     ?,     ?,     ?,      ?,    ?,       ?,              ?,         ?,      ?)", form_data)
+                # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track,mediaPath
+                cur.execute("insert into tChapter(albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track,mediaPath) \
+                            values               (?,      ?,       ?,  ?,    ?,     ?,     ?,     ?,      ?,    ?,       ?,              ?,         ?,      ?,    ?)\
+                            ON DUPLICATE KEY UPDATE albumId=?,seclevel=?,pnr=?,title=?,author=?,source=?,reader=?,summary=?,media=?,duration=?,publicationDate=?,sourceDate=?,allowed=?,track=?,mediaPath=?", form_data + form_data)
                 last_id = str(cur.lastrowid)
                 rc_code["last_id"] = last_id
 

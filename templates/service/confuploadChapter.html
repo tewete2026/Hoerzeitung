@@ -9,7 +9,8 @@
     <div class="row g-4">
       <form class="needs-validation" id="frm-main-upload-chapter" novalidate autocomplete="off" method="post" enctype="multipart/form-data">
         <input type="hidden" value="off" name="frm-main-upload-cancel">
-        {% if conf.has('step') %}<input type="hidden" value="{{ conf.get('step') }}" name="frm-main-step">{% endif %}
+        {% if conf.has('chpid') %}<input type="hidden" name="frm-main-chp-id" value="{{ conf.get('chpid') }}">{% endif %}
+        {% if conf.has('step') %}<input type="hidden" name="frm-main-step" value="{{ conf.get('step') }}">{% endif %}
         <div class="row g-3">
           <fieldset id="frm-main-set-base" name="frm-main-set-base">
             <div class="ms-2 pb-1" style="width: 98%;">
@@ -27,8 +28,7 @@
               <div class="col-sm-4 ms-2 mt-2 pb-1">
                 <label for="frm-main-base-chap">Soll Album-Kapitel angepasst werden?</label>
                 <select class="form-select" id="frm-main-base-chap" name="frm-main-base-chap" required>
-                  <option value="-1">Bitte wählen...</option>
-                  <option value="1">Ja</option>
+                  <option value="1" checked>Ja</option>
                   <option value="0">Nein</option>
                 </select>
                 <div class="invalid-feedback"></div>
@@ -74,10 +74,6 @@
               {% if conf.has('page') %}<div class="col-sm-1 ms-3 mt-2 pb-1">
                 <label for="frm-main-page">Folge-Nr.</label>
                 <input type="text" class="form-control" name="frm-main-page" id="frm-main-page" value="{{ conf.get('page') }}" readonly>
-              </div>{% endif %}
-              {% if conf.has('chpid') %}<div class="col-sm-1 ms-3 mt-2 pb-1">
-                <label for="frm-main-chp-id">Kapitel-ID</label>
-                <input type="text" class="form-control" name="frm-main-chp-id" id="frm-main-chp-id" value="{{ conf.get('chpid') }}" readonly>
               </div>{% endif %}
             </div>
             <div class="ms-2 mt-2 pb-1" style="width: 98%;">

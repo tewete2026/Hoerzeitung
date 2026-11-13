@@ -211,12 +211,12 @@ def init_tagging():
     if 'dbdata' not in session or session['dbdata']['seclevel'] < 4:
         abort(403)
 
-    target_path = current_app.instance_path + "/long/"
+    full_dir = current_app.instance_path + "/long"
+    target_path = full_dir + "/"
     shell_path = current_app.root_path + '/static/service/shell/reorg_OrderChapter.sh'
     subprocess.run([shell_path, target_path])
 
     ts = current_app.config["TS"]
-    full_dir = current_app.instance_path + "/long"
     content = os.listdir(full_dir)
     content.sort()
     max_rec = album_err = ref_err = chap_err = chp_empty = 0
@@ -246,7 +246,7 @@ def init_tagging():
             refalbum = {'team':0,'supporter':''}
             ref_err += 1
         # seclevel,pnr,title,supporter,summary,media,publicationDate,team,duration
-        rc_album = submit_album((session['dbdata']['seclevel'], session['dbdata']['pnr'], alb_title, refalbum['supporter'], description, element, published, refalbum['team'], duration))
+        rc_album = submit_album((session['dbdata']['seclevel'], session['dbdata']['pnr'], alb_title, refalbum['supporter'], description, element, published, refalbum['team'], duration, target_path))
         output.append(f"<h4>Album: {alb_title}; Dateiname: {element}; Datum: {published}; ID3-Datum: {alb_published}; Dauer: {duration}; Techniker: {refalbum['supporter']}; Team: {refalbum['team']}")
         if rc_album["submit_status"] == "OK":
             albumid = rc_album['last_id']
@@ -291,8 +291,8 @@ def init_tagging():
                         chp_allowed = refchapter['allowed']
                     if chp_title: title = chp_title
                     else: title = ID3_title
-                    # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track
-                    rc_chapter = submit_chapter((albumid, session['dbdata']['seclevel'], session['dbdata']['pnr'], title, chp_author, chp_source, chp_reader, description, entry, duration, published, chp_sourcedate, chp_allowed, step))
+                    # albumId,seclevel,pnr,title,author,source,reader,summary,media,duration,publicationDate,sourceDate,allowed,track,mediaPath
+                    rc_chapter = submit_chapter((albumid, session['dbdata']['seclevel'], session['dbdata']['pnr'], title, chp_author, chp_source, chp_reader, description, entry, duration, published, chp_sourcedate, chp_allowed, step, dirname + '/'))
                     if ID3_track != str(step):
                         err_style_trk = "style='font-weight:800;'"
                     else:

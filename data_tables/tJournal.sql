@@ -31,9 +31,11 @@ CREATE TABLE `tJournal` (
   `supporter` varchar(50) NOT NULL DEFAULT '' COMMENT 'Techniker-vom-Dienst',
   `summary` text NOT NULL DEFAULT '' COMMENT 'Beschreibung des Beitrags',
   `media` varchar(255) NOT NULL DEFAULT '' COMMENT 'Medien Datei',
+  `mediaPath` varchar(255) NOT NULL DEFAULT '' COMMENT 'Ursprungspfad zur Medien Datei',
   `duration` varchar(10) NOT NULL DEFAULT '' COMMENT 'Spiellänge der Medien Datei',
   `publicationDate` datetime NOT NULL DEFAULT current_timestamp() COMMENT 'Veröffentlichungs Datum',
   `team` smallint unsigned NOT NULL DEFAULT 0 COMMENT 'Nummer des durchführenden Teams',
+  UNIQUE KEY `mediapath` (`mediaPath`, `media`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;

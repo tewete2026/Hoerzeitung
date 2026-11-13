@@ -84,10 +84,11 @@ def getMP3Info(rawname:str):
     return (title, description, published, size, tlen, chapter, chapter_dict, image_dict, albumid, track)
 
 
-def setMp3Info(rawname:str, fields:tuple, clear_chaps:bool=False):
+def setMp3Info(rawname:str, fields:tuple, keep_chaps:bool=True):
     ts = current_app.config["TS"]
     audio = ID3(rawname)
-    if clear_chaps:
+    playtime = round(audio_info.duration(rawname) * 1000) # ganzzahlig Millisekunden
+    if not keep_chaps:
         audio.delall('CHAP')
         audio.delall('CTOC')
         audio.delall('COMM')
@@ -96,12 +97,8 @@ def setMp3Info(rawname:str, fields:tuple, clear_chaps:bool=False):
     audio.add(TIT2(text=[fields[0]], encoding=3)) # Titel / Encoding 3 = UTF-8
     audio.add(COMM(desc="summary", lang='ger', text=[fields[1]], encoding=3)) # Beschreibung
     audio.add(TDRC(text=[fields[2]], encoding=3)) # Produktionsdatum
-    # Datum in Audio-Datei schreiben (atime + mtime)
-    t = ts.totimestamp(fields[2]) # Konvertieren von ISO-Format zu float
-    os.utime(rawname, (t, t))
     audio.add(TXXX(desc="Supporter", text=[fields[3]], encoding=3)) # Techniker
     audio.add(TXXX(desc="Team", text=[fields[4]], encoding=3)) # Team
-    playtime = round(audio_info.duration(rawname) * 1000)
     audio.add(TLEN(text=[str(playtime)], encoding=3)) # Spiellänge in Millisekunden
     with open(fields[5], mode='rb') as image_file:
         audio.add(APIC(mime='image/jpeg', desc='CoverImage', data=image_file.read())) # Cover Foto
@@ -110,34 +107,48 @@ def setMp3Info(rawname:str, fields:tuple, clear_chaps:bool=False):
     audio.add(TALB(text=["Hörzeitung DRK-Norderstedt"], encoding=3)) # Album
     audio.add(TCON(text=["Podcast"], encoding=3)) # Genre
     audio.save()
+    # Datum aus der Erfassung in Audio-Datei schreiben (atime + mtime)
+    t = ts.totimestamp(fields[2]) # Konvertieren von ISO-Format zu float
+    os.utime(rawname, (t, t))
 
 
-def setMp3Chapter(rawname:str, basemedia:str, fields:tuple, clear_chaps:bool=False, chg_basechap:bool=True, ctoc_id:str=None):
+def setMp3Chapter(rawname:str, basemedia:str, fields:tuple, keep_chaps:bool=False, chg_basechap:bool=True, ctoc_id:str=None):
     ts = current_app.config["TS"]
     baseaudio = ID3(basemedia)
     basemtime = os.stat(basemedia).st_mtime
     ctoc_key = 'CTOC:toc'
     base_ctoc = baseaudio.get(ctoc_key)
+    playtime = round(audio_info.duration(rawname) * 1000) # ganzzahlig Millisekunden
     if base_ctoc is None:
         next_toc = 'chp0'
         size = 0
         starttime = 0
+        endtime = playtime
+        # Neues Inhaltsverzeichnis anlegen
         base_ctoc = CTOC(element_id='toc', flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED, child_element_ids=[next_toc])
         baseaudio.add(base_ctoc)
     else:
         if ctoc_id is None:
+            # Neues Kapitel ins Album schreiben:
             element_ids = base_ctoc.child_element_ids
             last_chap = baseaudio.get('CHAP:' + element_ids[-1])
+            if last_chap is None:
+                starttime = 0
+                endtime = playtime
+            else:
+                starttime = last_chap.end_time # end_time ist hier gewünscht
+                endtime = starttime + playtime # vorherige end_time + neue playtime
             size = len(element_ids)
             next_toc = 'chp' + str(size)
             element_ids.append(next_toc)
-            starttime = last_chap.end_time
+            next_chap = CHAP(element_id=next_toc, start_time=starttime, end_time=endtime, sub_frames=[TIT2(text=[fields[0]], encoding=3)])
+            baseaudio.add(next_chap)
         else:
             last_chap = baseaudio.get('CHAP:' + ctoc_id)
-            starttime = last_chap.start_time
-            endtime = last_chap.end_time
+            if last_chap is not None:
+                last_chap.sub_frames=[TIT2(text=[fields[0]], encoding=3)]
     audio = ID3(rawname)
-    if clear_chaps:
+    if not keep_chaps:
         audio.delall('CHAP')
         audio.delall('CTOC')
         audio.delall('COMM')
@@ -157,23 +168,16 @@ def setMp3Chapter(rawname:str, basemedia:str, fields:tuple, clear_chaps:bool=Fal
     audio.add(TXXX(desc="SourceDate", text=[fields[10]], encoding=3)) # Veröffentlichungsdatum der Quelle
     audio.add(TALB(text=[fields[11]], encoding=3)) # Album
     audio.add(TRCK(text=[fields[12]], encoding=3)) # Track-Nummer
-    playtime = round(audio_info.duration(rawname) * 1000)
     audio.add(TLEN(text=[str(playtime)], encoding=3)) # Spiellänge in Millisekunden
     audio.add(TPE1(text=["DRK-OV-Norderstedt"], encoding=3)) # Künstler
     audio.add(TCON(text=["Podcast"], encoding=3)) # Genre
-    # Neues Kapitel ins Album schreiben:
-    if ctoc_id is None:
-        next_chap = CHAP(element_id=next_toc, start_time=starttime, end_time=starttime + playtime, sub_frames=[TIT2(text=[fields[0]], encoding=3)])
-        baseaudio.add(next_chap)
-    else:
-        last_chap.sub_frames=[TIT2(text=[fields[0]], encoding=3)]
     audio.save()
-    if chg_basechap: 
-        baseaudio.save()
-        os.utime(basemedia, (basemtime, basemtime)) # Dateidatum wiederherstellen, da audio.save() das Datum ändert.
     # Datum in Audio-Datei schreiben (atime + mtime)
     t = ts.totimestamp(fields[2]) # Konvertieren von ISO-Format zu float
     os.utime(rawname, (t, t))
+    if chg_basechap: 
+        baseaudio.save()
+        os.utime(basemedia, (basemtime, basemtime)) # Dateidatum wiederherstellen, da audio.save() das Datum ändert.
     rc_code = {}
     rc_code['track'] = audio.get('TRCK').text[0]
     rc_code['chapterid'] = audio.get('TXXX:ChapterId').text[0]
