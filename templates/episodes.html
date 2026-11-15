@@ -53,9 +53,10 @@
                     <svg class="bi opacity-100" width="1.6em" height="1.6em"><use href="#plus-lg"></use></svg>
                   </a>
                   <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{{ url_for('s_service.confuploadAudacity', origin='episode', albumid=conf.map['albumId']) }}">Kapitel mit Audacity-Textmarken erstellen</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('s_service.confuploadTaggedChap', origin='episode', albumid=conf.map['albumId']) }}">Kapitel mit Album-Kapiteln erstellen</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('s_service.confuploadChapter', origin='episode', albumid=conf.map['albumId']) }}">Kapitel manuell erstellen</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('s_service.confuploadAudacity', origin='episode', albumid=conf.map['albumId']) }}">Kapitel-Beitrag mit Audacity-Textmarken erstellen</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('s_service.confuploadTaggedChap', origin='episode', albumid=conf.map['albumId']) }}">Kapitel-Beitrag mit Album-Kapiteln erstellen</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('s_service.confrefactorAlbum', origin='episode', albumid=conf.map['albumId']) }}">Aus allen Kapitel-Beiträgen Kapitel-Einträge in Album erstellen</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('s_service.confuploadChapter', origin='episode', albumid=conf.map['albumId']) }}">Kapitel-Beitrag manuell erstellen</a></li>
                   </ul>
                 </li>
               </ul>{% endif %}{% endif %}{% endif %}

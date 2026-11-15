@@ -10,7 +10,7 @@ window.addEventListener('load', () => {
     const setpage = this.document.getElementById('setpage');
     const btn_submit = this.document.getElementById('btn-submit');
     const btn_download = this.document.getElementById('btn-download');
-    const btn_cancel = this.document.getElementById('btn-cancel');
+    const btn_cancel = this.document.getElementById('btn-cancel-load');
     const btn_trash_hist = this.document.getElementById('btn-submit-trash-hist');
     const btn_trash_run = this.document.getElementById('btn-submit-trash-run');
     const btn_arrow_repeat = this.document.getElementById('btn-arrow-repeat');
@@ -23,6 +23,7 @@ window.addEventListener('load', () => {
     const frm_main_upload_chapter = this.document.getElementById('frm-main-upload-chapter');
     const frm_main_upload_audacity = this.document.getElementById('frm-main-upload-audacity');
     const frm_main_upload_taggedchap = this.document.getElementById('frm-main-upload-taggedchap');
+    const frm_main_refactchap = this.document.getElementById('frm-main-refactchap');
     const frm_main_set_image = this.document.getElementById('frm-main-set-team');
     const frm_main_file = this.document.getElementById('frm-main-file');
     const frm_main_title = this.document.getElementById('frm-main-title');
@@ -324,6 +325,18 @@ window.addEventListener('load', () => {
             const iscancel = submitter.id == "btn-cancel";
             if (iscancel) {
                 const cfield = frm_main_upload_taggedchap.elements.namedItem("frm-main-upload-cancel");
+                cfield.value = "on";
+                return;
+            }
+        })
+    }
+
+    if (frm_main_refactchap) {
+        frm_main_refactchap.addEventListener('submit', event => {
+            const submitter = event.submitter;
+            const iscancel = submitter.id == "btn-cancel";
+            if (iscancel) {
+                const cfield = frm_main_refactchap.elements.namedItem("frm-main-upload-cancel");
                 cfield.value = "on";
                 return;
             }

@@ -6,6 +6,7 @@ from flask import render_template
 from flask import redirect, url_for, g
 from werkzeug.exceptions import abort
 from werkzeug.utils import secure_filename
+from sox import file_info as audio_info
 from ..db import Configure
 from ..db import get_db, getLogin
 from .. import version, tools
@@ -101,7 +102,7 @@ def doUpload(albumid=None, origin='album'):
             g.errors.append(err.args[0])
             abort(500)
     
-    conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
+    conf = Configure("Norderstedter Hörzeitung - Service Ebene - Upload", request, current_app)
     conf.append('datetimenow', ts.now_local())
     conf.append('datenow', ts.now_datelocal())
 
@@ -204,9 +205,17 @@ def doUpload(albumid=None, origin='album'):
                     elif 'taggedchap' in session:
                         try:
                             session['taggedchap'].pop(0)
-                            goto = url_for("s_service.confuploadChapter", origin='episode', albumid=albumid)
+                            toc_name = dirname + "/" + mediabase + ".chaptoc"
+                            if len(session['taggedchap']) == 0:
+                                if os.path.exists(toc_name): os.remove(toc_name)
+                                goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+                            else: 
+                                goto = url_for("s_service.confuploadChapter", origin='episode', albumid=albumid)
+                                with open(toc_name, mode='w') as chap_file:
+                                    chap_file.write(json.dumps(session['taggedchap'], ensure_ascii=False))
                         except IndexError as err:
                             goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+                            if os.path.exists(toc_name): os.remove(toc_name)
                     else:
                         goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
                 else:
@@ -309,7 +318,7 @@ def confcreate():
         form_data = request.form
         post_request = True
     
-    conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
+    conf = Configure("Norderstedter Hörzeitung - Service Ebene - Neue Codes", request, current_app)
     conf.append('conf_max_freecodes', conf_max_freecodes)
     
     conf.initlogin(session['dbdata'])
@@ -530,7 +539,7 @@ def doUploadGuided(category, albumid, origin):
         g.errors.append(err.args[0])
         abort(500)
     
-    conf = Configure("Norderstedter Hörzeitung - Service Ebene", request, current_app)
+    conf = Configure("Norderstedter Hörzeitung - Service Ebene - Guided Upload", request, current_app)
     conf.initlogin(session['dbdata'])
     conf.append("title", albumdata['title'])
     conf.append("show_navall", True)
@@ -586,27 +595,27 @@ def doUploadGuided(category, albumid, origin):
                     if temp_name is not None and os.path.exists(temp_name):
                         os.remove(temp_name)
                     if len(audacity) > 0:
-                        session['audacity'] = audacity
-                        conf.append('audacityload', audacity)
                         if not os.path.isdir(dirname):
                             os.mkdir(dirname)
                         with open(toc_file, mode='w') as auda_file:
                             auda_file.write(json.dumps(audacity, ensure_ascii=False))
                         html = 'confuploadAudacityLoad'
+                        conf.append('audacityload', audacity)
+                        session['audacity'] = audacity
         else:
             if os.path.exists(toc_file):
                 with open(toc_file, mode='r') as auda_file:
                     audacity = json.loads(auda_file.read())
-                if len(audacity) > 0:
-                    session['audacity'] = audacity
-                    conf.append('audacityload', audacity)
-                    html = 'confuploadAudacityLoad'
+                session['audacity'] = audacity
+                conf.append('audacityload', audacity)
+                html = 'confuploadAudacityLoad'
         
     elif category == 'taggedchap': 
         html = 'confuploadTaggedChap'
         filearr = albumdata['media'].rsplit('.')
         mediabase = filearr[0]
         dirname = media_path + mediabase
+        toc_file = dirname + "/" + mediabase + ".chaptoc"
         if request.method == "POST":
             if  request.form['frm-main-upload-cancel'] == 'on':
                 if not os.path.isdir(dirname):
@@ -618,26 +627,124 @@ def doUploadGuided(category, albumid, origin):
             else:
                 return redirect(url_for('s_service.confuploadChapter', origin='episode', albumid=albumid))
         else:
-            rawname = media_path + albumdata['media']
-            (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(rawname)
             taggedchap = []
-            step = 1
-            for key, (text, start, end, start_timefmt, end_timefmt) in chapter_dict.items():
-                taggedchap.append({
-                    'key':str(key), 
-                    'step':str(step), 
-                    'desc':text, 
-                    'start':start, 
-                    'end':end, 
-                    'start_timefmt':start_timefmt, 
-                    'end_timefmt':end_timefmt
-                })
-                step += 1
-            if len(taggedchap) > 0:
-                conf.append('taggedchap', taggedchap)
-                session['taggedchap'] = taggedchap
+            conf.append('taggedchap', taggedchap)
+            if os.path.exists(toc_file):
+                with open(toc_file, mode='r') as chap_file:
+                    taggedchap = json.loads(chap_file.read())
+            session['taggedchap'] = taggedchap
+            conf.append('taggedchap', taggedchap)
+            if len(taggedchap) == 0:
+                rawname = media_path + albumdata['media']
+                (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(rawname)
+                step = 1
+                for key, (text, start, end, start_timefmt, end_timefmt) in chapter_dict.items():
+                    taggedchap.append({
+                        'key':str(key), 
+                        'step':str(step), 
+                        'desc':text, 
+                        'start':start, 
+                        'end':end, 
+                        'start_timefmt':start_timefmt, 
+                        'end_timefmt':end_timefmt
+                    })
+                    step += 1
+                if len(taggedchap) > 0:
+                    if not os.path.isdir(dirname):
+                        os.mkdir(dirname)
+                    with open(toc_file, mode='w') as chap_file:
+                        chap_file.write(json.dumps(taggedchap, ensure_ascii=False))
 
     return render_template(f"service/{html}.html", conf=conf)
+
+
+@bp.route("/Refactor-Album/<origin>/<albumid>", methods=['GET', 'POST'])
+def confrefactorAlbum(origin, albumid):
+    if current_app.config["NO_POOL_AVAILABLE"]:
+        abort(500)
+    if 'dbdata' not in session or session['dbdata']['seclevel'] < 2:
+        abort(403)
+    try:
+        db = get_db()
+        if not db:
+            raise mariadb.PoolError("Kein Databasepool vorhanden.")
+        cur = db.cursor(dictionary=True)
+        cur.execute("SELECT id,title,supporter,summary,media,publicationDate,team,duration FROM tJournal WHERE id=?", (albumid,))
+        albumdata = cur.fetchone()
+        if cur.rowcount <= 0:
+            current_app.logger.error("Datenbank SELECT FROM tJournal: %s/refactorAlbum, Rowcount=%s", bp.name, cur.rowcount)
+            raise mariadb.DataError(f"Kein Datensatz für {albumid} gefunden.")
+        cur.close()
+        db.close()
+    except mariadb.Error as err:
+        if cur: cur.close()
+        if db: db.close()
+        current_app.logger.error("Datenbank-Fehler: %s/refactorAlbum/%s", bp.name, err)
+        g.errors.append(err.args[0])
+        abort(500)
+    
+    conf = Configure("Norderstedter Hörzeitung - Service Ebene - Refactor Album", request, current_app)
+    conf.initlogin(session['dbdata'])
+    conf.append("title", albumdata['title'])
+    conf.append("show_navall", True)
+
+    if session['dbdata']['seclevel'] > 1:
+        conf.append("show_navtop", True)
+
+    media_path = current_app.instance_path + "/long/"
+    filearr = albumdata['media'].rsplit('.')
+    mediabase = filearr[0]
+    dirname = media_path + mediabase
+    content = os.listdir(dirname)
+    content.sort() # nach Dateiname aufsteigend sortiert
+    toc_file = dirname + "/" + mediabase + ".refacttoc"
+
+    if request.method == "POST":
+        if  request.form['frm-main-upload-cancel'] == 'on':
+            if origin == 'album':
+                return redirect(url_for('bx_s_start.s_album'))
+            else:
+                return redirect(url_for("bx_s_start.s_episodes", subdir=mediabase))
+        else:
+            if os.path.exists(toc_file):
+                with open(toc_file, mode='r') as tag_file:
+                    summary = json.loads(tag_file.read())
+                album_path = f"{media_path}{mediabase}.mp3"
+                if os.path.exists(album_path):
+                    tools.setMp3AlbumChap(basemedia=album_path, fields=summary)
+                    if os.path.exists(toc_file): os.remove(toc_file)
+            return redirect(url_for('bx_s_start.s_album'))
+    else:
+        starttime = 0
+        endtime = 0
+        summary = []
+        step = 1
+        for media in content:
+            if not media.endswith(".mp3"): continue
+            starttime = endtime
+            rawname = f"{dirname}/{media}"
+            (title, description, published, size, tlen, chapter, chapter_dict, image_dict, notused, track) = tools.getMP3Info(rawname)
+            if tlen == 0: 
+                audio_len = audio_info.duration(rawname)
+                if audio_len is not None: 
+                    tlen = round(audio_len * 1000) # ganzzahlig Millisekunden
+            endtime += tlen
+            info_line = {}
+            info_line['step'] = str(step)
+            info_line['key'] = 'chp' + str(step - 1)
+            info_line['start'] = starttime
+            info_line['ende'] = endtime
+            info_line['start_timefmt'] = tools.getTimeFormat(float(starttime / 1000))
+            info_line['end_timefmt'] = tools.getTimeFormat(float(endtime / 1000))
+            info_line['desc'] = title
+            summary.append(info_line)
+            step += 1
+        if len(summary) > 0:
+            with open(toc_file, mode='w') as tag_file:
+                tag_file.write(json.dumps(summary, ensure_ascii=False))
+        conf.append('refactload', summary)
+    
+    return render_template("service/confrefactorChap.html", conf=conf)
 
 
 @bp.route("/Export-Liste-<level>", methods=['GET'])
@@ -651,7 +758,7 @@ def export(level):
         abort(403)
     
     ts = current_app.config["TS"]
-    conf = Configure("Norderstedter Hörzeitung - Export", request, current_app)
+    conf = Configure("Norderstedter Hörzeitung - Export Liste User", request, current_app)
 
     conf.initlogin(session['dbdata'])
     error = False

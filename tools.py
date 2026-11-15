@@ -186,6 +186,29 @@ def setMp3Chapter(rawname:str, basemedia:str, fields:tuple, keep_chaps:bool=Fals
     return rc_code
 
 
+def setMp3AlbumChap(basemedia:str, fields:list):
+    ts = current_app.config["TS"]
+    basemtime = os.stat(basemedia).st_mtime
+    baseaudio = ID3(basemedia)
+    baseaudio.delall('CHAP')
+    baseaudio.delall('CTOC')
+    toc_element_ids = []
+    step = 0
+    for tagentry in fields:
+        # Neues Kapitel ins Album schreiben:
+        next_toc = 'chp' + str(step)
+        next_chap = CHAP(element_id=next_toc, start_time=tagentry['start'], end_time=tagentry['ende'], sub_frames=[TIT2(text=[tagentry['desc']], encoding=3)])
+        baseaudio.add(next_chap)
+        toc_element_ids.append(next_toc)
+        step += 1
+        current_app.logger.debug("%s, %s, %s, %s", next_toc, tagentry['desc'], tagentry['start'], tagentry['ende'])
+    # Neues Inhaltsverzeichnis anlegen
+    base_ctoc = CTOC(element_id='toc', flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED, child_element_ids=toc_element_ids)
+    baseaudio.add(base_ctoc)
+    baseaudio.save()
+    os.utime(basemedia, (basemtime, basemtime)) # Dateidatum wiederherstellen, da audio.save() das Datum ändert.
+
+
 def getMpegInfo(rawname:str):
     sekunden = audio_info.duration(rawname)
     return (os.stat(rawname).st_size, getTimeFormat(sekunden))
