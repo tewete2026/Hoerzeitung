@@ -9,6 +9,7 @@
     <div class="row g-4">
       <form class="needs-validation" id="frm-main-upload-chapter" novalidate autocomplete="off" method="post" enctype="multipart/form-data">
         <input type="hidden" value="off" name="frm-main-upload-cancel">
+        <input type="hidden" value="off" name="frm-main-skip-right">
         {% if conf.has('chpid') %}<input type="hidden" name="frm-main-chp-id" value="{{ conf.get('chpid') }}">{% endif %}
         {% if conf.has('step') %}<input type="hidden" name="frm-main-step" value="{{ conf.get('step') }}">{% endif %}
         <div class="row g-3">
@@ -74,6 +75,11 @@
               {% if conf.has('page') %}<div class="col-sm-1 ms-3 mt-2 pb-1">
                 <label for="frm-main-page">Folge-Nr.</label>
                 <input type="text" class="form-control" name="frm-main-page" id="frm-main-page" value="{{ conf.get('page') }}" readonly>
+              </div>
+              <div class="col-sm-1 ms-4 mt-4 pb-1">
+                <button id="btn-skip-right" class="btn btn-outline-primary" type="button" title="Weiterspringen">
+                  <svg class="bi mt-1 opacity-100" width="1.5em" height="1.5em"><use href="#chevron-double-right"></use></svg>
+                </button>              
               </div>{% endif %}
             </div>
             <div class="ms-2 mt-2 pb-1" style="width: 98%;">

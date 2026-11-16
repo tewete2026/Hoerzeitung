@@ -17,7 +17,7 @@ def getMP3Info(rawname:str):
     chapter_dict = {}
     image_dict = {}
     description = title = ""
-    albumid = track = "0"
+    albumid = track = chapterid = "0"
     tlen = 0.0
     current_app.logger.debug(rawname)
     for key in audio.keys():
@@ -44,6 +44,8 @@ def getMP3Info(rawname:str):
         elif key[:5] == 'TXXX:':
             if cont.desc == 'AlbumId':
                 albumid = cont.text[0]
+            elif cont.desc == 'ChapterId':
+                chapterid = cont.text[0]
             current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
         elif key == 'TPE1':
             current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
@@ -81,7 +83,7 @@ def getMP3Info(rawname:str):
         chapter += "{0:02}. {1} [{2}-{3}]<br>".format(counter, text, start_timefmt, end_timefmt)
         counter += 1
     published = ts.fromtimestamp(os.stat(rawname).st_mtime)
-    return (title, description, published, size, tlen, chapter, chapter_dict, image_dict, albumid, track)
+    return (title, description, published, size, tlen, chapter, chapter_dict, image_dict, albumid, track, chapterid)
 
 
 def setMp3Info(rawname:str, fields:tuple, keep_chaps:bool=True):

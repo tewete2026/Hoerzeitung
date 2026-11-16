@@ -121,6 +121,11 @@ def doUpload(albumid=None, origin='album'):
                     return redirect(url_for("bx_s_start.s_episodes", subdir=mediabase))
             else:
                 return redirect(url_for('bx_s_start.s_album'))
+        elif  form_data['frm-main-skip-right'] == 'on':
+            filearr = albumdata['media'].rsplit('.')
+            mediabase = filearr[0]
+            dirname = media_path + mediabase
+            return redirect(getNextStep(albumid=albumid, dirname=dirname, mediabase=mediabase))
         file = request.files['frm-main-file']
         filename = secure_filename(file.filename)
         pnr = session['dbdata']['pnr']
@@ -165,7 +170,7 @@ def doUpload(albumid=None, origin='album'):
                 subprocess.run([shell_path, temp_name, temp_target])
             (size, duration) = tools.getMpegInfo(temp_target)
             if isChapter:
-                (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(album_path)
+                (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused, notused) = tools.getMP3Info(album_path)
                 if frm_main_step is None:
                     next_track = "{0:02.0f}".format(len(chapter_dict.values()) + 1)
                 else:
@@ -188,36 +193,7 @@ def doUpload(albumid=None, origin='album'):
                         tools.setMp3Info(temp_target, (frm_main_title, frm_main_summary, frm_main_datum, frm_main_supporter, frm_main_team, teamlogo, rc_code['last_id']), keep_chaps=chgbasechap)
                 if isChapter:
                     audioname = rc_chp['track'] + "-" + audioname
-                    if 'audacity' in session:
-                        try:
-                            session['audacity'].pop(0)
-                            toc_name = dirname + "/" + mediabase + ".audatoc"
-                            if len(session['audacity']) == 0:
-                                if os.path.exists(toc_name): os.remove(toc_name)
-                                goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
-                            else: 
-                                goto = url_for("s_service.confuploadChapter", origin='episode', albumid=albumid)
-                                with open(toc_name, mode='w') as auda_file:
-                                    auda_file.write(json.dumps(session['audacity'], ensure_ascii=False))
-                        except IndexError as err:
-                            goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
-                            if os.path.exists(toc_name): os.remove(toc_name)
-                    elif 'taggedchap' in session:
-                        try:
-                            session['taggedchap'].pop(0)
-                            toc_name = dirname + "/" + mediabase + ".chaptoc"
-                            if len(session['taggedchap']) == 0:
-                                if os.path.exists(toc_name): os.remove(toc_name)
-                                goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
-                            else: 
-                                goto = url_for("s_service.confuploadChapter", origin='episode', albumid=albumid)
-                                with open(toc_name, mode='w') as chap_file:
-                                    chap_file.write(json.dumps(session['taggedchap'], ensure_ascii=False))
-                        except IndexError as err:
-                            goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
-                            if os.path.exists(toc_name): os.remove(toc_name)
-                    else:
-                        goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+                    goto = getNextStep(albumid=albumid, dirname=dirname, mediabase=mediabase)
                 else:
                     goto = url_for("bx_s_start.s_album")
                 if os.path.exists(temp_target):
@@ -295,6 +271,41 @@ def doUpload(albumid=None, origin='album'):
         html = "service/confupload.html"
 
     return render_template(html, conf=conf)
+
+
+def getNextStep(dirname, mediabase, albumid):
+    if 'audacity' in session:
+        try:
+            session['audacity'].pop(0)
+            toc_name = dirname + "/" + mediabase + ".audatoc"
+            if len(session['audacity']) == 0:
+                if os.path.exists(toc_name): os.remove(toc_name)
+                goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+            else: 
+                goto = url_for("s_service.confuploadChapter", origin='episode', albumid=albumid)
+                with open(toc_name, mode='w') as auda_file:
+                    auda_file.write(json.dumps(session['audacity'], ensure_ascii=False))
+        except IndexError as err:
+            goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+            if os.path.exists(toc_name): os.remove(toc_name)
+    elif 'taggedchap' in session:
+        try:
+            session['taggedchap'].pop(0)
+            toc_name = dirname + "/" + mediabase + ".chaptoc"
+            if len(session['taggedchap']) == 0:
+                if os.path.exists(toc_name): os.remove(toc_name)
+                goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+            else: 
+                goto = url_for("s_service.confuploadChapter", origin='episode', albumid=albumid)
+                with open(toc_name, mode='w') as chap_file:
+                    chap_file.write(json.dumps(session['taggedchap'], ensure_ascii=False))
+        except IndexError as err:
+            goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+            if os.path.exists(toc_name): os.remove(toc_name)
+    else:
+        goto = url_for("bx_s_start.s_episodes", subdir=mediabase)
+
+    return goto
 
 
 @bp.route("/Neue-Codes", methods=['GET', 'POST'])
@@ -636,7 +647,7 @@ def doUploadGuided(category, albumid, origin):
             conf.append('taggedchap', taggedchap)
             if len(taggedchap) == 0:
                 rawname = media_path + albumdata['media']
-                (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused) = tools.getMP3Info(rawname)
+                (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused, notused) = tools.getMP3Info(rawname)
                 step = 1
                 for key, (text, start, end, start_timefmt, end_timefmt) in chapter_dict.items():
                     taggedchap.append({
@@ -723,7 +734,7 @@ def confrefactorAlbum(origin, albumid):
             if not media.endswith(".mp3"): continue
             starttime = endtime
             rawname = f"{dirname}/{media}"
-            (title, description, published, size, tlen, chapter, chapter_dict, image_dict, notused, track) = tools.getMP3Info(rawname)
+            (title, description, published, size, tlen, chapter, chapter_dict, image_dict, notused, track, chapterid) = tools.getMP3Info(rawname)
             if tlen == 0: 
                 audio_len = audio_info.duration(rawname)
                 if audio_len is not None: 
@@ -1111,6 +1122,37 @@ def db_collect(sql_file):
     except mariadb.Error as err:
         db.close()
         current_app.logger.error("Datenbank-Fehler: %s/db_collect/%s", bp.name, err)
+        rc_code['status'] = 'ERR'
+        rc_code['errmsg'] = err.args[0]
+
+    return rc_code
+
+
+def db_remove_Chap(data_list:list):
+    rc_code = {'status':'OK'}
+    try:
+        db = get_db()
+        if not db:
+            raise mariadb.PoolError()
+        db.begin()
+        cur = db.cursor(dictionary=True)
+        ids = []
+        for data in data_list.items():
+            ids.append(data[1])
+        cur.execute(f"SELECT id,mediaPath,media FROM tChapter WHERE id in ({','.join(ids)})")
+        rc_code['result_fetch'] = cur.fetchall()
+        cur.execute(f"DELETE FROM tChapter WHERE id in ({','.join(ids)})")
+        rc_code['result_sql'] = cur.rowcount
+        db.commit()
+        cur.close()
+        db.close()
+    except mariadb.PoolError as err:
+        current_app.logger.error("Pool-Fehler: %s/db_remove_Chap/%s", bp.name, err)
+        rc_code['status'] = 'ERR'
+        rc_code['errmsg'] = err.args[0]
+    except mariadb.Error as err:
+        db.close()
+        current_app.logger.error("Datenbank-Fehler: %s/db_remove_Chap/%s", bp.name, err)
         rc_code['status'] = 'ERR'
         rc_code['errmsg'] = err.args[0]
 

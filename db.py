@@ -243,7 +243,7 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
                 audio_name = f"{archive_dir}!{audio_name}"
             if bonus: 
                 audio_name = f"B!{audio_name}"
-            (title, description, published, size, dur, chapter, chapter_dict, image_dict, albumid, track) = tools.getMP3Info(rawname)
+            (title, description, published, size, dur, chapter, chapter_dict, image_dict, albumid, track, chapterid) = tools.getMP3Info(rawname)
             (si, duration) = tools.getMpegInfo(rawname)
             published = ts.addtimezone(published)
             episode.update({"rawname":rawname})
@@ -257,6 +257,7 @@ def get_s_episodes(full_dir, subdir=None, max_pageview=-1, archive=False, archiv
             episode.update({"length":size})
             episode.update({"track":track})
             episode.update({"albumid":albumid})
+            episode.update({"chapterid":chapterid})
             episode.update({"duration":duration})
             if 'data' in image_dict: episode.update({"image":f'{audio_name}_ximg.jpg'})
             episode.update({"size":size})
@@ -285,7 +286,7 @@ def get_s_favorites(base_dir, content, conf=None, max_pageview=-1):
         rawname = f"{base_dir}{path}/{audio_name}"
         if not audio_name.endswith(".mp3"): continue
         key = audio_name.split('.')[0].strip()
-        (title, description, published, size, dur, chapter, chapter_dict, image_dict, albumid, track) = tools.getMP3Info(rawname)
+        (title, description, published, size, dur, chapter, chapter_dict, image_dict, albumid, track, chapterid) = tools.getMP3Info(rawname)
         (si, duration) = tools.getMpegInfo(rawname)
         published = ts.addtimezone(published)
         episode.update({"rawname":rawname})

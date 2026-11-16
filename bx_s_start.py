@@ -10,6 +10,7 @@ from werkzeug.exceptions import abort
 from podgen import Podcast, Episode, Person, Category, Media
 from markdown import markdown
 from .db import get_db, Configure, getLogin, get_s_episodes, get_s_favorites, getAlbumDB
+from .service.s_service import db_remove_Chap
 from . import version, credentials, tools
 
 bp = Blueprint("bx_s_start", __name__)
@@ -149,7 +150,7 @@ def media(file:str):
         rawname = path + "/" + fname
         if not os.path.exists(rawname):
             abort(404)
-        (title, description, published, size, dur, chapter, chapter_dict, image_dict, albumid, track) = tools.getMP3Info(rawname)
+        (title, description, published, size, dur, chapter, chapter_dict, image_dict, albumid, track, chapterid) = tools.getMP3Info(rawname)
         if not 'data' in image_dict:
             abort(404)
         resp = make_response(image_dict['data'])
@@ -379,21 +380,31 @@ def show_content(html_form, header, subdir=None, guest=False, online=False, parm
         conf.initlogin(session['dbdata'])
         auth_code_guest = session['guest']
         html = html_form
-        if post_request and not single_view:
-            if 'morepage' in form_data:
-                morepage = form_data['morepage']
-                if morepage.isnumeric():
-                    max_pageview += int(morepage)
-                elif morepage == 'ALL':
-                    max_pageview = -1
-                session['max_pageview'] = max_pageview
-            if 'setpage' in form_data:
-                setpage = form_data['setpage']
-                if setpage.isnumeric():
-                    max_pageview = int(setpage)
-                elif setpage == 'ALL':
-                    max_pageview = -1
-                session['max_pageview'] = max_pageview
+        if post_request:
+            if not single_view:
+                if 'morepage' in form_data:
+                    morepage = form_data['morepage']
+                    if morepage.isnumeric():
+                        max_pageview += int(morepage)
+                    elif morepage == 'ALL':
+                        max_pageview = -1
+                    session['max_pageview'] = max_pageview
+                if 'setpage' in form_data:
+                    setpage = form_data['setpage']
+                    if setpage.isnumeric():
+                        max_pageview = int(setpage)
+                    elif setpage == 'ALL':
+                        max_pageview = -1
+                    session['max_pageview'] = max_pageview
+            else:
+                # Entfernen von ausgewählten Kapitel-Beiträgen
+                if len(form_data) > 0:
+                    rc = db_remove_Chap(form_data)
+                    if rc['result_sql'] > 0:
+                        for rc_data in rc['result_fetch']:
+                            rc_media = f"{rc_data['mediaPath']}{rc_data['media']}"
+                            if os.path.exists(rc_media): os.remove(rc_media)
+                            current_app.logger.info("Removed: %s", rc_media)
         show_max_pageview = max_pageview
         if max_pageview < 0: show_max_pageview ="Alles"
         conf.append("show_max_pageview", show_max_pageview)
