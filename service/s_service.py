@@ -170,9 +170,9 @@ def doUpload(albumid=None, origin='album'):
                 subprocess.run([shell_path, temp_name, temp_target])
             (size, duration) = tools.getMpegInfo(temp_target)
             if isChapter:
-                (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused, notused) = tools.getMP3Info(album_path)
+                id3_info = tools.getMP3Info(album_path)
                 if frm_main_step is None:
-                    next_track = "{0:02.0f}".format(len(chapter_dict.values()) + 1)
+                    next_track = "{0:02.0f}".format(len(id3_info['chapter_dict'].values()) + 1)
                 else:
                     next_track = "{0:02.0f}".format(int(frm_main_step))
                     if frm_main_chpid is None:
@@ -628,12 +628,15 @@ def doUploadGuided(category, albumid, origin):
         dirname = media_path + mediabase
         toc_file = dirname + "/" + mediabase + ".chaptoc"
         if request.method == "POST":
-            if  request.form['frm-main-upload-cancel'] == 'on':
+            cfield = request.form['frm-main-upload-cancel']
+            if cfield == 'on' or cfield == 'reload':
                 if not os.path.isdir(dirname):
                     os.mkdir(dirname)
                 if origin == 'album':
                     return redirect(url_for('bx_s_start.s_album'))
                 else:
+                    if cfield == 'reload':
+                        if os.path.exists(toc_file): os.remove(toc_file)
                     return redirect(url_for("bx_s_start.s_episodes", subdir=mediabase))
             else:
                 return redirect(url_for('s_service.confuploadChapter', origin='episode', albumid=albumid))
@@ -647,9 +650,9 @@ def doUploadGuided(category, albumid, origin):
             conf.append('taggedchap', taggedchap)
             if len(taggedchap) == 0:
                 rawname = media_path + albumdata['media']
-                (notused, notused, notused, notused, notused, notused, chapter_dict, notused, notused, notused, notused) = tools.getMP3Info(rawname)
+                id3_info = tools.getMP3Info(rawname)
                 step = 1
-                for key, (text, start, end, start_timefmt, end_timefmt) in chapter_dict.items():
+                for key, (text, start, end, start_timefmt, end_timefmt) in id3_info['chapter_dict'].items():
                     taggedchap.append({
                         'key':str(key), 
                         'step':str(step), 
@@ -734,7 +737,8 @@ def confrefactorAlbum(origin, albumid):
             if not media.endswith(".mp3"): continue
             starttime = endtime
             rawname = f"{dirname}/{media}"
-            (title, description, published, size, tlen, chapter, chapter_dict, image_dict, notused, track, chapterid) = tools.getMP3Info(rawname)
+            id3_info = tools.getMP3Info(rawname)
+            tlen = id3_info['tlen']
             if tlen == 0: 
                 audio_len = audio_info.duration(rawname)
                 if audio_len is not None: 
@@ -747,7 +751,7 @@ def confrefactorAlbum(origin, albumid):
             info_line['ende'] = endtime
             info_line['start_timefmt'] = tools.getTimeFormat(float(starttime / 1000))
             info_line['end_timefmt'] = tools.getTimeFormat(float(endtime / 1000))
-            info_line['desc'] = title
+            info_line['desc'] = id3_info['title']
             summary.append(info_line)
             step += 1
         if len(summary) > 0:

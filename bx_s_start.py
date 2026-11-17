@@ -150,15 +150,15 @@ def media(file:str):
         rawname = path + "/" + fname
         if not os.path.exists(rawname):
             abort(404)
-        (title, description, published, size, dur, chapter, chapter_dict, image_dict, albumid, track, chapterid) = tools.getMP3Info(rawname)
-        if not 'data' in image_dict:
+        id3_info = tools.getMP3Info(rawname)
+        if 'data' not in id3_info['image_dict']:
             abort(404)
-        resp = make_response(image_dict['data'])
+        resp = make_response(id3_info['image_dict']['data'])
         resp.content_encoding = "UTF-8"
         resp.automatically_set_content_length = True
-        resp.mimetype = image_dict['mime']
+        resp.mimetype = id3_info['image_dict']['mime']
         resp.access_control_max_age = 0
-        resp.default_mimetype = image_dict['mime']
+        resp.default_mimetype = id3_info['image_dict']['mime']
         resp.headers['Cache-Control']='no-cache'
         resp.headers['Pragma']='no-cache'
         return resp

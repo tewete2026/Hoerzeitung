@@ -12,13 +12,11 @@ from sox import file_info as audio_info
 
 def getMP3Info(rawname:str):
     ts = current_app.config["TS"]
+    result = {'title':'', 'tlen':0, 'albumid':0, 'chapterid':0, 'supporter':'', 'author':'', 'team':0, 'license':'', 'licenseallowed':0, 'sourcedate':'0000-00-00', 'track':0, 'description':'', 'reader':''}
+    result['chapter_dict'] = {}
+    result['image_dict'] = {}
     # audio = MP3(current_app.instance_path + "/" + mp3, ID3=EasyID3)
     audio = MP3(rawname)
-    chapter_dict = {}
-    image_dict = {}
-    description = title = ""
-    albumid = track = chapterid = "0"
-    tlen = 0.0
     current_app.logger.debug(rawname)
     for key in audio.keys():
         cont = audio.get(key)
@@ -26,15 +24,17 @@ def getMP3Info(rawname:str):
         if key == 'TIT2':
             title = cont.text[0]
             current_app.logger.debug("%s, %s", title, cont.encoding)
+            result['title'] = title
         elif key == 'TLEN':
             tlen = float(cont.text[0])
             current_app.logger.debug("%s, %s", tlen, cont.encoding)
+            result['tlen'] = tlen
         elif key[:5] == 'CTOC:':
             current_app.logger.debug("child_element_ids=%s, flags=%s, element_id=%s", cont.child_element_ids, cont.flags, cont.element_id)
             for elem in cont.child_element_ids:
                 chap_key = 'CHAP:' + elem
                 chap = audio.get(chap_key)
-                chapter_dict.update({chap.element_id:(chap.sub_frames['TIT2'].text[0], chap.start_time, chap.end_time, getTimeFormat(chap.start_time/1000), getTimeFormat(chap.end_time/1000))})
+                result['chapter_dict'].update({chap.element_id:(chap.sub_frames['TIT2'].text[0], chap.start_time, chap.end_time, getTimeFormat(chap.start_time/1000), getTimeFormat(chap.end_time/1000))})
         elif key[:5] == 'CHAP:':
             current_app.logger.debug("element_id=%s, start=%s, end=%s", cont.element_id, cont.start_time, cont.end_time)
             for sub in cont.sub_frames:
@@ -44,13 +44,30 @@ def getMP3Info(rawname:str):
         elif key[:5] == 'TXXX:':
             if cont.desc == 'AlbumId':
                 albumid = cont.text[0]
+                result['albumid'] = albumid
             elif cont.desc == 'ChapterId':
                 chapterid = cont.text[0]
+                result['chapterid'] = cont.text[0]
+            elif cont.desc == 'Author':
+                result['author'] = cont.text[0]
+            elif cont.desc == 'Supporter':
+                result['supporter'] = cont.text[0]
+            elif cont.desc == 'Team':
+                result['team'] = cont.text[0]
+            elif cont.desc == 'License':
+                result['license'] = cont.text[0]
+            elif cont.desc == 'LicenseAllowed':
+                result['licenseallowed'] = cont.text[0]
+            elif cont.desc == 'SourceDate':
+                result['sourcedate'] = cont.text[0]
+            elif cont.desc == 'Reader':
+                result['reader'] = cont.text[0]
             current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
         elif key == 'TPE1':
             current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
         elif key == 'TRCK':
             track = cont.text[0]
+            result['track'] = track
             current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
         elif key == 'TDRC':
             current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
@@ -66,24 +83,22 @@ def getMP3Info(rawname:str):
             current_app.logger.debug("%s, %s", cont.text[0], cont.encoding)
         elif key[:5] == 'COMM:':
             current_app.logger.debug("%s, %s, %s, %s", cont.text[0], cont.desc, cont.lang, cont.encoding)
-            if not cont.desc and cont.lang == "eng" or cont.desc == "summary" and cont.lang == "ger":
-                description = cont.text[0]
+            if not cont.desc and (cont.desc == "summary" and cont.lang == "ger" or cont.lang == "eng"):
+                result['description'] = cont.text[0]
         elif key[:5] == 'APIC:':
-            image_dict.update({'mime': cont.mime})
-            image_dict.update({'desc': cont.desc})
-            image_dict.update({'data': cont.data})
             current_app.logger.debug("Mime: %s, Desc: %s, Len: %s", cont.mime, cont.desc, len(cont.data))
-    # keys = ["TALB", "TPE1", "TDRC", "TIT2", "TENC", "TLEN"]
-    # for key in keys:
-    #     print(key, audio.get(key))
-    size = os.stat(rawname).st_size
+            result['image_dict'].update({'mime': cont.mime})
+            result['image_dict'].update({'desc': cont.desc})
+            result['image_dict'].update({'data': cont.data})
     chapter = ""
     counter = 1
-    for key, (text, start, end, start_timefmt, end_timefmt) in chapter_dict.items():
+    for key, (text, start, end, start_timefmt, end_timefmt) in result['chapter_dict'].items():
         chapter += "{0:02}. {1} [{2}-{3}]<br>".format(counter, text, start_timefmt, end_timefmt)
         counter += 1
-    published = ts.fromtimestamp(os.stat(rawname).st_mtime)
-    return (title, description, published, size, tlen, chapter, chapter_dict, image_dict, albumid, track, chapterid)
+    result['length'] = os.stat(rawname).st_size
+    result['published'] = ts.fromtimestamp(os.stat(rawname).st_mtime)
+    result['chapter'] = chapter
+    return result
 
 
 def setMp3Info(rawname:str, fields:tuple, keep_chaps:bool=True):

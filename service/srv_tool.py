@@ -234,7 +234,14 @@ def init_tagging():
     for element in content:
         rawname = f"{full_dir}/{element}"
         if os.path.isdir(rawname) or not element.endswith(".mp3"): continue
-        (alb_title, description, alb_published, notused, alb_tlen, chapter, chapter_dict, notused, notused, notused, notused) = tools.getMP3Info(rawname)
+        # (alb_title, description, alb_published, notused, alb_tlen, chapter, chapter_dict, notused, notused, notused, notused) = tools.getMP3Info(rawname)
+        id3_info = tools.getMP3Info(rawname)
+        alb_title = id3_info['title']
+        description = id3_info['description']
+        alb_published = id3_info['published']
+        alb_tlen = id3_info['tlen']
+        chapter_dict = id3_info['chapter_dict']
+        chapter = id3_info['chapter']
         mtime = os.stat(rawname).st_mtime
         published = ts.fromtimestamp(mtime)
         duration = tools.getTimeFormat(alb_tlen/1000)
@@ -266,7 +273,12 @@ def init_tagging():
                 for entry in dircontent:
                     entryname = f"{dirname}/{entry}"
                     if os.path.isdir(entryname) or not entry.endswith(".mp3"): continue
-                    (ID3_title, description, ID3_published, notused, ID3_tlen, notused, notused, notused, notused, ID3_track, notused) = tools.getMP3Info(entryname)
+                    id3_info = tools.getMP3Info(rawname)
+                    ID3_title = id3_info['title']
+                    description = id3_info['description']
+                    ID3_published = id3_info['published']
+                    ID3_tlen = id3_info['tlen']
+                    ID3_track = id3_info['track']
                     mtime = os.stat(entryname).st_mtime
                     published = ts.fromtimestamp(mtime)
                     duration = tools.getTimeFormat(ID3_tlen/1000)
@@ -386,7 +398,9 @@ def analyse_tagging():
         rawname = f"{full_dir}/{element}"
         if not os.path.isdir(rawname):
             if not element.endswith(".mp3"): continue
-            (alb_title, description, pub, size, ID3_tlen, chapter, chapter_dict, image_dict, notused, notused, notused) = tools.getMP3Info(rawname)
+            id3_info = tools.getMP3Info(rawname)
+            alb_title = id3_info['title']
+            ID3_tlen = id3_info['tlen']
             mtime = os.stat(rawname).st_mtime
             published = ts.fromtimestamp(mtime)
             if not ID3_tlen:
@@ -410,7 +424,10 @@ def analyse_tagging():
                 for entry in dircontent:
                     entryname = f"{dirname}/{entry}"
                     if os.path.isdir(entryname) or not entry.endswith(".mp3"): continue
-                    (ID3_title, description, pub, size, ID3_tlen, notused, chapter_dict, image_dict, notused, ID3_track, notused) = tools.getMP3Info(entryname)
+                    id3_info = tools.getMP3Info(rawname)
+                    ID3_title = id3_info['title']
+                    ID3_tlen = id3_info['tlen']
+                    ID3_track = id3_info['track']
                     mtime = os.stat(entryname).st_mtime
                     published = ts.fromtimestamp(mtime)
                     duration = tools.getTimeFormat(ID3_tlen/1000)
