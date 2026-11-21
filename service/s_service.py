@@ -171,7 +171,7 @@ def doUpload(albumid=None, origin='album'):
             (size, duration) = tools.getMpegInfo(temp_target)
             if isChapter:
                 id3_info = tools.getMP3Info(album_path)
-                if frm_main_step is None:
+                if not frm_main_step:
                     next_track = "{0:02.0f}".format(len(id3_info['chapter_dict'].values()) + 1)
                 else:
                     next_track = "{0:02.0f}".format(int(frm_main_step))
